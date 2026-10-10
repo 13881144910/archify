@@ -92,7 +92,8 @@ function gitValue(repoRoot, args, failure) {
     evidence: { gitArgs: args, exitCode: result.status },
     supportedFixes: ['use the intended local Git repository and verify its origin and revision'],
   });
-  return result.stdout.trim();
+  // Remove Git's record terminator without changing whitespace in a path.
+  return result.stdout.replace(/\n$/, '');
 }
 
 function verifiedSourcePath(value, where) {

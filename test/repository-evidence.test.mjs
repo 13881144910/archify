@@ -727,3 +727,16 @@ test('live preview forwards repo-root and publishes only verified evidence', { t
     await preview.stop();
   }
 });
+
+// POSIX permits trailing whitespace in a directory component; it belongs to
+// the repository identity rather than Git's newline-delimited output framing.
+test('repository evidence preserves trailing whitespace in the Git top-level path', { skip: process.platform === 'win32' }, (t) => {
+  const data = fixture();
+  const renamedRoot = `${data.root} `;
+  fs.renameSync(data.root, renamedRoot);
+  t.after(() => fs.rmSync(renamedRoot, { recursive: true, force: true }));
+  const evidence = verifyRepositoryEvidence('architecture', data.diagram, renamedRoot);
+  assert.equal(evidence.verified, true);
+  assert.equal(evidence.repository.revision, data.revision);
+  assert.equal(evidence.referenceCount, 2);
+});

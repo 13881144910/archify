@@ -70,6 +70,14 @@ function git(cwd, ...args) {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 }
 
+function shellForFixture() {
+  if (process.platform !== 'win32') return 'bash';
+  const gitExecPath = git(repoRoot, '--exec-path');
+  const gitBash = path.resolve(gitExecPath, '..', '..', '..', 'bin', 'bash.exe');
+  assert.ok(fs.existsSync(gitBash), `Git Bash is required for the Windows fixture: ${gitBash}`);
+  return gitBash;
+}
+
 function writeStarHistoryCharts(cwd, version) {
   const assets = path.join(cwd, 'assets');
   fs.mkdirSync(assets, { recursive: true });
@@ -365,6 +373,7 @@ test('Star History publishing advances the data branch without a force push', ()
   const firstCheckout = path.join(fixture, 'first');
   const secondCheckout = path.join(fixture, 'second');
   const publisher = path.join(repoRoot, 'scripts', 'publish-star-history.sh');
+  const shell = shellForFixture();
 
   try {
     git(fixture, 'init', '--bare', remote);
@@ -384,7 +393,7 @@ test('Star History publishing advances the data branch without a force push', ()
     const firstTemp = path.join(fixture, 'run-1');
     fs.mkdirSync(firstTemp);
     writeStarHistoryCharts(firstCheckout, 'v1');
-    execFileSync('bash', [publisher, 'star-history'], {
+    execFileSync(shell, [publisher, 'star-history'], {
       cwd: firstCheckout,
       env: { ...process.env, RUNNER_TEMP: firstTemp },
     });
@@ -394,7 +403,7 @@ test('Star History publishing advances the data branch without a force push', ()
     const secondTemp = path.join(fixture, 'run-2');
     fs.mkdirSync(secondTemp);
     writeStarHistoryCharts(secondCheckout, 'v2');
-    execFileSync('bash', [publisher, 'star-history'], {
+    execFileSync(shell, [publisher, 'star-history'], {
       cwd: secondCheckout,
       env: { ...process.env, RUNNER_TEMP: secondTemp },
     });
@@ -411,6 +420,6 @@ test('Star History publishing advances the data branch without a force push', ()
       /light v2/,
     );
   } finally {
-    fs.rmSync(fixture, { recursive: true, force: true });
+    fs.rmSync(fixture, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
   }
 });

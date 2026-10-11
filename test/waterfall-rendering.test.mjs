@@ -27,6 +27,20 @@ function layoutOf(diagram) {
   return JSON.parse(result.stdout);
 }
 
+test('waterfall: nonzero origins preserve distinct ticks and accessible timing', () => {
+  const diagram = clone(small);
+  diagram.spans = [{ id: 'request', name: 'Request', start: 0.0091, duration: 0.000004 }];
+  const result = run(diagram);
+  assert.equal(result.status, 0, result.stderr);
+  const html = fs.readFileSync(result.output, 'utf8');
+  const labels = [...html.matchAll(/class="t-muted wf-num"[^>]*text-anchor="middle">([^<]+)<\/text>/g)].map(match => match[1]);
+  assert.ok(labels.length >= 2);
+  assert.equal(new Set(labels).size, labels.length);
+  const values = labels.map(label => Number(label.replace(/ ms$/, '').replaceAll(',', '')));
+  assert.ok(values.every((value, index) => value >= 0.0091 && value <= 0.009104000000000001 && (!index || value > values[index - 1])));
+  assert.match(html, /aria-label="[^"]*0\.0091–0\.009104 ms/);
+});
+
 test('waterfall: both examples render and pass the showcase artifact checks', () => {
   for (const diagram of [small, large]) {
     const result = run(diagram);

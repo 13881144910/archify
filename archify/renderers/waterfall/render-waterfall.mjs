@@ -192,6 +192,16 @@ for (let index = 0; index < tickCount; index += 1) {
   if (ticks.at(-1)?.t !== t) ticks.push({ t, x: xOf(t) });
 }
 
+// Absolute times need enough precision for the axis and the shortest recorded
+// span, rather than the duration formatter's fixed significant-digit floor.
+const timeResolution = Math.min(tickStep, ...spans.filter(row => row.duration > 0).map(row => row.duration));
+function timeNumber(value) {
+  const ordinary = number(value);
+  if (Math.abs(value) < 1e21 && Math.abs(Number(ordinary.replaceAll(',', '')) - value) <= timeResolution / 100) return ordinary;
+  const digits = value === 0 ? 1 : Math.min(17, Math.max(1, Math.floor(Math.log10(Math.abs(value))) - Math.floor(Math.log10(timeResolution)) + 2));
+  return Number(value.toPrecision(digits)).toString();
+}
+
 const LABEL_GAP = 7;
 const parentIds = new Set(rows.map((row) => row.parent).filter((id) => id !== undefined));
 const placed = rows.map((row, index) => {
@@ -226,6 +236,21 @@ const legendEntries = [
 const contentBottom = rowsTop + placed.length * layout.rowH + 8;
 const labelRoom = Math.ceil(Math.max(...placed.map((row) => row.x1 + LABEL_GAP + row.labelWidth)) - axisX1);
 const width = Math.ceil(axisX1 + Math.max(24, labelRoom) + layout.margin);
+const axisLabels = ticks.map(tick => {
+  const text = `${timeNumber(tick.t)} ${unitLabel}`;
+  const halfWidth = (textUnits(text) * 10.5 * ADVANCE + 4) / 2;
+  const x = Math.max(layout.margin + halfWidth, Math.min(tick.x, width - layout.margin - halfWidth));
+  return { text, x, left: x - halfWidth, right: x + halfWidth };
+});
+// Keep the endpoints readable; omit intermediate labels that cannot fit. The
+// ticks and the proportional time geometry remain unchanged.
+let previousLabelRight = -Infinity;
+for (const [index, label] of axisLabels.entries()) {
+  const last = axisLabels.at(-1);
+  if (label.left < previousLabelRight + 8 || (index > 0 && index < axisLabels.length - 1 && label.right + 8 > last.left)) continue;
+  label.visible = true;
+  previousLabelRight = label.right;
+}
 const footprint = legendFootprint(legendEntries, { width: width - layout.margin * 2, fontSize: 11 });
 const height = Math.ceil(contentBottom + layout.margin + (legendEntries.length ? 34 + footprint.extraHeight : 0));
 const viewBox = [width, height];
@@ -236,7 +261,7 @@ function renderHeader() {
   const evidenceW = Math.ceil(textUnits(evidence) * 10.5 * ADVANCE + 24);
   const tone = wf.meta.evidence === 'measured' ? 'backend' : 'messagebus';
   const wallText = i18nText(locale, 'waterfall.wall', { duration: formatDuration(wall) });
-  const range = `${number(t0)} → ${number(t1)} ${unitLabel}`;
+  const range = `${timeNumber(t0)} → ${timeNumber(t1)} ${unitLabel}`;
   const wallX = layout.margin + evidenceW + 14;
   return `        <g data-waterfall-evidence="${esc(wf.meta.evidence)}">
           <rect x="${layout.margin}" y="14" width="${evidenceW}" height="22" rx="11" class="c-${tone}" stroke-width="1"/>
@@ -253,7 +278,7 @@ function renderAxis() {
     `        <line x1="${axisX0}" y1="${lineY}" x2="${axisX1}" y2="${lineY}" class="wf-axis" stroke-width="1"/>`,
     ...ticks.map((tick, index) => `        <line x1="${tick.x}" y1="${lineY}" x2="${tick.x}" y2="${contentBottom}" class="wf-grid${index ? '' : ' wf-grid-origin'}" stroke-width="1"/>
         <line x1="${tick.x}" y1="${lineY - 4}" x2="${tick.x}" y2="${lineY}" class="wf-axis" stroke-width="1"/>
-        <text x="${tick.x}" y="${lineY - 10}" class="t-muted wf-num" font-size="10.5" text-anchor="middle">${esc(number(tick.t))} ${esc(unitLabel)}</text>`),
+        ${axisLabels[index].visible ? `<text x="${axisLabels[index].x}" y="${lineY - 10}" class="t-muted wf-num" font-size="10.5" text-anchor="middle">${esc(axisLabels[index].text)}</text>` : ''}`),
   ].join('\n');
 }
 
@@ -277,7 +302,7 @@ function renderGuides() {
 // added together, and the paint says which bars are inclusive summaries.
 function renderRow(row, order) {
   const parent = row.parent !== undefined ? placed.find((candidate) => candidate.id === row.parent) : null;
-  const timing = `${number(row.start)}–${row.open ? '…' : number(row.end)} ${unitLabel} · ${row.label} · ${i18nText(locale, 'waterfall.share', { percent: percent(row.duration), total: formatDuration(wall) })}`;
+  const timing = `${timeNumber(row.start)}–${row.open ? '…' : timeNumber(row.end)} ${unitLabel} · ${row.label} · ${i18nText(locale, 'waterfall.share', { percent: percent(row.duration), total: formatDuration(wall) })}`;
   const service = serviceOf.get(row.id);
   const passport = { kind: row.tone, sublabel: [timing, row.detail].filter(Boolean).join(' — '), context: [service, parent?.name].filter(Boolean).join(' \u203a ') || undefined };
   const midY = row.y + layout.rowH / 2;

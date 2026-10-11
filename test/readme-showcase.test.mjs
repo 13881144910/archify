@@ -142,6 +142,9 @@ test('README motion proof is compact, looping, and backed by current gallery art
   assert.match(builder, /\?embed=1&theme=dark\$\{scene\.hash\}/);
   assert.doesNotMatch(builder, /play=1|#view=/);
   assert.match(builder, /path\.relative\(from, to\)\.split\(path\.sep\)\.join\('\/'\)/);
+  assert.match(builder, /async function stopChrome\(chrome\)/);
+  assert.match(builder, /await stopChrome\(chrome\)/);
+  assert.match(builder, /chrome\.kill\('SIGKILL'\)/);
   const buffer = fs.readFileSync(assetPath);
   const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
   const inspected = inspectGif(buffer);

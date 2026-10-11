@@ -234,6 +234,19 @@ async function evaluate(cdp, sessionId, expression, awaitPromise = false) {
   return result.result?.value;
 }
 
+async function stopChrome(chrome) {
+  if (chrome.exitCode !== null || chrome.signalCode !== null) return;
+  const closed = new Promise(resolve => chrome.once('close', resolve));
+  chrome.kill('SIGTERM');
+  const graceful = await Promise.race([
+    closed.then(() => true),
+    sleep(5000).then(() => false),
+  ]);
+  if (graceful) return;
+  chrome.kill('SIGKILL');
+  await closed;
+}
+
 async function captureFrames(chromePath, tempRoot) {
   const profileRoot = path.join(tempRoot, 'profile');
   const framesRoot = path.join(tempRoot, 'frames');
@@ -299,7 +312,7 @@ async function captureFrames(chromePath, tempRoot) {
     throw error;
   } finally {
     cdp.failAll(new Error('capture finished'));
-    chrome.kill('SIGTERM');
+    await stopChrome(chrome);
   }
 }
 

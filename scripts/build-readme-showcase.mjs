@@ -69,6 +69,12 @@ function executable(file) {
 }
 
 function commandPath(command) {
+  if (process.platform === 'win32') {
+    const result = spawnSync('where.exe', [command], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true,
+    });
+    return result.status === 0 ? result.stdout.trim().split(/\r?\n/)[0] : null;
+  }
   const result = spawnSync('sh', ['-c', 'command -v "$1"', 'archify-showcase', command], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
@@ -315,7 +321,7 @@ function buildGif(ffmpeg, framesRoot) {
     '-i', path.join(framesRoot, 'frame-%04d.png'),
     '-filter_complex', filter, '-loop', '0', outputPath,
   ], { encoding: 'utf8' });
-  if (result.status !== 0) throw new Error(`ffmpeg failed:\n${result.stderr || result.stdout}`);
+  if (result.status !== 0) throw new Error(`ffmpeg failed:\n${result.error?.message || result.stderr || result.stdout}`);
 }
 
 async function main() {

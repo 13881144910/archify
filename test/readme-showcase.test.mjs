@@ -142,6 +142,9 @@ test('README motion proof is compact, looping, and backed by current gallery art
   assert.match(builder, /\?embed=1&theme=dark\$\{scene\.hash\}/);
   assert.doesNotMatch(builder, /play=1|#view=/);
   assert.match(builder, /path\.relative\(from, to\)\.split\(path\.sep\)\.join\('\/'\)/);
+  assert.match(builder, /process\.platform === 'win32'/);
+  assert.match(builder, /spawnSync\('where\.exe', \[command\]/);
+  assert.match(builder, /result\.error\?\.message/);
   const buffer = fs.readFileSync(assetPath);
   const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
   const inspected = inspectGif(buffer);

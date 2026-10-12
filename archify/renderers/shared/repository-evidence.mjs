@@ -229,7 +229,7 @@ export function verifyRepositoryEvidence(diagramType, diagram, repoRootInput) {
       supportedFixes: [`pass --repo-root ${gitRoot}`],
     });
   }
-  const origin = gitValue(realRoot, ['remote', 'get-url', 'origin'], 'Evidence repository must have an origin remote.');
+  const origin = gitValue(realRoot, ['remote', 'get-url', 'origin'], 'Evidence repository must have an origin remote.').trim();
   if (parseRepositoryRemote(origin, { provider: repository.provider })?.identity !== location.identity) {
     const safeOrigin = redactRepositoryRemote(origin);
     evidenceFailure('repository-evidence/origin-mismatch', `Evidence repository origin ${JSON.stringify(safeOrigin)} does not match ${JSON.stringify(repository.url)}.`, {

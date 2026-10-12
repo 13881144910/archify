@@ -417,6 +417,10 @@ test('portable origin failures redact HTTP credentials and query tokens', () => 
     'http://user:SYNTHETIC_TOKEN@git.internal/Team/other',
     'http://git.internal/Team/repo?token=SYNTHETIC_TOKEN',
     'https://user:SYNTHETIC_TOKEN@git.internal/Team/repo',
+    ' http://user:SYNTHETIC_TOKEN@git.internal/Team/other',
+    '\thttp://user:SYNTHETIC_TOKEN@git.internal/Team/other',
+    ' https://user:SYNTHETIC_TOKEN@git.internal/Team/other',
+    '\thttps://user:SYNTHETIC_TOKEN@git.internal/Team/other',
   ]) {
     git(data.root, 'remote', 'set-url', 'origin', origin);
     const result = run(['validate', 'architecture', data.input, '--repo-root', data.root, '--json']);

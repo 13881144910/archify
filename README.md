@@ -20,7 +20,8 @@
   <a href="https://archify.si/guide.html"><strong>Scenario guide</strong></a> &nbsp;·&nbsp;
   <a href="#community"><strong>Community</strong></a> &nbsp;·&nbsp;
   <a href="./README_ZH.md"><strong>简体中文</strong></a> &nbsp;·&nbsp;
-  <a href="./README_JA.md"><strong>日本語</strong></a>
+  <a href="./README_JA.md"><strong>日本語</strong></a> &nbsp;·&nbsp;
+  <a href="./README_KO.md"><strong>한국어</strong></a>
 </p>
 
 <p align="center">
@@ -32,7 +33,7 @@
   <a href="https://skills.sh/tt-a1i/archify/archify"><img src="https://img.shields.io/badge/installs-130K%2B-0EA5E9?style=flat-square" alt="130K+ installs on skills.sh" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="MIT License" /></a>
   <a href="#installation-options"><img src="https://img.shields.io/badge/works_with-Claude_Code_%7C_Codex_%7C_Cursor_%7C_OpenCode-7C3AED?style=flat-square" alt="Works with Claude Code, Codex, Cursor, and OpenCode" /></a>
-  <a href="CHANGELOG.md#301--2026-09-28"><img src="https://img.shields.io/badge/version-3.0.1-0891b2?style=flat-square" alt="Stable version 3.0.1" /></a>
+  <a href="CHANGELOG.md#310--2026-10-14"><img src="https://img.shields.io/badge/version-3.1.0-0891b2?style=flat-square" alt="Stable version 3.1.0" /></a>
 </p>
 
 <p align="center">
@@ -192,7 +193,7 @@ Open [`examples/web-app.html`](examples/web-app.html) locally to try the complet
 
 ## Quick start
 
-**Current stable version:** `v3.0.1`. See [Changelog](CHANGELOG.md#301--2026-09-28).
+**Current stable version:** `v3.1.0`. See [Changelog](CHANGELOG.md#310--2026-10-14).
 
 ### 1. Install
 
@@ -366,7 +367,7 @@ Settings:
 }
 ```
 
-`meta.locale` localizes page title, Legend, states/errors, a11y, HTML/SVG `lang`—never authored content. `en`/`zh-CN` are built in; other languages, including Spanish (`es`), need `meta.translations` (canonical message key → translated string; see `examples/locales/es.json`), or the renderer falls back to English and discloses it. Static omits `animation`; `classic` defaults.
+`meta.locale` localizes page title, Legend, states/errors, a11y, HTML/SVG `lang`—never authored content. `en`, `zh-CN`, `zh-TW`, `es`, and `ko` are bundled and need only `meta.locale`; `meta.translations` (canonical message key → translated string) overrides individual keys and keeps the rest of the language. Other languages supply their catalog there (see `archify/examples/locales/`), or the renderer falls back to English and discloses it. Static omits `animation`; `classic` defaults.
 
 </details>
 
@@ -384,7 +385,7 @@ Settings:
 | Choose visual style (`S` cycles) / toggle theme / open Export | <kbd>S</kbd> / <kbd>T</kbd> / <kbd>E</kbd> |
 | Zoom or reset | <kbd>+</kbd> / <kbd>-</kbd> / <kbd>0</kbd> |
 
-Stable links can restore `#focus=<id>`, `#focus=<id>&reach=upstream|downstream`, `#relation=<id>`, `#route=<source>~<target>`, and `#lens=<kind>~<kind>`. Reader-driven motion is finite, respects `prefers-reduced-motion`, and never enters canonical exports.
+Stable links can restore `#focus=<id>`, `#focus=<id>&reach=upstream|downstream`, `#relation=<id>`, `#route=<source>~<target>`, and `#lens=<kind>~<kind>`. Live repeats connection flow until paused; semantic previews remain bounded. Motion respects `prefers-reduced-motion` and never enters canonical exports.
 
 The complete generation and viewer contract lives in [`archify/SKILL.md`](archify/SKILL.md).
 

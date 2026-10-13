@@ -20,7 +20,8 @@
   <a href="https://archify.si/guide.html"><strong>シナリオガイド</strong></a> &nbsp;·&nbsp;
   <a href="#コミュニティ"><strong>コミュニティ</strong></a> &nbsp;·&nbsp;
   <a href="./README.md"><strong>English</strong></a> &nbsp;·&nbsp;
-  <a href="./README_ZH.md"><strong>简体中文</strong></a>
+  <a href="./README_ZH.md"><strong>简体中文</strong></a> &nbsp;·&nbsp;
+  <a href="./README_KO.md"><strong>한국어</strong></a>
 </p>
 
 <p align="center">
@@ -32,7 +33,7 @@
   <a href="https://skills.sh/tt-a1i/archify/archify"><img src="https://img.shields.io/badge/installs-130K%2B-0EA5E9?style=flat-square" alt="130K+ installs on skills.sh" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="MIT License" /></a>
   <a href="#インストール方法"><img src="https://img.shields.io/badge/works_with-Claude_Code_%7C_Codex_%7C_Cursor_%7C_OpenCode-7C3AED?style=flat-square" alt="Works with Claude Code, Codex, Cursor, and OpenCode" /></a>
-  <a href="CHANGELOG.md#301--2026-09-28"><img src="https://img.shields.io/badge/version-3.0.1-0891b2?style=flat-square" alt="Stable version 3.0.1" /></a>
+  <a href="CHANGELOG.md#310--2026-10-14"><img src="https://img.shields.io/badge/version-3.1.0-0891b2?style=flat-square" alt="Stable version 3.1.0" /></a>
 </p>
 
 <p align="center">
@@ -170,7 +171,7 @@ Export メニューから PNG をクリップボードにコピーしたり、�
 
 ## クイックスタート
 
-**現在の安定版:** `v3.0.1`。[変更履歴](CHANGELOG.md#301--2026-09-28)を参照してください。
+**現在の安定版:** `v3.1.0`。[変更履歴](CHANGELOG.md#310--2026-10-14)を参照してください。
 
 ### 1. インストール
 
@@ -336,7 +337,7 @@ node bin/archify.mjs deliver workflow examples/agent-tool-call.workflow.json /tm
 }
 ```
 
-`meta.locale=en|zh-CN` はページタイトル、Legend、状態／エラー、アクセシビリティ、HTML/SVG の `lang` をローカライズします（記述された内容自体は変更しません）。該当しない場合は省略し、要求された言語の文言はそのまま維持し、英語へフォールバックした場合はその旨を明示してください。静止出力では `animation` は省略され、`classic` が既定になります。
+`meta.locale=en|zh-CN|zh-TW|es|ko` はページタイトル、Legend、状態／エラー、アクセシビリティ、HTML/SVG の `lang` をローカライズします（記述された内容自体は変更しません）。該当しない場合は省略し、要求された言語の文言はそのまま維持し、英語へフォールバックした場合はその旨を明示してください。静止出力では `animation` は省略され、`classic` が既定になります。
 
 </details>
 
@@ -354,7 +355,7 @@ node bin/archify.mjs deliver workflow examples/agent-tool-call.workflow.json /tm
 | ビジュアルスタイルを選択（`S` で循環）/ テーマ切り替え / Export を開く | <kbd>S</kbd> / <kbd>T</kbd> / <kbd>E</kbd> |
 | ズーム / リセット | <kbd>+</kbd> / <kbd>-</kbd> / <kbd>0</kbd> |
 
-安定したリンクで `#focus=<id>`、`#focus=<id>&reach=upstream|downstream`、`#relation=<id>`、`#route=<source>~<target>`、`#lens=<kind>~<kind>` を復元できます。読み手が起動するモーションは有限で、`prefers-reduced-motion` を尊重し、正規のエクスポートには含まれません。
+安定したリンクで `#focus=<id>`、`#focus=<id>&reach=upstream|downstream`、`#relation=<id>`、`#route=<source>~<target>`、`#lens=<kind>~<kind>` を復元できます。Live は一時停止するまで接続の流れを繰り返し、意味的なプレビューは有限のままです。モーションは `prefers-reduced-motion` を尊重し、正規のエクスポートには含まれません。
 
 生成とビューアの完全な仕様は [`archify/SKILL.md`](archify/SKILL.md) にあります。
 

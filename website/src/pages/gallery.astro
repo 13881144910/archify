@@ -1,5 +1,6 @@
 ---
 import { version, versioned, jsonScript, gallery, cards } from '../data/site';
+import { productChannel } from '../data/product-facts';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import GalleryCard from '../components/GalleryCard.astro';
 import Navigation from '../components/Navigation.astro';
@@ -39,6 +40,7 @@ const { lang = 'en' } = Astro.props;
           <button class="filter-button" type="button" data-filter="sequence" aria-pressed="false" data-en="Sequence" data-zh="时序图">Sequence</button>
           <button class="filter-button" type="button" data-filter="dataflow" aria-pressed="false" data-en="Data flow" data-zh="数据流">Data flow</button>
           <button class="filter-button" type="button" data-filter="lifecycle" aria-pressed="false" data-en="Lifecycle" data-zh="生命周期">Lifecycle</button>
+          <button class="filter-button" type="button" data-filter="erd" aria-pressed="false" data-en="Entity-relationship" data-zh="实体关系图">Entity-relationship</button>
         </div>
         <div class="controls-actions">
           <button class="filter-button" id="preview-theme" type="button">Preview: dark</button>
@@ -50,7 +52,7 @@ const { lang = 'en' } = Astro.props;
     <section class="gallery-section" id="gallery">
       <div class="shell">
         <div class="section-intro">
-          <h2 data-en="Five lenses. Eleven real stories." data-zh="五种视角，十一个真实故事。">Five lenses. Eleven real stories.</h2>
+          <h2 data-en="Six lenses. Twelve real stories." data-zh="六种视角，十二个真实故事。">Six lenses. Twelve real stories.</h2>
           <p data-en="Every scenario has focus, reach, and path exploration, shareable links, dark/light rendering, self-contained export, and a machine-readable quality receipt." data-zh="每个场景都支持聚焦、上下游与路径探索、可分享链接、深浅主题、自包含导出和机器可读质量凭证。">Every scenario has focus, reach, and path exploration, shareable links, dark/light rendering, self-contained export, and a machine-readable quality receipt.</p>
         </div>
         <div class="gallery-grid" id="gallery-grid">
@@ -115,13 +117,14 @@ const { lang = 'en' } = Astro.props;
           <div class="method-code-bar"><span>reproduce locally</span><span>zero runtime deps</span></div>
           <pre><span class="accent">$ node scripts/build-gallery.mjs</span>
 
-render  workflow      ✓
-render  sequence      ✓
-render  dataflow      ✓
-render  lifecycle     ✓
-render  architecture  ✓
+render  workflow       ✓
+render  sequence       ✓
+render  dataflow       ✓
+render  lifecycle      ✓
+render  architecture   ✓
+render  erd            ✓
 
-receipt 99 checks / 11 artifacts / deterministic hashes</pre>
+receipt {gallery.checkCount} checks / {gallery.entryCount} artifacts / deterministic hashes</pre>
         </div>
       </div>
     </section>
@@ -130,7 +133,7 @@ receipt 99 checks / 11 artifacts / deterministic hashes</pre>
   <footer>
     <div class="shell footer-inner">
       <span data-en="Generated from Archify's checked-in examples. No hand-authored capability claims." data-zh="由 Archify 仓库内示例自动生成，不手写可能过期的能力声明。">Generated from Archify's checked-in examples. No hand-authored capability claims.</span>
-      <span data-en={`Archify v${version} · stable · MIT`} data-zh={`Archify v${version} · 稳定版 · MIT`}>Archify v{version} · stable · MIT</span>
+      <span data-en={`Archify v${version} · ${productChannel} · MIT`} data-zh={`Archify v${version} · ${productChannel === 'development' ? '开发版' : '稳定版'} · MIT`}>Archify v{version} · {productChannel} · MIT</span>
     </div>
   </footer>
 

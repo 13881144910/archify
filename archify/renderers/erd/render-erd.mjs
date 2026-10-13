@@ -627,6 +627,11 @@ const TRUNK_SNAP = LANE_STEP;
 const TRUNK_BRIDGE = ERD_PORT_SPACING + 8;
 const TRUNK_CAP = 10;
 const TRUNK_LEG = 12;
+const DEFAULT_RELATIONSHIP_STROKE_WIDTH = 1.5;
+
+function relationshipStrokeWidth(relationship) {
+  return Number.isFinite(relationship.width) ? relationship.width : DEFAULT_RELATIONSHIP_STROKE_WIDTH;
+}
 
 const isHorizontalSide = (side) => (side === 'left' || side === 'right');
 
@@ -859,7 +864,7 @@ function bundledTrunkPaths() {
   const paths = [];
   const bridged = [];
   const routed = relationships.filter(renderableRelationship)
-    .map((relationship) => ({ relationship, points: pathFor(relationship).points }));
+    .map((relationship) => ({ relationship, points: pathFor(relationship).points, width: relationshipStrokeWidth(relationship) }));
   for (const [key, runs] of clusters) {
     const [axis, coordinate] = key.split(':').slice(0, 2).map(Number);
     const members = new Set(runs.map((run) => run.relationship));
@@ -887,9 +892,12 @@ function bundledTrunkPaths() {
           x: probe.start[0], y: probe.start[1],
           width: probe.end[0] - probe.start[0], height: probe.end[1] - probe.start[1],
         };
-        const conflicts = routed.some(({ relationship, points }) => !members.has(relationship)
-          && points.slice(1).some((end, index) => segmentIntersectsRect({ start: points[index], end }, box)))
-          || bridged.some((other) => segmentIntersectsRect(other, box));
+        // 两条线的半宽之和才是描边的接触边界，显式加粗关系也使用实际绘制宽度。
+        const conflicts = routed.some(({ relationship, points, width }) => !members.has(relationship)
+          && points.slice(1).some((end, index) => segmentIntersectsRect(
+            { start: points[index], end }, box, (DEFAULT_RELATIONSHIP_STROKE_WIDTH + width) / 2,
+          )))
+          || bridged.some((other) => segmentIntersectsRect(other, box, DEFAULT_RELATIONSHIP_STROKE_WIDTH));
         if (!conflicts && ![...entities.values()].some((entity) => segmentIntersectsRect(probe, entity))) {
           bridged.push(probe);
           last.high = segment.high;
@@ -903,7 +911,7 @@ function bundledTrunkPaths() {
       const points = axis === 0
         ? [[coordinate, segment.low], [coordinate, segment.high]]
         : [[segment.low, coordinate], [segment.high, coordinate]];
-      paths.push(`        <path data-er-trunk="" data-composition-points="${routePointsValue(points)}" d="${roundedPath(points, 8)}" class="${cls}" stroke-width="1.5"/>`);
+      paths.push(`        <path data-er-trunk="" data-composition-points="${routePointsValue(points)}" d="${roundedPath(points, 8)}" class="${cls}" stroke-width="${DEFAULT_RELATIONSHIP_STROKE_WIDTH}"/>`);
     }
   }
   return paths.join('\n');
@@ -1408,7 +1416,7 @@ function renderRelationshipPath(relationship, index) {
   const [cls] = arrowClassMap[markerStyleOf(relationship)] || arrowClassMap.default;
   const routed = pathFor(relationship);
   const d = bundledRelationshipD(routed, relationshipTrunkRuns(relationship));
-  const strokeWidth = Number.isFinite(relationship.width) ? relationship.width : 1.5;
+  const strokeWidth = relationshipStrokeWidth(relationship);
   return `        <path ${focusEdgeAttrs(relationship.from, relationship.to, relationship.label, index, relationship.id)} data-er-ends="${relationshipEnds(relationship).join(' ')}" data-composition-points="${routePointsValue(routed.points)}" d="${d}" class="${cls}"${animateAttr(er.meta, 'edge', index)} stroke-width="${strokeWidth}" marker-start="url(#${cardinalityMarkerId(relationship, 'from')})" marker-end="url(#${cardinalityMarkerId(relationship, 'to')})"/>`;
 }
 

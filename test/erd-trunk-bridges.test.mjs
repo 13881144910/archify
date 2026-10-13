@@ -11,7 +11,7 @@ const cli = fileURLToPath(new URL('../archify/bin/archify.mjs', import.meta.url)
 const epsilon = 0.0001;
 const attributes = tag => Object.fromEntries([...tag.matchAll(/([\w-]+)="([^"]*)"/g)].map(match => [match[1], match[2]]));
 
-function fixture({ horizontal = false, conflict, dashed = false } = {}) {
+function fixture({ horizontal = false, conflict, dashed = false, offset = 0, width } = {}) {
   const table = (id, pos, rows = 3) => ({
     id, label: id, pos, width: rows * 20 + 36,
     attributes: Array.from({ length: rows }, (_, index) => ({ name: `f${index}`, type: 'int' })),
@@ -28,13 +28,14 @@ function fixture({ horizontal = false, conflict, dashed = false } = {}) {
   if (conflict) {
     // 两条逻辑主干之间留下 24px 空隙；独立关系的显式 U 形路线进入该空隙。
     // 相切用 16px 回转段，圆角恰好在总线上相接；重叠用 20px 留下真正的直线墨迹。
-    const x = conflict === 'crossing' ? 164 : 172;
-    const [top, bottom] = conflict === 'touch' ? [130, 146] : [128, 148];
+    const x = conflict === 'crossing' ? 164 : 172 + offset;
+    const [top, bottom] = width > 1.5 || conflict === 'touch' ? [130, 146] : [128, 148];
     document.relationships.push({
       id: 'c_d', from: 'c', to: 'd', fromCardinality: 'many', toCardinality: 'one',
       fromSide: 'left', toSide: 'left',
       via: [[400, 48], [400, top], [x, top], [x, bottom], [400, bottom], [400, 328]],
       ...(dashed ? { identifying: false } : {}),
+      ...(width === undefined ? {} : { width }),
     });
   }
   if (horizontal) {
@@ -135,3 +136,45 @@ test('ERD clear vertical and horizontal fan-in gaps retain one continuous shared
     }), '同一总线的合法分支间隙仍须连通');
   }
 });
+
+function pointDistance(point, { start, end }) {
+  const dx = end[0] - start[0], dy = end[1] - start[1];
+  const lengthSquared = dx * dx + dy * dy;
+  const ratio = lengthSquared ? Math.max(0, Math.min(1,
+    ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / lengthSquared)) : 0;
+  return Math.hypot(point[0] - start[0] - ratio * dx, point[1] - start[1] - ratio * dy);
+}
+
+function centerlineDistance(trunk, route) {
+  if (hitsTrunk(trunk, route)) return 0;
+  return Math.min(pointDistance(trunk.start, route), pointDistance(trunk.end, route),
+    pointDistance(route.start, trunk), pointDistance(route.end, trunk));
+}
+
+for (const horizontal of [false, true]) {
+  test(`ERD ${horizontal ? 'horizontal' : 'vertical'} bridge clearance covers both rendered stroke widths`, t => {
+    for (const [offset, width] of [[0.1, undefined], [1.2, undefined], [1.5, undefined], [2.5, 4]]) {
+      const { trunks, relationships } = render(t, fixture({ conflict: 'near', horizontal, offset, width }));
+      const independent = relationships.find(route => route.attrs['data-edge-id'] === 'c_d');
+      for (const trunk of trunks) {
+        const separation = (Number(trunk.attrs['stroke-width']) + Number(independent.attrs['stroke-width'])) / 2;
+        assert.ok(trunk.segments.every(bus => independent.segments.every(segment =>
+          centerlineDistance(bus, segment) > separation + epsilon)),
+        `距离 ${offset} 的实际描边不能被桥接连在一起，包含显式加粗关系`);
+      }
+    }
+  });
+
+  test(`ERD ${horizontal ? 'horizontal' : 'vertical'} bridges survive when nearby strokes remain separate`, t => {
+    for (const [offset, width] of [[1.6, undefined], [2.85, 4]]) {
+      const { trunks, relationships } = render(t, fixture({ conflict: 'near', horizontal, offset, width }));
+      const ports = relationships.filter(route => route.attrs['data-edge-id'] !== 'c_d').map(route => route.points.at(-1));
+      const along = horizontal ? 0 : 1;
+      assert.ok(trunks.some(trunk => {
+        const values = trunk.points.map(point => point[along]);
+        return Math.min(...values) <= Math.min(...ports.map(point => point[along]))
+          && Math.max(...values) >= Math.max(...ports.map(point => point[along]));
+      }), '有足够描边间距时仍保留连通主干，不能用过大的固定间距一律删除桥接');
+    }
+  });
+}

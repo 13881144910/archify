@@ -852,13 +852,17 @@ function bundledTrunkPaths() {
     const key = `${axis}:${coordinate}:${styleKey}`;
     const list = clusters.get(key) || [];
     for (const run of runs) {
-      list.push({ low: run.low, high: run.high, styleKey });
+      list.push({ low: run.low, high: run.high, styleKey, relationship });
     }
     clusters.set(key, list);
   }
   const paths = [];
+  const bridged = [];
+  const routed = relationships.filter(renderableRelationship)
+    .map((relationship) => ({ relationship, points: pathFor(relationship).points }));
   for (const [key, runs] of clusters) {
     const [axis, coordinate] = key.split(':').slice(0, 2).map(Number);
+    const members = new Set(runs.map((run) => run.relationship));
     runs.sort((left, right) => left.low - right.low);
     const merged = [];
     for (const run of runs) {
@@ -877,7 +881,17 @@ function bundledTrunkPaths() {
         const probe = axis === 0
           ? { start: [coordinate, last.high], end: [coordinate, segment.low] }
           : { start: [last.high, coordinate], end: [segment.low, coordinate] };
-        if (![...entities.values()].some((entity) => segmentIntersectsRect(probe, entity))) {
+        // 桥接不在任何逻辑关系中，必须检查它实际增加的墨迹。同簇成员可以共享总线；
+        // 无关路线和已补出的其他桥接一旦交叉、相接或重叠，就保留两段独立主干。
+        const box = {
+          x: probe.start[0], y: probe.start[1],
+          width: probe.end[0] - probe.start[0], height: probe.end[1] - probe.start[1],
+        };
+        const conflicts = routed.some(({ relationship, points }) => !members.has(relationship)
+          && points.slice(1).some((end, index) => segmentIntersectsRect({ start: points[index], end }, box)))
+          || bridged.some((other) => segmentIntersectsRect(other, box));
+        if (!conflicts && ![...entities.values()].some((entity) => segmentIntersectsRect(probe, entity))) {
+          bridged.push(probe);
           last.high = segment.high;
           continue;
         }

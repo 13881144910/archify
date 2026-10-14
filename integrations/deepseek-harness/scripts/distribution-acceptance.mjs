@@ -152,6 +152,8 @@ fs.mkdirSync(dshHome);
 fs.mkdirSync(agentsHome);
 fs.mkdirSync(dshRuntime);
 fs.mkdirSync(workspace);
+// Anchor host project-root discovery even if the temporary directory has a Git ancestor.
+fs.mkdirSync(path.join(workspace, '.git'));
 
 // Distinct names and bodies make discovery-only and wrong-root successes fail.
 // All homes and the project are disposable; never use the caller's live Skills.

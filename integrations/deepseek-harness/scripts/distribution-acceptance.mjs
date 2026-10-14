@@ -359,7 +359,7 @@ async function probeProfile(profile, stage, { isolated = false, expectedNames = 
     env: {
       ...dshEnv,
       ARCHIFY_DSH_PROBE_OUT: probeOut,
-      // The host may change cwd to its profile while resolving plugin modules.
+      // Query the fixture project explicitly, independently of the host process cwd.
       ARCHIFY_DSH_PROBE_CWD: workspace,
       ARCHIFY_DSH_PROBE_SKILLS: JSON.stringify(expectedNames),
     },

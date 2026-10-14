@@ -268,7 +268,7 @@ object with gate statuses, bounded actionable diagnostics, artifact identity,
 and evidence paths. The same compact object is written atomically to
 `<output-stem>.finalize-summary.json`; use that file for normal failure repair. When diagnostics are truncated, `diagnosticSummary.omittedByCode` counts the unshown entries by diagnostic code without replacing their full subject and repair evidence in the full receipt.
 Complete stage receipts and timings remain available for auditing in
-`<output-stem>.finalize.json`. With `--out-dir`, both files are written there;
+`<output-stem>.finalize.json`. With `--out-dir`, both files are written there (evidence only; the artifact HTML is rewritten in place);
 `--receipt <path.json>` overrides the full receipt path and derives a distinct
 `<path>-summary.json`. Read the full receipt only when the compact summary is
 truncated and its shown subjects and evidence cannot identify a coherent local
@@ -543,7 +543,7 @@ a capable environment.
 
 ## A new candidate at an existing output path
 
-Browser evidence belongs to exact artifact bytes. After editing a candidate whose previous HTML already has browser evidence, choose a fresh evidence directory before running the next `finalize`; this preserves the old receipts and captures without an avoidable ownership-conflict retry:
+Browser evidence belongs to exact artifact bytes. After editing a candidate whose previous HTML already has browser evidence, choose a fresh evidence directory before running the next `finalize`; this preserves the old receipts and captures without an avoidable ownership-conflict retry. `--out-dir` moves only evidence: the artifact HTML is rewritten in place and rebound to new provenance, while previously written same-directory sidecars become stale and untrusted:
 
 ```bash
 node bin/archify.mjs finalize architecture candidate.json diagram.html --quality showcase --repo-root <root> --out-dir diagram.review-2 --json

@@ -305,7 +305,29 @@ Lifecycle 区分正常进展、等待、重试和终态：
 
 ![Lifecycle 示例](docs/assets/archify-lifecycle.png)
 
-3.1 新增示例：[`ERD`](https://archify.si/gallery/artifacts/orders.erd.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html)。其中 Timeline 和 Waterfall 示例使用示意数据；只有来自日志或链路追踪的时间和耗时，才能当作真实数据。
+3.1 新增 ERD、Class、Tree、Timeline 和 Waterfall。
+
+ERD 把表、每个字段与键，以及关系基数放在一起：
+
+![ERD 示例：订单管理库，customer、order、payment、inventory、product 和 order_item 表按业务域分组](docs/assets/archify-erd.png)
+
+Class 展示接口契约、关键成员，以及哪些类型依赖或实现它们：
+
+![Class 示例：OrderService 依赖 PaymentGateway 接口，由银行卡和钱包网关实现](docs/assets/archify-class.png)
+
+Tree 展示单一父级的包含关系，例如能力拆解：
+
+![Tree 示例：支付平台拆解为订单、支付和运营能力](docs/assets/archify-tree.png)
+
+Timeline 把事件放在同一条按比例的时间轴上，每个来源一条泳道：
+
+![Timeline 示例：一次示意性的支付故障，发布、监控和响应事件位于同一时间轴](docs/assets/archify-timeline.png)
+
+Waterfall 展示嵌套、重叠的 Span 中时间花在了哪里：
+
+![Waterfall 示例：一次结账请求的示意耗时，库存查询与折扣计算并发执行](docs/assets/archify-waterfall.png)
+
+打开这些示例：[`ERD`](https://archify.si/gallery/artifacts/orders.erd.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html)。其中 Timeline 和 Waterfall 示例使用示意数据；只有来自日志或链路追踪的时间和耗时，才能当作真实数据。
 
 Architecture 示例：[`Web App`](examples/web-app.html) · [`Archify Pipeline`](examples/archify-repo.html) · [`Grid 布局`](examples/archify-repo-grid.html) · [`桌面 Agent`](examples/maka-architecture.html)
 

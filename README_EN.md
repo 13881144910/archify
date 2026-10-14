@@ -304,7 +304,9 @@ Lifecycle separates progress, waits, retries, and terminal outcomes:
 
 ![Lifecycle example](docs/assets/archify-lifecycle.png)
 
-New in 3.1, ERD keeps tables, every column and key, and relationship cardinality together:
+New in 3.1: ERD, Class, Tree, Timeline and Waterfall.
+
+ERD keeps tables, every column and key, and relationship cardinality together:
 
 ![ERD example: an order management schema with customer, order, payment, inventory, product and order item tables grouped by domain](docs/assets/archify-erd.png)
 
@@ -322,7 +324,7 @@ Timeline places events on one proportional clock, with a lane per source:
 
 Waterfall shows where the time went across nested and overlapping spans:
 
-![Waterfall example: illustrative timing of a checkout request with concurrent inventory and discount lookups](docs/assets/archify-waterfall.png)
+![Waterfall example: illustrative timing of a checkout request where inventory lookup and discount calculation run concurrently](docs/assets/archify-waterfall.png)
 
 Explore these examples: [`ERD`](https://archify.si/gallery/artifacts/orders.erd.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html). The Timeline and Waterfall examples use illustrative data; treat timestamps or durations as real only when they come from logs or traces.
 

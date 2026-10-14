@@ -270,7 +270,9 @@ Lifecycle は進行、待機、リトライ、終端結果を切り分けます:
 
 ![Lifecycle の例](docs/assets/archify-lifecycle.png)
 
-3.1 で追加された ERD は、テーブル、すべてのカラムとキー、リレーションのカーディナリティをまとめて示します:
+3.1 で ERD、Class、Tree、Timeline、Waterfall が追加されました。
+
+ERD は、テーブル、すべてのカラムとキー、リレーションのカーディナリティをまとめて示します:
 
 ![ERD の例: customer、order、payment、inventory、product、order_item テーブルをドメインごとにまとめた注文管理スキーマ](docs/assets/archify-erd.png)
 
@@ -282,11 +284,11 @@ Tree は機能の分解のような、親が 1 つの包含関係を示します
 
 ![Tree の例: 注文、決済、運用の機能に分解された決済プラットフォーム](docs/assets/archify-tree.png)
 
-Timeline はイベントを比例した 1 本の時間軸に置き、ソースごとにレーンを分けます:
+Timeline はイベントを実時間に比例した 1 本の時間軸に置き、ソースごとにレーンを分けます:
 
 ![Timeline の例: リリース、監視、対応のイベントを 1 本の時間軸に並べた説明用の決済障害](docs/assets/archify-timeline.png)
 
-Waterfall はネストし重なり合うスパンのどこに時間がかかったかを示します:
+Waterfall はネストや重なりのあるスパンのどこで時間がかかったかを示します:
 
 ![Waterfall の例: 在庫照会と割引計算が並行して走るチェックアウトリクエストの説明用の所要時間](docs/assets/archify-waterfall.png)
 

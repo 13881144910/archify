@@ -305,7 +305,9 @@ Lifecycle 区分正常进展、等待、重试和终态：
 
 ![Lifecycle 示例](docs/assets/archify-lifecycle.png)
 
-3.1 新增的 ERD 把表、每个字段与键、以及关系基数放在一起：
+3.1 新增 ERD、Class、Tree、Timeline 和 Waterfall。
+
+ERD 把表、每个字段与键，以及关系基数放在一起：
 
 ![ERD 示例：订单管理库，customer、order、payment、inventory、product 和 order_item 表按业务域分组](docs/assets/archify-erd.png)
 

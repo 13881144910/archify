@@ -97,12 +97,16 @@ API 优先读取 Redis，缓存未命中时查询 PostgreSQL 并回填缓存。
 <td>感谢 OpenLux 对本项目的赞助！OpenLux 是一个面向企业的一站式 AI 聚合平台，汇集全球各大厂商主流大模型，平台提供高效、稳定的服务与及时的技术支持。Claude、OpenAI、Gemini 系列模型基准折扣分别低至官方的 0.882 折、0.4 折和 0.8 折。<br/><br/>Archify 用户还可享受专属福利：通过专属链接注册，充值最高可享 7.5% 优惠！<br/><br/><a href="https://www.openlux.ai/register?channel=c_qdvanbpc">立即体验 →</a></td>
 </tr>
 <tr>
-<td align="center" width="240"><a href="https://zturbo.top"><img src="docs/assets/sponsors/zturbo-logo.png" alt="ZTURBO" width="200" /></a><br/><strong><a href="https://zturbo.top">ZTURBO</a></strong></td>
-<td>为开发者和 AI 用户提供高速、稳定的连接体验。<br/>新用户注册即可免费体验，首次充值还有专属加赠；支持 Windows、macOS、iOS 和 Android 多端使用，长期套餐折算每天不到 ¥1。<br/><br/>免费体验 · 首充加赠 · 多端畅连<br/><br/><a href="https://zturbo.top">立即体验 ZTURBO →</a></td>
-</tr>
-<tr>
 <td align="center" width="240"><a href="https://www.packyapi.ai/register?aff=bN97"><img src="docs/assets/sponsors/packycode-logo.png" alt="PackyCode" width="200" /></a><br/><strong><a href="https://www.packyapi.ai/register?aff=bN97">PackyCode</a></strong></td>
 <td>PackyCode 提供统一域名、统一密钥和智能容灾切换，一句话接入主流大模型，提供专属 Codex / Claude Code 高速通道。<br/><br/>新用户可获 $1 免费体验额度，首充享折扣，多分组折扣低至 2 折起。支持人民币 1:1 充值，无汇率加价或额外充值手续费。<br/><br/><a href="https://www.packyapi.ai/register?aff=bN97">立即体验 PackyCode →</a></td>
+</tr>
+<tr>
+<td align="center" width="240"><a href="https://www.aicodemirror.ai/register?invitecode=WC26FL"><img src="docs/assets/sponsors/aicodemirror-logo.jpg" alt="AICodeMirror" width="200" /></a><br/><strong><a href="https://www.aicodemirror.ai/register?invitecode=WC26FL">AICodeMirror</a></strong></td>
+<td>感谢 AICodeMirror 赞助 Archify！AICodeMirror 提供 Claude / Codex / Gemini API 中转服务，支持企业级高并发、开票和 7×24 技术支持。Codex 通道低至基准价格 0.7 折，充值还有额外优惠。<br/><br/>Archify 专属福利：通过专属链接注册，可享首充 8 折。<br/><br/><a href="https://www.aicodemirror.ai/register?invitecode=WC26FL">立即体验 AICodeMirror →</a></td>
+</tr>
+<tr>
+<td align="center" width="240"><a href="https://zturbo.top"><img src="docs/assets/sponsors/zturbo-logo.png" alt="ZTURBO" width="200" /></a><br/><strong><a href="https://zturbo.top">ZTURBO</a></strong></td>
+<td>为开发者和 AI 用户提供高速、稳定的连接体验。<br/>新用户注册即可免费体验，首次充值还有专属加赠；支持 Windows、macOS、iOS 和 Android 多端使用，长期套餐折算每天不到 ¥1。<br/><br/>免费体验 · 首充加赠 · 多端畅连<br/><br/><a href="https://zturbo.top">立即体验 ZTURBO →</a></td>
 </tr>
 <tr>
 <td align="center" width="240"><a href="https://www.infistar.cc/register?aff=9N89LEMV&amp;ref_source=link"><img src="docs/assets/sponsors/infistar-logo.svg" alt="Infistar.cc 无限星河" width="140" /></a><br/><strong><a href="https://www.infistar.cc/register?aff=9N89LEMV&amp;ref_source=link">Infistar.cc 无限星河</a></strong></td>

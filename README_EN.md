@@ -304,7 +304,27 @@ Lifecycle separates progress, waits, retries, and terminal outcomes:
 
 ![Lifecycle example](docs/assets/archify-lifecycle.png)
 
-New in 3.1: [`ERD`](https://archify.si/gallery/artifacts/orders.erd.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html). The Timeline and Waterfall examples use illustrative data; treat timestamps or durations as real only when they come from logs or traces.
+New in 3.1, ERD keeps tables, every column and key, and relationship cardinality together:
+
+![ERD example: an order management schema with customer, order, payment, inventory, product and order item tables grouped by domain](docs/assets/archify-erd.png)
+
+Class shows contracts, selected members, and which types depend on or implement them:
+
+![Class example: OrderService depends on the PaymentGateway interface, implemented by card and wallet gateways](docs/assets/archify-class.png)
+
+Tree shows single-parent containment, such as a capability breakdown:
+
+![Tree example: a payment platform broken down into orders, payments and operations capabilities](docs/assets/archify-tree.png)
+
+Timeline places events on one proportional clock, with a lane per source:
+
+![Timeline example: an illustrative payment incident with release, monitoring and response events on one clock](docs/assets/archify-timeline.png)
+
+Waterfall shows where the time went across nested and overlapping spans:
+
+![Waterfall example: illustrative timing of a checkout request with concurrent inventory and discount lookups](docs/assets/archify-waterfall.png)
+
+Explore these examples: [`ERD`](https://archify.si/gallery/artifacts/orders.erd.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html). The Timeline and Waterfall examples use illustrative data; treat timestamps or durations as real only when they come from logs or traces.
 
 Architecture examples: [`web-app`](examples/web-app.html) · [`Archify pipeline`](examples/archify-repo.html) · [`grid placement`](examples/archify-repo-grid.html) · [`desktop agent`](examples/maka-architecture.html)
 

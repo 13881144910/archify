@@ -257,6 +257,143 @@ test('visual-check disables the Chrome sandbox only for root or an explicit envi
   assert.equal(root.includes('--no-sandbox'), true);
 });
 
+test('Windows browser launch removes only the standalone inherited app-health layer', async () => {
+  for (const [key, layer] of [
+    ['__COMPAT_LAYER', 'DetectorsAppHealth'],
+    ['__compat_layer', 'detectorsapphealth'],
+    ['__Compat_Layer', '  DetectorsAppHealth  '],
+  ]) {
+    const env = Object.freeze({
+      [key]: layer,
+      Path: String.raw`C:\Windows\System32`,
+      SystemRoot: String.raw`C:\Windows`,
+      TEMP: String.raw`C:\Temp`,
+      ARCHIFY_CHROME_NO_SANDBOX: '0',
+      UNRELATED_SETTING: 'preserved',
+    });
+    const child = fakeChromeChild();
+    let launched;
+    const browser = new ChromeVisualBrowser('/fake/msedge.exe', {
+      platform: 'win32', env, getuid: null,
+      spawnImpl: (executable, args, options) => {
+        launched = { executable, args, options };
+        return child;
+      },
+    });
+    const attached = browser.sessionPromise.catch(() => {});
+    try {
+      assert.equal(launched.executable, '/fake/msedge.exe');
+      assert.equal(Object.hasOwn(launched.options.env, key), false);
+      assert.deepEqual(launched.options.env, Object.fromEntries(
+        Object.entries(env).filter(([name]) => name !== key),
+      ));
+      assert.equal(env[key], layer, 'the parent environment is untouched');
+      assert.deepEqual(launched.args, chromeVisualBrowserArgs(browser.profileRoot, { env, getuid: null }));
+      assert.ok(launched.args.includes('--remote-debugging-pipe'));
+      assert.ok(launched.args.includes(`--user-data-dir=${browser.profileRoot}`));
+      assert.equal(launched.args.includes('--no-sandbox'), false);
+      assert.equal(launched.args.includes('--do-not-de-elevate'), false);
+      assert.equal(launched.args.includes('--edge-skip-compat-layer-relaunch'), false);
+      assert.deepEqual(launched.options.stdio, ['ignore', 'ignore', 'pipe', 'pipe', 'pipe']);
+    } finally {
+      await browser.close();
+      await attached;
+    }
+    assert.equal(fs.existsSync(browser.profileRoot), false);
+  }
+});
+
+test('browser launch preserves unknown, combined and non-Windows compatibility layers', async () => {
+  for (const [platform, layer] of [
+    ['win32', 'Installer'],
+    ['win32', 'RunAsInvoker'],
+    ['win32', 'DetectorsAppHealth RunAsInvoker'],
+    ['win32', 'UnknownLayer'],
+    ['darwin', 'DetectorsAppHealth'],
+    ['linux', 'DetectorsAppHealth'],
+  ]) {
+    const env = Object.freeze({ __COMPAT_LAYER: layer, UNRELATED_SETTING: 'preserved' });
+    const child = fakeChromeChild();
+    let spawnOptions;
+    const browser = new ChromeVisualBrowser('/fake/chrome', {
+      platform, env, getuid: () => 1001,
+      spawnImpl: (_executable, _args, options) => {
+        spawnOptions = options;
+        return child;
+      },
+    });
+    const attached = browser.sessionPromise.catch(() => {});
+    try {
+      assert.deepEqual(spawnOptions.env, env, `${platform}: ${layer}`);
+    } finally {
+      await browser.close();
+      await attached;
+    }
+    assert.equal(fs.existsSync(browser.profileRoot), false);
+  }
+});
+
+test('browser environment defaults to the actual host platform', async () => {
+  const env = Object.freeze({ __COMPAT_LAYER: 'DetectorsAppHealth' });
+  const child = fakeChromeChild();
+  let spawnOptions;
+  const browser = new ChromeVisualBrowser('/fake/chrome', {
+    env, getuid: () => 1001,
+    spawnImpl: (_executable, _args, options) => {
+      spawnOptions = options;
+      return child;
+    },
+  });
+  const attached = browser.sessionPromise.catch(() => {});
+  try {
+    assert.deepEqual(spawnOptions.env, process.platform === 'win32' ? {} : env);
+  } finally {
+    await browser.close();
+    await attached;
+  }
+});
+
+test('browser relaunch hint is absent after a response or on non-Windows hosts', async () => {
+  for (const [platform, response] of [['win32', true], ['linux', false], ['darwin', false]]) {
+    const child = fakeChromeChild();
+    const browser = new ChromeVisualBrowser('/fake/chrome', {
+      platform, env: {}, getuid: () => 1001, spawnImpl: () => child,
+    });
+    try {
+      const failed = assert.rejects(browser.sessionPromise, (error) => {
+        assert.doesNotMatch(error.message, /Windows browser startup/);
+        return true;
+      });
+      if (response) child.stdio[4].write('{"method":"Target.targetCreated","params":{}}\0');
+      child.stdio[4].end();
+      await failed;
+    } finally {
+      await browser.close();
+    }
+  }
+});
+
+test('Windows pipe startup failure provides a non-elevated remedy without claiming its cause', async () => {
+  const child = fakeChromeChild();
+  const browser = new ChromeVisualBrowser('/fake/msedge.exe', {
+    platform: 'win32', env: {}, getuid: null, spawnImpl: () => child,
+  });
+  try {
+    const failed = assert.rejects(browser.sessionPromise, (error) => {
+      assert.match(error.message, /receivedBytes=0/);
+      assert.match(error.message, /Windows browser startup may have relaunched/);
+      assert.match(error.message, /non-elevated PowerShell/);
+      assert.match(error.message, /does not disable browser de-elevation or the sandbox/);
+      return true;
+    });
+    child.stdio[4].end();
+    await failed;
+  } finally {
+    await browser.close();
+  }
+  assert.equal(fs.existsSync(browser.profileRoot), false);
+});
+
 test('visual-check converts a Chrome DevTools pipe reset and captured stderr into a structured failure', async () => {
   const input = artifact('chrome-pipe-reset.html');
   const child = fakeChromeChild();

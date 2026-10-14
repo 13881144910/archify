@@ -1522,9 +1522,20 @@ async function evaluate(cdp, sessionId, expression, awaitPromise = false) {
   return response.result?.value;
 }
 
+function browserEnvironment(env, platform) {
+  if (platform !== 'win32') return env;
+  // Agent-launched Git Bash can inherit this app-health shim. Edge then
+  // relaunches and loses the DevTools pipes (#790). Change the browser's copy
+  // only, and leave unknown/combined layers (including privilege settings) alone.
+  return Object.fromEntries(Object.entries(env).filter(([name, value]) =>
+    !(name.toUpperCase() === '__COMPAT_LAYER'
+      && /^\s*DetectorsAppHealth\s*$/i.test(String(value)))));
+}
+
 export class ChromeVisualBrowser {
   #profile;
   constructor(chromePath, {
+    platform = process.platform,
     env = process.env,
     getuid = typeof process.getuid === 'function' ? () => process.getuid() : null,
     spawnImpl = spawn,
@@ -1536,7 +1547,10 @@ export class ChromeVisualBrowser {
     this.shutdownTimeoutMs = shutdownTimeoutMs;
     this.stderr = '';
     const args = chromeVisualBrowserArgs(this.profileRoot, { env, getuid });
-    this.child = spawnImpl(chromePath, args, { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
+    this.child = spawnImpl(chromePath, args, {
+      stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'],
+      env: browserEnvironment(env, platform),
+    });
     this.child.stderr.setEncoding('utf8');
     this.child.stderr.on('data', (chunk) => {
       this.stderr = `${this.stderr}${chunk}`.slice(-8000);
@@ -1553,6 +1567,11 @@ export class ChromeVisualBrowser {
         return [
           `Chrome process: ${exit}.`,
           stderr ? `Chrome stderr:\n${stderr}` : '',
+          platform === 'win32' && this.cdp?.receivedBytes === 0
+            ? 'Windows browser startup may have relaunched before connecting to the DevTools pipe. '
+              + 'Retry from a non-elevated PowerShell opened normally, outside an elevated or compatibility-mode parent. '
+              + 'Archify does not disable browser de-elevation or the sandbox to preserve pipe handles.'
+            : '',
         ].filter(Boolean).join('\n');
       },
     });

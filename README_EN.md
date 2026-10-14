@@ -267,11 +267,11 @@ Continue with focused requests such as `add Redis`, `move auth to the left`, or 
 | **Sequence** | API calls, cache fallback, auth, async traces | Callers, callees, returns, timing |
 | **Data Flow** | Pipelines, lineage, PII, consumers | Sources, transforms, stores, boundaries |
 | **Lifecycle** | States, retries, waits, terminal outcomes | States, events, retry and cancellation paths |
-| **ERD** | Database schemas: tables, columns, keys, cardinality | Tables, every column with its type, primary and foreign keys |
-| **Class** | Classes, interfaces, selected members, type relationships | Types, key members, inheritance, composition, dependencies |
+| **ERD** | Database schemas: tables, columns, keys, cardinality | Tables, every column with its type, primary/foreign/unique keys, relationship cardinality |
+| **Class** | Classes, interfaces, selected members, type relationships | Types, key members, inheritance and implementations, composition, dependencies |
 | **Tree** | Single-parent hierarchies: repositories, modules, capability breakdowns | Root, levels, what each branch contains |
-| **Timeline** | When things happened: incident reviews, release histories | Timestamps, events, source lanes |
-| **Waterfall** | Where the time went in one request or agent run | Spans, start times and durations, nesting |
+| **Timeline** | When things happened: incident reviews, release histories | Timestamps with time zone, events, source lanes, whether times are observed or illustrative |
+| **Waterfall** | Where the time went in one request or agent run | Spans, start times and durations, nesting, whether timings are measured or illustrative |
 
 Architecture's optional `deployment-ownership` profile fails closed when authored owners, region placement, private database scope, or named crossings are missing; it is never implicit and does not inspect live infrastructure. See the [checked deployment proof](https://archify.si/gallery.html#proof-deployment-ownership).
 
@@ -304,7 +304,7 @@ Lifecycle separates progress, waits, retries, and terminal outcomes:
 
 ![Lifecycle example](docs/assets/archify-lifecycle.png)
 
-New in 3.1: [`ERD`](examples/erd-orders-rendered.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html). The Timeline and Waterfall examples use illustrative data; present values as measured only when they come from real logs or traces.
+New in 3.1: [`ERD`](https://archify.si/gallery/artifacts/orders.erd.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html). The Timeline and Waterfall examples use illustrative data; treat timestamps or durations as real only when they come from logs or traces.
 
 Architecture examples: [`web-app`](examples/web-app.html) · [`Archify pipeline`](examples/archify-repo.html) · [`grid placement`](examples/archify-repo-grid.html) · [`desktop agent`](examples/maka-architecture.html)
 

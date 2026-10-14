@@ -265,11 +265,11 @@ DeepSeek Harness（社区集成、显式启用）：运行 `dsh plugin --profile
 | **Sequence** | API 调用、缓存回源、鉴权、异步链路 | 调用方、被调用方、返回、时序 |
 | **Data Flow** | 数据管线、血缘、PII、下游消费者 | 来源、转换、存储、边界 |
 | **Lifecycle** | 状态、重试、等待、终态 | 状态、事件、重试与取消路径 |
-| **ERD** | 数据库结构：表、字段、键、基数关系 | 表、每个字段及类型、主键与外键 |
-| **Class** | 类、接口、关键成员与类型关系 | 类型、关键成员、继承、组合与依赖 |
+| **ERD** | 数据库结构：表、字段、键、基数关系 | 表、每个字段及类型、主键/外键/唯一键、关系基数 |
+| **Class** | 类、接口、关键成员与类型关系 | 类型、关键成员、继承与接口实现、组合与依赖 |
 | **Tree** | 单一父级的层级结构：仓库、模块、能力拆解 | 根节点、层级、各分支包含的内容 |
-| **Timeline** | 事情发生的时间：故障复盘、发布历史 | 时间点、事件、来源泳道 |
-| **Waterfall** | 一次请求或 Agent 运行的耗时分布 | 区间、开始时间与时长、嵌套关系 |
+| **Timeline** | 何时发生了什么：故障复盘、发布历史 | 带时区的时间点、事件、来源泳道，以及时间是真实观测还是示意 |
+| **Waterfall** | 一次请求或 Agent 运行的耗时分布 | Span、开始时间与时长、嵌套关系，以及耗时是实测还是示意 |
 
 做生产部署评审时，Architecture 可以按需启用 `deployment-ownership`
 工程画像：负责人、单一区域归属、数据库私有边界或边界穿越机制缺失时会直接阻断。
@@ -305,7 +305,7 @@ Lifecycle 区分正常进展、等待、重试和终态：
 
 ![Lifecycle 示例](docs/assets/archify-lifecycle.png)
 
-3.1 新增示例：[`ERD`](examples/erd-orders-rendered.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html)。其中 Timeline 和 Waterfall 示例使用示意数据；只有来自真实日志或链路追踪的数值，才应表述为实测结果。
+3.1 新增示例：[`ERD`](https://archify.si/gallery/artifacts/orders.erd.html) · [`Class`](examples/class-payments-rendered.html) · [`Tree`](examples/tree-payment-platform-rendered.html) · [`Timeline`](examples/timeline-payment-incident-rendered.html) · [`Waterfall`](examples/waterfall-checkout-request-rendered.html)。其中 Timeline 和 Waterfall 示例使用示意数据；只有来自日志或链路追踪的时间和耗时，才能当作真实数据。
 
 Architecture 示例：[`Web App`](examples/web-app.html) · [`Archify Pipeline`](examples/archify-repo.html) · [`Grid 布局`](examples/archify-repo-grid.html) · [`桌面 Agent`](examples/maka-architecture.html)
 

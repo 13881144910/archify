@@ -423,7 +423,12 @@ command is:
 node bin/archify.mjs browser-check <output.html> --json --require-provenance
 ```
 
-The zero-dependency command uses Chrome/Chromium through the DevTools pipe. It
+The zero-dependency command uses Chrome/Chromium (or Microsoft Edge on Windows)
+through the DevTools pipe. `ARCHIFY_CHROME` is authoritative when set, including
+an invalid path: Archify does not silently fall back to another browser. Automatic
+Windows discovery checks every Chrome/Chromium install location and PATH command
+first, then Edge under `%ProgramFiles(x86)%`, `%ProgramFiles%`, and `%LocalAppData%`,
+followed by `msedge` on PATH. Non-Windows automatic discovery is unchanged. It
 measures light-theme containment at 1440×900, 1600×1000, 1920×1080, and
 2048×1320, and verifies the requested light theme at all four viewports, the dark
 theme at both endpoints, and READ/Still runtime states. A requested theme that
@@ -455,7 +460,7 @@ command:
 
 - `passed` maps from exit 0 and receipt `status: "pass"` after every required measurement completes and passes.
 - `failed` maps from exit 1 and receipt `status: "fail"` when the inspection finds a defect, the command fails, or a runtime error leaves the evidence incomplete.
-- `skipped` maps only from exit 2 and receipt `status: "skipped"` when Chrome/Chromium is unavailable and the inspection does not run.
+- `skipped` maps only from exit 2 and receipt `status: "skipped"` when no supported browser is available and the inspection does not run.
 
 Runtime failures leave incomplete evidence and must not be normalized to
 `skipped`. They do not invalidate an already successful deterministic delivery.

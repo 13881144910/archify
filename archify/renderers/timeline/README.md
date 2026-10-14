@@ -26,6 +26,11 @@ events (with their millisecond timestamps and x positions) instead of HTML.
 - `meta.timezone` is an IANA zone (default `UTC`) used for every tick and label;
   ticks fall on that zone's wall clock, so a `+05:30` zone ticks on its own
   hours. An unknown zone fails `timeline/invalid-timezone`.
+- Across timezone-offset changes, daily ticks stay at local midnight and hourly
+  ticks use real local instants. Both occurrences of a repeated hour remain;
+  skipped hours or dates do not invent ticks. Event timestamps and proportional
+  elapsed-time spacing are unchanged, so consecutive daily ticks can be 23 or 25
+  hours apart. The existing label filter still hides text that does not fit.
 - 夏令时和时区调整不会把刻度固定在时间段起点的 UTC 偏移上：日刻度保持当地
   午夜，小时刻度仅对应真实存在的当地时刻。回拨产生的两个相同墙钟时刻都保留；
   跳过的小时或整天不补造刻度。事件时间与轴上的实际时间距离不变，因此相邻

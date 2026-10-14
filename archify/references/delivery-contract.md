@@ -463,6 +463,18 @@ Retry an environmental failure in a browser-capable execution context when
 practical. Keep the packaged transport unchanged unless the failure reproduces
 through that seam in a capable environment.
 
+On Windows, Chrome/Edge startup relaunches can lose the inherited DevTools
+pipe before any response arrives. Archify removes a standalone
+`__COMPAT_LAYER=DetectorsAppHealth` from the browser child's environment only
+(case-insensitive name and value); the parent environment, unknown layers,
+combined layers, and privilege-related compatibility settings are unchanged.
+This targets the reported non-elevated Git Bash app-health case, not every
+AppCompat mode. Elevated-shell relaunches remain unsupported: rerun from a
+non-elevated PowerShell opened normally, outside an elevated or compatibility-mode
+parent. Archify does not suppress browser de-elevation or disable the sandbox
+as a relaunch workaround. A zero-response startup diagnostic suggests this
+remedy without claiming that elevation or AppCompat caused every pipe failure.
+
 A provenance failure exits before browser inspection and persists a failed
 browser-check receipt bound to the attempted artifact. If the failure receipt
 cannot be written, the diagnostic names that incomplete evidence.

@@ -244,6 +244,19 @@ const axisLabels = ticks.map(tick => {
 });
 // Keep the endpoints readable; omit intermediate labels that cannot fit. The
 // ticks and the proportional time geometry remain unchanged.
+if (axisLabels.length > 1) {
+  const first = axisLabels[0];
+  const last = axisLabels.at(-1);
+  const overlap = Math.max(0, first.right + 8 - last.left);
+  const leftShift = Math.min(overlap, first.left - layout.margin);
+  first.x -= leftShift;
+  first.left -= leftShift;
+  first.right -= leftShift;
+  const rightShift = Math.min(overlap - leftShift, width - layout.margin - last.right);
+  last.x += rightShift;
+  last.left += rightShift;
+  last.right += rightShift;
+}
 let previousLabelRight = -Infinity;
 for (const [index, label] of axisLabels.entries()) {
   const last = axisLabels.at(-1);
@@ -329,7 +342,7 @@ function legendSwatch(entry) {
 const SOLID_TONES = ['frontend', 'backend', 'database', 'cloud', 'messagebus', 'security', 'external'];
 
 function renderSvg() {
-  return `      <svg viewBox="0 0 ${viewBox[0]} ${viewBox[1]}" ${svgRootAttrs(wf.meta)} data-waterfall-ui="" data-waterfall-unit="${esc(unit)}" data-reader-fit="width-first" data-reader-min-text="7.5">
+  return `      <svg viewBox="0 0 ${viewBox[0]} ${viewBox[1]}" ${svgRootAttrs(wf.meta)} data-motion-choreography="replay" data-waterfall-ui="" data-waterfall-unit="${esc(unit)}" data-reader-fit="width-first" data-reader-min-text="7.5">
 ${svgAccessibleText(wf.meta, 'waterfall')}
 ${renderDefinitions()}
         <style>

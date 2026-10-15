@@ -1359,6 +1359,18 @@ export function findChrome({
     }
     return findOnPath('msedge', env, platform, resolveExecutable);
   }
+  // macOS and Linux: probe Edge behind every Chrome/Chromium candidate, the
+  // same way Windows does. #920 asked for `microsoft-edge`,
+  // `microsoft-edge-stable`, and the macOS application bundle.
+  if (platform === 'darwin') {
+    const edgeApp = '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge';
+    const resolved = resolveExecutable(edgeApp, platform);
+    if (resolved) return resolved;
+  }
+  for (const command of ['microsoft-edge', 'microsoft-edge-stable']) {
+    const resolved = findOnPath(command, env, platform, resolveExecutable);
+    if (resolved) return resolved;
+  }
   return null;
 }
 
@@ -2504,14 +2516,14 @@ async function runBrowserEvidence({
     receipt.viewerChrome.status = 'skipped';
     receipt.themeStates.status = 'skipped';
     if (capture) receipt.captures.status = 'skipped';
-    receipt.error = 'No supported browser found. Install Chrome/Chromium (or Microsoft Edge on Windows), or set ARCHIFY_CHROME to its executable path.';
+    receipt.error = 'No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.';
     receipt.diagnostics = [failureDiagnostic({
       code: 'viewer/chrome-unavailable',
       severity: 'warning',
       message: receipt.error,
       subject: { artifact },
       evidence: { executable: null },
-      supportedFixes: [`set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge on Windows) and rerun ${command}`],
+      supportedFixes: [`set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun ${command}`],
     })];
     const publication = publishReceiptOnly(artifact, outputs, receipt, ownership);
     if (publication.ok) publishedBrowserEvidenceReceipts.add(receipt);

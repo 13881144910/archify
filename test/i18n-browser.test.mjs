@@ -161,7 +161,7 @@ const BROWSER_LOCALES = {
     title: (type) => `API Gateway · مخطّط-${type}`,
     toolbarLabel: 'أدواتُ عرض المخطّط',
     finder: { hidden: false, title: 'ابحث عن عقدة', searchLabel: 'ابحث في عُقد المخطّط' },
-    route: { hidden: false, title: 'انقر حيث يبدأ المسار', label: 'امسح مسبار المسار' },
+    route: { hidden: false, title: 'انقر حيث يبدأ المسار', label: 'امسح المسار المتتبَّع' },
     exportLabel: 'تصدير المخطّط',
     exportMenuLabel: 'تصدير',
     exportMenuText: /انسخ المخطّط/,

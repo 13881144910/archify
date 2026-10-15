@@ -1,8 +1,8 @@
 import { canonicalUrl, canonicalOrigin } from './site-urls.mjs';
 const descriptions = {
   index: {
-    en: ['Archify — AI Agent Skill for Interactive Diagrams', 'Archify is an MIT-licensed AI agent skill for validated HTML diagrams from descriptions or code, with interactive exploration and browser export.'],
-    zh: ['Archify — 用自然语言生成交互式图表', 'Archify 是采用 MIT 许可证的 AI Agent 技能，可从自然语言或源码生成经过验证的独立 HTML 图表，支持交互探索与浏览器导出。'],
+    en: ['Archify — Interactive Diagram Skill for AI Coding Agents', 'Create architecture, workflow, and sequence diagrams with Claude Code, Codex, or other coding agents. Archify is an MIT-licensed skill that delivers interactive HTML.'],
+    zh: ['Archify — 面向 AI Agent 的交互式画图工具', '用 Claude Code、Codex 等 AI Agent 从自然语言或代码仓库创建架构图、流程图和时序图。Archify 是采用 MIT 许可证的开源画图 Skill，交付可探索、可导出的交互式 HTML。'],
   },
   guide: {
     en: ['Archify Scenario Guide — Choose the Right Diagram', 'Choose an Archify diagram recipe for your question. Browse evidence checklists, use cases, boundaries, and prompts linked to the recipe source.'],

@@ -1292,7 +1292,11 @@ function executable(file, platform = process.platform) {
 }
 
 function findOnPath(command, env, platform, resolveExecutable) {
-  const pathApi = platform === 'win32' ? path.win32 : path;
+  // Use the target platform's path grammar, not the host's: these candidates
+  // are checked through an injected platform (see the findChrome tests), and
+  // the host `path` object on Windows would join POSIX directories with
+  // backslashes and split PATH on ';'.
+  const pathApi = platform === 'win32' ? path.win32 : path.posix;
   const directories = String(env.PATH || '').split(pathApi.delimiter).filter(Boolean);
   const extensions = platform === 'win32'
     ? String(env.PATHEXT || '.EXE;.CMD;.BAT;.COM').split(';').filter(Boolean)

@@ -46,6 +46,8 @@ test('timeline: subsecond events retain their time in cards and accessible conte
     assert.ok(node.includes(`10-01 ${time} UTC+05:30`), node);
     assert.ok(node.includes(`>${time}</text>`), node);
   }
+  const axisLabels = [...html.matchAll(/<text [^>]*class="[^"]*\btl-tick\b[^"]*"[^>]*>([^<]*)<\/text>/g)].map(([, label]) => label);
+  assert.ok(axisLabels.includes('15:30:00.007'), axisLabels.join(', '));
   const report = layoutOf(diagram);
   assert.equal(report.events[1].t - report.events[0].t, 893);
   assert.ok(report.events[1].x > report.events[0].x);

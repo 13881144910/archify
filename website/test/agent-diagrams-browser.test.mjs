@@ -117,11 +117,11 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
         })()`);
         // Capture bounded viewport tiles so long mobile prompts and limits are not
         // silently cropped or squeezed into an unreadable full-page thumbnail.
-        for (const region of ['opening', 'cache-example', 'review-limits']) {
+        for (const region of ['opening', 'description-workflow', 'cache-example', 'review-limits']) {
           const bounds = await evaluate(`(() => {
             const article = document.querySelector('.article-body');
-            const start = ${JSON.stringify(region)} === 'opening' ? article.querySelector('h1') : document.getElementById(${JSON.stringify(region === 'cache-example' ? 'cache-scenarios' : 'review-and-share')});
-            const end = document.getElementById(${JSON.stringify(region === 'opening' ? 'responsibilities' : region === 'cache-example' ? 'repository-evidence' : 'questions')});
+            const start = ${JSON.stringify(region)} === 'opening' ? article.querySelector('h1') : document.getElementById(${JSON.stringify(region === 'description-workflow' ? 'description-workflow' : region === 'cache-example' ? 'cache-scenarios' : 'review-and-share')});
+            const end = document.getElementById(${JSON.stringify(region === 'opening' ? 'responsibilities' : region === 'description-workflow' ? 'cache-scenarios' : region === 'cache-example' ? 'repository-evidence' : 'questions')});
             return { top: start.getBoundingClientRect().top + scrollY, bottom: end.getBoundingClientRect().top + scrollY, nav: document.querySelector('.site-nav').getBoundingClientRect().bottom };
           })()`);
           const inset = bounds.nav + 20;
@@ -157,6 +157,24 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
       assert.equal(await evaluate('location.hash'), '#cache-scenarios');
       assert.equal(await evaluate('!!document.getElementById(location.hash.slice(1))'), true);
       const localePosition = await assertSectionVisible();
+      await evaluate(`document.querySelector('.article-toc a[href$="#description-workflow"]').click()`);
+      await settled();
+      assert.equal(await evaluate('location.hash'), '#description-workflow');
+      const workflowPosition = await assertSectionVisible();
+      await loadedAction(() => evaluate(`document.querySelector('[data-language-switch]').click()`));
+      assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
+      assert.equal(await evaluate('location.hash'), '#description-workflow');
+      const workflowLocalePosition = await assertSectionVisible();
+      await loadedAction(() => evaluate(`document.querySelector('.article-body a[href*="type=workflow"]').click()`));
+      assert.equal(await evaluate('location.pathname'), new URL(urlFor('start', lang)).pathname);
+      assert.equal(await evaluate('new URL(location.href).searchParams.get("input")'), 'description');
+      assert.equal(await evaluate(`document.querySelector('[data-type="workflow"]').getAttribute('aria-selected')`), 'true');
+      assert.equal(await evaluate(`document.querySelector('[data-input="description"]').getAttribute('aria-selected')`), 'true');
+      await navigate(urlFor('agent-diagrams', other));
+      await loadedAction(() => evaluate(`document.querySelector('.article-body a[href="cases/life/leave-plan.workflow.html"]').click()`));
+      assert.equal(await evaluate('location.pathname'), `${mount}/cases/life/leave-plan.workflow.html`);
+      assert.equal(await evaluate('!!document.querySelector("svg")'), true, 'the existing linked workflow artifact loads');
+      await navigate(urlFor('agent-diagrams', other));
       await loadedAction(() => evaluate(`document.querySelector('.article-footer a').click()`));
       assert.equal(await evaluate('location.pathname'), new URL(urlFor('start', other)).pathname);
       await loadedAction(() => evaluate(`document.querySelector('.agent-guide-link a').click()`));
@@ -164,7 +182,7 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
       await navigate(urlFor('guide', lang));
       await loadedAction(() => evaluate(`document.querySelector('.agent-guide-link a').click()`));
       assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
-      manifest.navigation.push({ width, lang, result: 'passed', tocPosition, localePosition, paths: ['toc', 'language with fragment', 'article to start', 'start to article', 'guide to article'] });
+      manifest.navigation.push({ width, lang, result: 'passed', tocPosition, localePosition, workflowPosition, workflowLocalePosition, paths: ['toc', 'language with fragment', 'workflow section and locale', 'workflow description quick start', 'existing leave artifact', 'article to start', 'start to article', 'guide to article'] });
       saveManifest();
     }
   } finally {

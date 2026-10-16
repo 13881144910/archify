@@ -26,6 +26,18 @@ Archify 根据源文件生成 HTML，并执行对应的渲染与校验。你可�
 
 安装说明也不表示所有 Agent 版本组合都已验证。如果失败，先记录 Agent 及版本、操作系统和完整错误，再判断问题出在配置还是图表本身。
 
+<span id="description-workflow" class="section-anchor" aria-hidden="true"></span>
+
+## 不用代码仓库：读懂一张中文流程图
+
+没有代码仓库，也可以从步骤、额度和规则开始。打开现有的[中文休假流程图](cases/life/leave-plan.workflow.html)，对照[固定版本的 JSON 源文件](https://github.com/tt-a1i/archify/blob/68031cf978e0b906aa56c684a394049a3ea9d583/docs/cases/life/leave-plan.workflow.json)。这是已有源文件的阅读示例，不是一次新的 Agent 执行记录。
+
+先看“休假计划”和“规则提醒”两条泳道：全图有 8 个节点、7 条关系；主路径只有 6 个节点，从年初额度经过四次安排，到全年用完。年假按 1 + 4 + 3 + 2 分配，正好 10 天；春节另用 2 天调休，合计 12 天。两条分支连接过期和审批提醒，不是再次扣减休假额度。
+
+检查时把“顺序”“额度”“提醒”分开读：先沿主路径核对剩余额度，再看分支是否只是补充约束，别把提醒算成额外休假。图中的规则都是示例，不是实际日历或公司休假政策建议；“连休 9 天／10 天”标签不是现实保证，必须另行核对日期和适用制度。
+
+想从自己的描述开始，可打开[工作流快速开始](start.html?type=workflow&input=description)，只提供已确认的步骤和规则，并标出未知条件。
+
 <span id="cache-scenarios" class="section-anchor" aria-hidden="true"></span>
 
 ## 第一个例子：分别画缓存命中与未命中

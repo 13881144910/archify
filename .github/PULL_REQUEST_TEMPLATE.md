@@ -2,9 +2,21 @@
 
 ## Problem and value
 
-- Related issue / agreed discussion, or why this is a small fix that needs no prior issue:
+- Related issue / agreed discussion, or why this is a purely mechanical documentation correction:
 - Actual problem on the current base, intended outcome, and why it is worth maintaining:
 - Before/after evidence entry point: <!-- Link the relevant evidence below or an existing report; explain when not applicable. -->
+
+## AI assistance and accountability
+
+<!-- Required for every PR. See CONTRIBUTING.md#ai-assistance-and-contributor-responsibility. A short answer is enough; reuse the evidence sections below. -->
+
+- AI use: none / writing or translation only / implementation, investigation, tests, or review assistance
+- Tools and model (if known), and assisted areas:
+- Accountable contributor: @handle
+- Problem origin: observed usage / code inspection / synthetic probe / proposed improvement; describe briefly
+- [ ] I reviewed the submitted changes and explanation, understand their impact, and can answer questions about them. Validation results and gaps are recorded below.
+
+<!-- Personal confirmation: an Agent must leave this unchecked unless the accountable person explicitly confirms it. -->
 
 ## Stability impact
 

@@ -2,6 +2,14 @@
 
 Use this guide for initial and revised PR reviews. Judge the user value, implementation and ongoing maintenance cost, and impact on existing behavior. [Contributing](CONTRIBUTING.md#choose-evidence-by-impact) describes contribution and evidence requirements.
 
+## Check readiness before detailed review
+
+Apply [Choose the right path](CONTRIBUTING.md#choose-the-right-path) first. When prior scope agreement is required but missing, thank the contributor, point to the relevant issue or proposal form, and defer detailed code review until the direction is agreed. Small fixes with a concrete reproduction or rationale can proceed directly.
+
+For missing evidence, describe the material gaps together and request the smallest comparison that resolves them. Resume review when the contributor supplies it; reuse valid existing evidence. Maintainers review and sample the submitted evidence rather than routinely reconstructing every contribution's test run. An issue link alone does not establish scope agreement or review readiness.
+
+For existing PRs, reuse earlier maintainer decisions and evidence; request discussion only for unresolved direction, rather than requiring a new issue as paperwork.
+
 ## Understand the problem and approach
 
 Record the current target base and candidate head. Read the linked issue or agreed scope and check the current-base behavior where feasible. Separate the reported problem from the proposed implementation.

@@ -2,7 +2,9 @@
 
 ## Problem and value
 
-Current-base trigger or rationale, intended outcome, why the approach is worth maintaining, and linked issue/agreed scope:
+- Related issue / agreed discussion, or why this is a small fix that needs no prior issue:
+- Actual problem on the current base, intended outcome, and why it is worth maintaining:
+- Before/after evidence entry point: <!-- Link the relevant evidence below or an existing report; explain when not applicable. -->
 
 ## Stability impact
 

@@ -7,9 +7,11 @@ Archify is Agent-first: people describe systems, and the Skill, typed JSON, rend
 - Renderer, validator, package, or Viewer defect: use the [bug report form](.github/ISSUE_TEMPLATE/bug-report.yml).
 - Standalone community package: follow the [submission guide](community/README.md#submitting-a-package) and submit one metadata file to `dev`.
 - Reproducible real-world diagram: use the [showcase form](.github/ISSUE_TEMPLATE/showcase.yml).
-- New schema fields, defaults, acceptance rules, installation/export contracts, or broad product behavior: agree on value, compatibility, and non-goals before substantial implementation. Link the issue or recorded maintainer decision; reuse an existing agreed scope.
+- New features, layout/routing rules, schema fields, defaults, acceptance rules, installation/export contracts, or substantial refactors: open an [improvement proposal](.github/ISSUE_TEMPLATE/improvement.yml) and obtain explicit maintainer agreement on the problem, value, scope, and compatibility before substantial implementation. Link an existing issue or PR discussion with that agreement when available; a second approval thread is unnecessary.
 - Narrow fixes and small documentation or test corrections can proceed with a concrete reproduction or rationale; a separate planning issue is unnecessary.
 - Security vulnerabilities: follow [SECURITY.md](SECURITY.md).
+
+Agreement on direction allows implementation to proceed; final acceptance still depends on the implementation, user-visible results, and maintenance cost. Draft PRs may support early discussion but do not replace scope agreement.
 
 Do not include secrets, access tokens, credentials, private repository content, personal data, or customer data in fixtures, logs, screenshots, artifacts, or package tests.
 

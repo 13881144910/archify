@@ -38,15 +38,15 @@ The Agent reads source and follows that revision's Archify Skill to produce a di
 
 Capture the earliest complete diagram JSON **before its first validation/render attempt**, every later candidate submitted to the CLI, command arguments/results, receipts and final artifacts. Use client tool logging/file snapshots or an external recorder, not a retrospective reconstruction of the first draft. Record the capture method. If the client cannot preserve a first draft or a file revision, mark that metric unavailable and disclose the gap; never substitute the final candidate. That run can still support a final-artifact claim, but not a first-draft or complete-repair-history claim.
 
-Retain all scheduled runs, failed commands, timeouts and repeats. Extra attempts receive new run IDs; a successful retry does not replace an earlier failure. If a claimed diagnostic fix never occurs naturally, report that the mechanism was not exercised. Add an original failure captured from real use when available; artificially corrupted inputs do not demonstrate Agent benefit.
+Retain all scheduled runs and their sessions, including failed commands, timeouts and repeats. Extra attempts receive new run IDs; a successful retry does not replace an earlier failure. If a claimed diagnostic fix never occurs naturally, report that the mechanism was not exercised. Add an original failure captured from real use when available; artificially corrupted inputs do not demonstrate Agent benefit.
 
 ## 4. Retain inspectable evidence
 
 Each run includes:
 
 - Original composed prompt; run metadata from [run-template.json](run-template.json).
-- Exported session record with ordered messages, tool calls/results, timestamps and nested-session links/exports where used. Preserve commands, errors, edits and restarts, not just the final answer. Native exports are preferred; an event export is acceptable when its origin and completeness are stated. Private model reasoning is not required.
-- First JSON, ordered attempted JSON versions, final JSON, HTML/SVG and CLI receipts when produced. Missing output is an explicit result.
+- Exported session record with ordered messages, tool calls/results, timestamps and nested-session links/exports where used. Preserve commands, errors, edits and restarts, not just the final answer. Native exports are preferred; an event export is acceptable when its origin and completeness are stated. The session is the source record for failures and retries; no separate failure log is required. The comparison report summarizes counts and links to relevant events. Supplement only tool output or external logs that the session export omits. Private model reasoning is not required.
+- First JSON, ordered attempted JSON versions, final JSON and HTML/SVG. Link CLI receipts where produced; output already preserved in the session need not be copied into a separate log. Missing output is an explicit result.
 - Browser screenshots of the final artifact: light/Classic/Still, browser zoom 100%, 1440 × 900 CSS pixels, device scale 1 where supported. Retain both the initial viewport and a full-page image when needed; label any different conditions. Inspect dark mode or exports when affected. If defaults change, additionally show each version's actual default instead of hiding it behind forced settings.
 - A small semantic checklist with links into the pinned source for the key nodes, directions, conditions, ownership boundaries and failure paths. Have the reviewer verify this independently of the generated JSON; do not score agreement with a reference layout.
 

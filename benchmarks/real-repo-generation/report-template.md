@@ -47,7 +47,7 @@ Repeat this section for each project/type. Include a named reviewer and explicit
 
 - Evidence bundle URL, digest, retention/location, native session export provenance:
 - Missing outputs, unavailable metrics, redactions and truncated logs:
-- Every retry/timeout/provider failure and disposition:
+- Failure/retry/timeout summary and links to session events (no separate failure log); supplemental logs only for output missing from the export:
 - Reused evidence with original SHA and relevance to current head:
 - Execution cost if available; evidence assembly time; maintainer review time:
 - Useful defects discovered and any excessive verification work:

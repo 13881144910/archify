@@ -173,13 +173,13 @@ test('Windows command lookup and ffmpeg launch keep their boundary diagnostics',
   const lookup = showcase.commandPath('ffmpeg', () => ({
     status: 0,
     stdout: `\r\n${selected}\r\nC:\\Other\\ffmpeg.exe\r\n`,
-  }));
+  }), 'win32');
   assert.equal(lookup, selected);
   assert.equal(showcase.commandPath('ffmpeg', () => ({
     status: 1,
     stdout: '',
     error: new Error('where failed'),
-  })), null);
+  }), 'win32'), null);
   assert.throws(
     () => showcase.launchFfmpeg(selected, ['-version'], () => ({
       status: null,

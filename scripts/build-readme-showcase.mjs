@@ -68,13 +68,13 @@ function executable(file) {
   }
 }
 
-function commandPath(command, spawnCommand = spawnSync) {
-  if (process.platform === 'win32') {
+function commandPath(command, spawnCommand = spawnSync, platform = process.platform) {
+  if (platform === 'win32') {
     const result = spawnCommand('where.exe', [command], {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true,
     });
     if (result.error || result.status !== 0) return null;
-    return result.stdout.trim().split(/\r?\n/).find(Boolean) || null;
+    return result.stdout.split(/\r?\n/u).map(entry => entry.trim()).find(Boolean) || null;
   }
   const result = spawnCommand('sh', ['-c', 'command -v "$1"', 'archify-showcase', command], {
     encoding: 'utf8',
@@ -378,7 +378,8 @@ async function main() {
   }
 }
 
-const invokedDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const invokedDirectly = process.argv[1]
+  && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly) {
   main().catch(error => {
     console.error(error.stack || error.message);

@@ -1,11 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { EventEmitter } from 'node:events';
+import { PassThrough } from 'node:stream';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const skillRoot = path.resolve(__dirname, '..', 'archify');
@@ -142,9 +144,6 @@ test('README motion proof is compact, looping, and backed by current gallery art
   assert.match(builder, /\?embed=1&theme=dark\$\{scene\.hash\}/);
   assert.doesNotMatch(builder, /play=1|#view=/);
   assert.match(builder, /path\.relative\(from, to\)\.split\(path\.sep\)\.join\('\/'\)/);
-  assert.match(builder, /async function stopChrome\(chrome\)/);
-  assert.match(builder, /await stopChrome\(chrome\)/);
-  assert.match(builder, /chrome\.kill\('SIGKILL'\)/);
   const buffer = fs.readFileSync(assetPath);
   const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
   const inspected = inspectGif(buffer);
@@ -168,6 +167,70 @@ test('README motion proof is compact, looping, and backed by current gallery art
     assert.equal(scene.artifactSha256, sha256(artifact), `${scene.id}: source artifact drift; rebuild README showcase`);
     assert.match(scene.receipt, /9\/9 checks/);
   }
+});
+
+function fakeChrome({ exitBeforeStop = false, closeOn = null } = {}) {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  child.signalCode = null;
+  child.stderr = new PassThrough();
+  child.stdout = new PassThrough();
+  child.stdio = [null, child.stdout, child.stderr, new PassThrough(), new PassThrough()];
+  child.kill = (signal) => {
+    child.signalCode = signal;
+    if (closeOn === signal) {
+      child.exitCode = null;
+      queueMicrotask(() => child.emit('close', null, signal));
+    }
+    return true;
+  };
+  if (exitBeforeStop) {
+    child.exitCode = 0;
+    child.emit('close', 0, null);
+  }
+  return child;
+}
+
+test('showcase shutdown clears its timer and bounds a forced stop', async () => {
+  const showcase = await import(pathToFileURL(path.join(repoRoot, 'scripts', 'build-readme-showcase.mjs')).href);
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'archify-showcase-profile-'));
+  const started = Date.now();
+  await showcase.stopChrome(fakeChrome({ exitBeforeStop: true }), profile);
+  assert.ok(Date.now() - started < 1000, 'an already exited browser must not wait for the losing timer');
+  fs.rmSync(profile, { recursive: true, force: true });
+
+  const retained = fs.mkdtempSync(path.join(os.tmpdir(), 'archify-showcase-profile-'));
+  const forced = fakeChrome();
+  await assert.rejects(
+    () => showcase.stopChrome(forced, retained, 20),
+    new RegExp(`Chrome did not exit; profile retained at ${retained.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+  );
+  assert.equal(forced.signalCode, 'SIGKILL');
+  assert.equal(fs.existsSync(retained), true);
+  fs.rmSync(retained, { recursive: true, force: true });
+
+  const graceful = fakeChrome({ closeOn: 'SIGTERM' });
+  const gracefulStarted = Date.now();
+  await showcase.stopChrome(graceful, profile);
+  assert.equal(graceful.signalCode, 'SIGTERM');
+  assert.ok(Date.now() - gracefulStarted < 1000, 'a prompt close must cancel the shutdown timer');
+});
+
+test('showcase navigation failure cancels its unused load waiter', async () => {
+  const showcase = await import(pathToFileURL(path.join(repoRoot, 'scripts', 'build-readme-showcase.mjs')).href);
+  const child = fakeChrome();
+  const cdp = new showcase.PipeCdp(child);
+  const loaded = cdp.waitFor('Page.loadEventFired', 'session');
+  let rejected = false;
+  loaded.catch(() => { rejected = true; });
+  const originalWrite = child.stdio[3].write.bind(child.stdio[3]);
+  child.stdio[3].write = () => { throw new Error('navigation pipe closed'); };
+  await assert.rejects(() => cdp.send('Page.navigate', { url: 'about:blank' }, 'session'), /navigation pipe closed/);
+  loaded.cancel();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(rejected, false);
+  child.stdio[3].write = originalWrite;
+  cdp.failAll(new Error('test finished'));
 });
 
 test('every README header links to the other languages', () => {

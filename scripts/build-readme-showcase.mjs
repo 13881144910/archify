@@ -56,7 +56,11 @@ function sha256(file) {
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  let timer;
+  const promise = new Promise(resolve => {
+    timer = setTimeout(resolve, ms);
+  });
+  return { promise, cancel: () => clearTimeout(timer) };
 }
 
 function executable(file) {
@@ -198,14 +202,21 @@ class PipeCdp {
   }
 
   waitFor(method, sessionId, timeoutMs = 15000) {
-    return new Promise((resolve, reject) => {
-      const waiter = { method, sessionId, resolve, reject, timer: null };
+    let waiter;
+    const promise = new Promise((resolve, reject) => {
+      waiter = { method, sessionId, resolve, reject, timer: null };
       waiter.timer = setTimeout(() => {
         this.waiters.splice(this.waiters.indexOf(waiter), 1);
         reject(new Error(`${method}: event timed out after ${timeoutMs}ms`));
       }, timeoutMs);
       this.waiters.push(waiter);
     });
+    promise.cancel = () => {
+      const index = this.waiters.indexOf(waiter);
+      if (index >= 0) this.waiters.splice(index, 1);
+      clearTimeout(waiter.timer);
+    };
+    return promise;
   }
 
   failAll(error) {
@@ -234,18 +245,43 @@ async function evaluate(cdp, sessionId, expression, awaitPromise = false) {
   return result.result?.value;
 }
 
-async function stopChrome(chrome) {
-  if (chrome.exitCode !== null || chrome.signalCode !== null) return;
-  const closed = new Promise(resolve => chrome.once('close', resolve));
-  chrome.kill('SIGTERM');
-  const graceful = await Promise.race([
-    closed.then(() => true),
-    sleep(5000).then(() => false),
-  ]);
-  if (graceful) return;
-  chrome.kill('SIGKILL');
-  await closed;
+function releaseChildStreams(chrome) {
+  for (const stream of [chrome.stderr, chrome.stdout, ...(chrome.stdio || [])]) {
+    stream?.destroy?.();
+  }
 }
+
+async function stopChrome(chrome, profileRoot, timeoutMs = 5000) {
+  if (chrome.exitCode !== null || chrome.signalCode !== null) {
+    releaseChildStreams(chrome);
+    return;
+  }
+  let settled = false;
+  const closed = new Promise(resolve => {
+    chrome.once('close', () => {
+      settled = true;
+      resolve(true);
+    });
+  });
+  const gracefulDelay = sleep(timeoutMs);
+  chrome.kill('SIGTERM');
+  const graceful = await Promise.race([closed, gracefulDelay.promise.then(() => false)]);
+  gracefulDelay.cancel();
+  if (graceful) {
+    releaseChildStreams(chrome);
+    return;
+  }
+  chrome.kill('SIGKILL');
+  const forcedDelay = sleep(timeoutMs);
+  const forced = await Promise.race([closed, forcedDelay.promise.then(() => false)]);
+  forcedDelay.cancel();
+  releaseChildStreams(chrome);
+  if (!forced && !settled) {
+    throw new Error(`Chrome did not exit; profile retained at ${profileRoot}`);
+  }
+}
+
+export { PipeCdp, stopChrome, releaseChildStreams };
 
 async function captureFrames(chromePath, tempRoot) {
   const profileRoot = path.join(tempRoot, 'profile');
@@ -289,15 +325,24 @@ async function captureFrames(chromePath, tempRoot) {
       const wrapperPath = path.join(tempRoot, `showcase-${scene.id}.html`);
       fs.writeFileSync(wrapperPath, wrapperHtml(scene, sceneIndex));
       const loaded = cdp.waitFor('Page.loadEventFired', sessionId);
-      const navigation = await cdp.send('Page.navigate', { url: pathToFileURL(wrapperPath).href }, sessionId);
-      if (navigation.errorText) throw new Error(`${scene.id}: ${navigation.errorText}`);
+      let navigation;
+      try {
+        navigation = await cdp.send('Page.navigate', { url: pathToFileURL(wrapperPath).href }, sessionId);
+      } catch (error) {
+        loaded.cancel();
+        throw error;
+      }
+      if (navigation.errorText) {
+        loaded.cancel();
+        throw new Error(`${scene.id}: ${navigation.errorText}`);
+      }
       await loaded;
       await evaluate(cdp, sessionId, `new Promise((resolve,reject)=>{const end=Date.now()+12000;const poll=()=>window.__archifyShowcaseReady?resolve(true):Date.now()>end?reject(new Error('artifact load timeout')):setTimeout(poll,40);poll()})`, true);
 
       for (let i = 0; i < framesPerScene; i += 1) {
         const fade = i === 0 ? 0.82 : i === 1 ? 0.38 : i === framesPerScene - 1 ? 0.42 : 0;
         await evaluate(cdp, sessionId, `document.documentElement.style.setProperty('--fade','${fade}')`);
-        if (i > 0) await sleep(88);
+        if (i > 0) await sleep(88).promise;
         const screenshot = await cdp.send('Page.captureScreenshot', {
           format: 'png', fromSurface: true, captureBeyondViewport: false,
         }, sessionId, 20000);
@@ -312,7 +357,7 @@ async function captureFrames(chromePath, tempRoot) {
     throw error;
   } finally {
     cdp.failAll(new Error('capture finished'));
-    await stopChrome(chrome);
+    await stopChrome(chrome, profileRoot);
   }
 }
 
@@ -373,7 +418,10 @@ async function main() {
   }
 }
 
-main().catch(error => {
-  console.error(error.stack || error.message);
-  process.exitCode = 1;
-});
+const invokedDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (invokedDirectly) {
+  main().catch(error => {
+    console.error(error.stack || error.message);
+    process.exitCode = 1;
+  });
+}

@@ -66,14 +66,25 @@ function sha256(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
-function git(cwd, ...args) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+function git(cwd, args, env = process.env) {
+  return execFileSync('git', args, { cwd, encoding: 'utf8', env }).trim();
+}
+
+// Git for Windows installs bash.exe beside the git.exe that owns the repository.
+// `git --exec-path` returns GIT_EXEC_PATH unchanged, so discovery must not walk
+// up from that override: a missing directory there would hide the installed Bash.
+function gitBashForWindows(cwd, env = process.env) {
+  const discoveryEnv = { ...env };
+  delete discoveryEnv.GIT_EXEC_PATH;
+  const execPath = git(cwd, ['--exec-path'], discoveryEnv);
+  const gitExe = path.resolve(execPath, '..', '..', 'bin', 'git.exe');
+  const gitBash = path.resolve(execPath, '..', '..', '..', 'bin', 'bash.exe');
+  return { gitExe, gitBash };
 }
 
 function shellForFixture() {
   if (process.platform !== 'win32') return 'bash';
-  const gitExecPath = git(repoRoot, '--exec-path');
-  const gitBash = path.resolve(gitExecPath, '..', '..', '..', 'bin', 'bash.exe');
+  const { gitBash } = gitBashForWindows(repoRoot);
   assert.ok(fs.existsSync(gitBash), `Git Bash is required for the Windows fixture: ${gitBash}`);
   return gitBash;
 }
@@ -367,6 +378,16 @@ test('all README languages end with the self-hosted star history chart', () => {
   assert.doesNotMatch(workflow, /xpzouying\/star-history/);
 });
 
+test('Windows Git Bash discovery ignores GIT_EXEC_PATH', { skip: process.platform !== 'win32' }, () => {
+  const missing = path.join(os.tmpdir(), 'archify-missing-git-exec-path');
+  const overridden = gitBashForWindows(repoRoot, { ...process.env, GIT_EXEC_PATH: missing });
+  const normal = gitBashForWindows(repoRoot);
+  assert.equal(overridden.gitBash, normal.gitBash);
+  assert.equal(fs.existsSync(overridden.gitBash), true);
+  assert.equal(fs.existsSync(overridden.gitExe), true);
+  assert.equal(fs.existsSync(missing), false);
+});
+
 test('Star History publishing advances the data branch without a force push', () => {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'archify-star-history-'));
   const remote = path.join(fixture, 'remote.git');
@@ -376,19 +397,19 @@ test('Star History publishing advances the data branch without a force push', ()
   const shell = shellForFixture();
 
   try {
-    git(fixture, 'init', '--bare', remote);
-    git(fixture, '--git-dir', remote, 'config', 'receive.denyNonFastForwards', 'true');
-    git(fixture, '--git-dir', remote, 'config', 'receive.denyDeletes', 'true');
+    git(fixture, ['init', '--bare', remote]);
+    git(fixture, ['--git-dir', remote, 'config', 'receive.denyNonFastForwards', 'true']);
+    git(fixture, ['--git-dir', remote, 'config', 'receive.denyDeletes', 'true']);
 
     fs.mkdirSync(firstCheckout);
-    git(firstCheckout, 'init', '-b', 'main');
-    git(firstCheckout, 'config', 'user.name', 'Fixture');
-    git(firstCheckout, 'config', 'user.email', 'fixture@example.com');
+    git(firstCheckout, ['init', '-b', 'main']);
+    git(firstCheckout, ['config', 'user.name', 'Fixture']);
+    git(firstCheckout, ['config', 'user.email', 'fixture@example.com']);
     fs.writeFileSync(path.join(firstCheckout, 'README.md'), 'fixture\n');
-    git(firstCheckout, 'add', 'README.md');
-    git(firstCheckout, 'commit', '-m', 'seed');
-    git(firstCheckout, 'remote', 'add', 'origin', remote);
-    git(firstCheckout, 'push', '-u', 'origin', 'main');
+    git(firstCheckout, ['add', 'README.md']);
+    git(firstCheckout, ['commit', '-m', 'seed']);
+    git(firstCheckout, ['remote', 'add', 'origin', remote]);
+    git(firstCheckout, ['push', '-u', 'origin', 'main']);
 
     const firstTemp = path.join(fixture, 'run-1');
     fs.mkdirSync(firstTemp);
@@ -397,9 +418,9 @@ test('Star History publishing advances the data branch without a force push', ()
       cwd: firstCheckout,
       env: { ...process.env, RUNNER_TEMP: firstTemp },
     });
-    const firstCommit = git(fixture, '--git-dir', remote, 'rev-parse', 'refs/heads/star-history');
+    const firstCommit = git(fixture, ['--git-dir', remote, 'rev-parse', 'refs/heads/star-history']);
 
-    git(fixture, 'clone', '--branch', 'main', remote, secondCheckout);
+    git(fixture, ['clone', '--branch', 'main', remote, secondCheckout]);
     const secondTemp = path.join(fixture, 'run-2');
     fs.mkdirSync(secondTemp);
     writeStarHistoryCharts(secondCheckout, 'v2');
@@ -407,16 +428,16 @@ test('Star History publishing advances the data branch without a force push', ()
       cwd: secondCheckout,
       env: { ...process.env, RUNNER_TEMP: secondTemp },
     });
-    const secondCommit = git(fixture, '--git-dir', remote, 'rev-parse', 'refs/heads/star-history');
+    const secondCommit = git(fixture, ['--git-dir', remote, 'rev-parse', 'refs/heads/star-history']);
 
     assert.notEqual(secondCommit, firstCommit);
-    git(fixture, '--git-dir', remote, 'merge-base', '--is-ancestor', firstCommit, secondCommit);
+    git(fixture, ['--git-dir', remote, 'merge-base', '--is-ancestor', firstCommit, secondCommit]);
     assert.deepEqual(
-      git(fixture, '--git-dir', remote, 'ls-tree', '-r', '--name-only', secondCommit).split('\n'),
+      git(fixture, ['--git-dir', remote, 'ls-tree', '-r', '--name-only', secondCommit]).split('\n'),
       ['assets/star-history-dark.svg', 'assets/star-history-light.svg'],
     );
     assert.match(
-      git(fixture, '--git-dir', remote, 'show', `${secondCommit}:assets/star-history-light.svg`),
+      git(fixture, ['--git-dir', remote, 'show', `${secondCommit}:assets/star-history-light.svg`]),
       /light v2/,
     );
   } finally {

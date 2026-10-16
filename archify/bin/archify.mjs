@@ -2212,7 +2212,7 @@ function usage() {
     (Array.isArray(forms) ? forms : [forms]).map(form => `  archify ${command}${form ? ` ${form}` : ''}`));
   return `Usage:
 ${commands.join('\n')}
-  (finalize --out-dir moves only evidence: the HTML is rewritten in place and old same-directory sidecars become stale)
+  (finalize --out-dir relocates browser-check and default finalize receipts; HTML and its delivery receipt stay at the requested output path)
 
 Types:
   architecture, workflow, sequence, dataflow, lifecycle, erd, tree, class, timeline, waterfall

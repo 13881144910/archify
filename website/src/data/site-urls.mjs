@@ -1,5 +1,5 @@
 export const canonicalOrigin = 'https://archify.si';
-export const sitePages = ['index', 'guide', 'start', 'gallery', 'community'];
+export const sitePages = ['index', 'guide', 'start', 'gallery', 'community', 'agent-diagrams'];
 export function canonicalPath(page, lang = 'en') {
   return page === 'index' ? (lang === 'zh' ? '/zh' : '/') : `${lang === 'zh' ? '/zh/' : '/'}${page}`;
 }

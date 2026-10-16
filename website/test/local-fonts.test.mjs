@@ -1,3 +1,4 @@
+import { sitePages } from '../src/data/site-urls.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -12,7 +13,7 @@ const repo = new URL('../../', import.meta.url);
 const fonts = new URL('../public/fonts/', import.meta.url);
 const manifest = JSON.parse(fs.readFileSync(new URL('sources.json', fonts), 'utf8'));
 const css = fs.readFileSync(new URL('fonts.css', fonts), 'utf8');
-const pages = ['index', 'guide', 'start', 'gallery', 'community'];
+const pages = sitePages;
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const nodes = node => [node, ...(node.childNodes || []).flatMap(nodes)];
 const attr = (node, name) => node.attrs?.find(item => item.name === name)?.value;

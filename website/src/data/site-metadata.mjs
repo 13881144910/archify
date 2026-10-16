@@ -1,5 +1,9 @@
 import { canonicalUrl, canonicalOrigin } from './site-urls.mjs';
 const descriptions = {
+  'agent-diagrams': {
+    en: ['Archify Agent Diagramming Guide — Author, Review, Share', 'Create diagrams with Claude Code, Codex, Cursor and other coding agents. Learn bounded prompts, repository evidence, review checks and safe HTML sharing with Archify.'],
+    zh: ['Archify Agent 画图指南 — 编写、检查与分享', '用 Claude Code、Codex、Cursor 等 Coding Agent 画图：从范围明确的提示词和仓库证据开始，检查事实、修改图表，再安全分享 Archify HTML 成品。'],
+  },
   index: {
     en: ['Archify — Interactive Diagram Skill for AI Coding Agents', 'Create architecture, workflow, and sequence diagrams with Claude Code, Codex, or other coding agents. Archify is an MIT-licensed skill that delivers interactive HTML.'],
     zh: ['Archify — 面向 AI Agent 的交互式画图工具', '用 Claude Code、Codex 等 AI Agent 从自然语言或代码仓库创建架构图、流程图和时序图。Archify 是采用 MIT 许可证的开源画图 Skill，交付可探索、可导出的交互式 HTML。'],
@@ -28,6 +32,7 @@ export function pageMetadata(page, lang, version) {
     schema: { '@context': 'https://schema.org', '@graph': [
       { '@type': 'WebSite', '@id': `${canonicalOrigin}/#website`, url: `${canonicalOrigin}/`, name: 'Archify', inLanguage: ['en', 'zh-Hans'] },
       { '@type': 'SoftwareSourceCode', '@id': `${canonicalOrigin}/#source`, name: 'Archify', codeRepository: 'https://github.com/tt-a1i/archify', url: 'https://github.com/tt-a1i/archify', license: 'https://github.com/tt-a1i/archify/blob/main/LICENSE', version, programmingLanguage: 'JavaScript', description: descriptions.index[lang][1] },
+      ...(page === 'agent-diagrams' ? [{ '@type': 'TechArticle', '@id': `${canonical}#article`, url: canonical, headline: title, description, inLanguage: lang === 'zh' ? 'zh-Hans' : 'en', isPartOf: { '@id': `${canonicalOrigin}/#website` }, about: { '@id': `${canonicalOrigin}/#source` } }] : []),
     ] },
   };
 }

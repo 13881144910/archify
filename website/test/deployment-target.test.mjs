@@ -1,3 +1,4 @@
+import { sitePages } from '../src/data/site-urls.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -9,7 +10,7 @@ const cloudflare = process.env.ARCHIFY_SITE_TARGET === 'cloudflare';
 const output = new URL(cloudflare ? '../dist-cloudflare/' : '../dist/', import.meta.url);
 const nodes = node => [node, ...(node.childNodes || []).flatMap(nodes)];
 const attr = (node, name) => node?.attrs?.find(item => item.name === name)?.value;
-const pages = ['index', 'start', 'guide', 'gallery', 'community'];
+const pages = sitePages;
 
 test('built deployment uses host-compatible generated assets and canonical metadata in both languages', () => {
   for (const lang of ['en', 'zh']) for (const page of pages) {

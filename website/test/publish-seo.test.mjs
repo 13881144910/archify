@@ -25,7 +25,7 @@ for (const name of ['cloudflare', 'github']) test(`${name}: published discovery 
   const root = fixture();
   try {
     const urls = publishSeo(root, { name });
-    assert.equal(urls.length, 10 + CASES.length);
+    assert.equal(urls.length, sitePages.length * 2 + CASES.length);
     assert.equal(new Set(urls).size, urls.length);
     for (const page of sitePages) for (const lang of ['en', 'zh']) assert.ok(urls.includes(canonicalUrl(page, lang)));
     const sitemap = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');

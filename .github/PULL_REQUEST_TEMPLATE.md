@@ -17,6 +17,8 @@ Current-base trigger or rationale, intended outcome, why the approach is worth m
 
 Comparison base and candidate head; applicable commands/results or evidence links. Identify reused evidence by its original revision and explain material coverage gaps. Follow CONTRIBUTING.md#choose-evidence-by-impact; required remote CI still applies.
 
+<!-- Generation-chain pilot PRs: link the real-repository comparison report (benchmarks/real-repo-generation/README.md), or explain the agreed narrower scope/exemption. Include original session records and both versions' artifacts; identify synthetic checks separately. -->
+
 ## Visual evidence
 
 Omit this section for non-visual changes.

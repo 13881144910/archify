@@ -20,7 +20,7 @@ test('all built pages expose one shared top navigation and the correct current p
     const dom = parse(fs.readFileSync(new URL(file, output), 'utf8'));
     const bases = nodes(dom).filter(node => node.tagName === 'base');
     assert.equal(bases.length, 1, file);
-    assert.equal(attr(bases[0], 'href'), lang === 'zh' && page !== 'index' ? '../' : './', file);
+    assert.equal(attr(bases[0], 'href'), '../'.repeat(file.split('/').length - 1) || './', file);
     const baseUri = new URL(attr(bases[0], 'href'), new URL(cloudflare ? file.replace(/\.html$/, '').replace(/^index$/, '') : file, origin));
     const resolvedHref = node => new URL(attr(node, 'href'), baseUri).href;
     const nav = nodes(dom).find(node => node.tagName === 'nav' && hasClass(node, 'site-nav'));
@@ -30,7 +30,7 @@ test('all built pages expose one shared top navigation and the correct current p
       ...['guide', 'gallery', 'start', 'community'].map(hrefFor), 'https://github.com/tt-a1i/archify',
     ], page);
     assert.deepEqual(links.filter(node => attr(node, 'aria-current') === 'page').map(resolvedHref),
-      ['index', 'agent-diagrams'].includes(page) ? [] : [hrefFor(page)], page);
+      ['index', 'agent-diagrams', 'cases/mco-runtime'].includes(page) ? [] : [hrefFor(page)], page);
     const community = links.find(node => resolvedHref(node) === hrefFor('community'));
     if (page === 'index' || page === 'guide') {
       assert.equal(attr(community, 'data-i18n'), page === 'index' ? 'nav-community' : 'navCommunity', page);

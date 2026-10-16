@@ -66,6 +66,8 @@ Where an artifact includes verified source links, inspect them. A source link sh
 
 For an existing source-backed example, see the [MCO runtime architecture](https://archify.si/cases/mco-runtime.architecture.html) and its [typed source](https://github.com/tt-a1i/archify/blob/main/docs/cases/mco-runtime.architecture.json). The example describes its pinned revision, not the repository's future state.
 
+[Follow the MCO source case: who decodes output and who writes files →](cases/mco-runtime.html)
+
 <span id="review-and-share" class="section-anchor" aria-hidden="true"></span>
 
 ## Revise, inspect, and share

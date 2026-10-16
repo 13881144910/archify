@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const skillRoot = path.resolve(__dirname, '..', 'archify');
@@ -142,9 +142,6 @@ test('README motion proof is compact, looping, and backed by current gallery art
   assert.match(builder, /\?embed=1&theme=dark\$\{scene\.hash\}/);
   assert.doesNotMatch(builder, /play=1|#view=/);
   assert.match(builder, /path\.relative\(from, to\)\.split\(path\.sep\)\.join\('\/'\)/);
-  assert.match(builder, /process\.platform === 'win32'/);
-  assert.match(builder, /spawnSync\('where\.exe', \[command\]/);
-  assert.match(builder, /result\.error\?\.message/);
   const buffer = fs.readFileSync(assetPath);
   const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
   const inspected = inspectGif(buffer);
@@ -168,6 +165,29 @@ test('README motion proof is compact, looping, and backed by current gallery art
     assert.equal(scene.artifactSha256, sha256(artifact), `${scene.id}: source artifact drift; rebuild README showcase`);
     assert.match(scene.receipt, /9\/9 checks/);
   }
+});
+
+test('Windows command lookup and ffmpeg launch keep their boundary diagnostics', async () => {
+  const showcase = await import(pathToFileURL(path.join(repoRoot, 'scripts', 'build-readme-showcase.mjs')).href);
+  const selected = String.raw`C:\Tools\ffmpeg.EXE`;
+  const lookup = showcase.commandPath('ffmpeg', () => ({
+    status: 0,
+    stdout: `\r\n${selected}\r\nC:\\Other\\ffmpeg.exe\r\n`,
+  }));
+  assert.equal(lookup, selected);
+  assert.equal(showcase.commandPath('ffmpeg', () => ({
+    status: 1,
+    stdout: '',
+    error: new Error('where failed'),
+  })), null);
+  assert.throws(
+    () => showcase.launchFfmpeg(selected, ['-version'], () => ({
+      status: null,
+      stderr: '',
+      error: Object.assign(new Error('spawn ENOENT'), { code: 'ENOENT' }),
+    })),
+    /ffmpeg failed:\s*spawn ENOENT/,
+  );
 });
 
 test('every README header links to the other languages', () => {

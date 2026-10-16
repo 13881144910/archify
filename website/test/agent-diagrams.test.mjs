@@ -10,7 +10,7 @@ const nodes = node => [node, ...(node.childNodes || []).flatMap(nodes)];
 const attr = (node, name) => node.attrs?.find(item => item.name === name)?.value;
 const text = node => node.nodeName === '#text' ? node.value : (node.childNodes || []).map(text).join('');
 
-test('agent guide is readable without JavaScript, honest about examples, and linked from both entry points', () => {
+test('agent guide is readable without JavaScript, honest about examples, and linked from the homepage and both entry points', () => {
   for (const lang of ['en', 'zh']) {
     const prefix = lang === 'zh' ? 'zh/' : '';
     const all = nodes(parse(fs.readFileSync(new URL(`${prefix}agent-diagrams.html`, output), 'utf8')));
@@ -47,6 +47,15 @@ test('agent guide is readable without JavaScript, honest about examples, and lin
       assert.equal(text(nextElement), text(link), `${id}: TOC label must identify the section it reaches, including after reordering`);
     }
     assert.doesNotMatch(visible, /editorial draft|publication checks|workspace\/shared|factcheck\.md/i);
+    const homeFile = lang === 'zh' ? 'zh.html' : 'index.html';
+    const homeNodes = nodes(parse(fs.readFileSync(new URL(homeFile, output), 'utf8')));
+    const discovery = homeNodes.find(node => attr(node, 'class') === 'guide-discovery');
+    assert.ok(discovery, `${lang}: homepage discovery is present without JavaScript`);
+    const homeLink = nodes(discovery).find(node => node.tagName === 'a');
+    assert.equal(text(homeLink), lang === 'en' ? 'Learn to create and check diagrams with your agent →' : '学习用 Agent 画图并检查结果 →');
+    const homeUrl = new URL(homeFile, documentUrl.origin + (cloudflare ? '/' : '/archify/'));
+    const homeBase = new URL(attr(homeNodes.find(node => node.tagName === 'base'), 'href'), homeUrl);
+    assert.equal(new URL(attr(homeLink, 'href'), homeBase).href, documentUrl.href);
     for (const entry of ['start', 'guide']) {
       const entryNodes = nodes(parse(fs.readFileSync(new URL(`${prefix}${entry}.html`, output), 'utf8')));
       const guideLink = entryNodes.find(node => node.tagName === 'a' && attr(node, 'href') === `${prefix}agent-diagrams${cloudflare ? '' : '.html'}`);
@@ -59,4 +68,16 @@ test('agent guide is readable without JavaScript, honest about examples, and lin
 test('both agent guide routes are included in the actual sitemap and allowed IndexNow inventory', () => {
   const urls = parseSitemap(fs.readFileSync(new URL('sitemap.xml', output), 'utf8'));
   for (const url of ['https://archify.si/agent-diagrams', 'https://archify.si/zh/agent-diagrams']) assert.ok(urls.includes(url));
+});
+
+test('README entry points link directly to the matching language guide', () => {
+  for (const name of ['README.md', 'README_EN.md', 'README_ZH.md']) {
+    const source = fs.readFileSync(new URL(`../../${name}`, import.meta.url), 'utf8');
+    const link = name === 'README_ZH.md'
+      ? '[用 Agent 画图并检查结果](https://archify.si/zh/agent-diagrams)'
+      : '[Create and check diagrams with your agent](https://archify.si/agent-diagrams)';
+    assert.ok(source.includes(link), `${name}: descriptive guide discovery`);
+    assert.ok(source.indexOf(link) < source.indexOf('<a id="sponsors">'), `${name}: link stays with quick start`);
+  }
+  assert.equal(fs.readFileSync(new URL('../../README.md', import.meta.url), 'utf8'), fs.readFileSync(new URL('../../README_EN.md', import.meta.url), 'utf8'));
 });

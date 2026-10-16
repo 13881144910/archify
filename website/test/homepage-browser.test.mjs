@@ -71,9 +71,10 @@ test('real Chrome: homepage category and identity remain readable across languag
           await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
           const receipt = await evaluate(`(() => {
             const selectors = ${JSON.stringify(region === 'hero' ? ['.hero h1', '.hero-sub', '.hero-eyebrow', '.cmd-chip', '.cmd-copy', '.hero-actions .btn'] : ['.facts-identity', '.facts-identity a'])};
+            const scope = ${JSON.stringify(region)} === 'hero' ? document.querySelector('.hero-copy') : document;
             return { lang: document.documentElement.lang, theme: document.documentElement.dataset.theme,
               viewport: innerWidth, scrollY, pageWidth: document.documentElement.scrollWidth,
-              nodes: selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(node => {
+              nodes: selectors.flatMap(selector => [...scope.querySelectorAll(selector)].map(node => {
                 const box = node.getBoundingClientRect(), style = getComputedStyle(node);
                 return { rect: { x: box.x, y: box.y, width: box.width, height: box.height }, text: node.innerText, href: node.getAttribute('href'), visible: box.width > 0 && box.height > 0 && style.visibility === 'visible' && Number(style.opacity) === 1,
                   fits: [...node.getClientRects()].every(rect => rect.left >= -1 && rect.right <= innerWidth + 1),

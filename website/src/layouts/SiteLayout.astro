@@ -9,7 +9,7 @@ import { productChannel } from '../data/product-facts';
 import { canonicalUrl } from '../data/site-urls.mjs';
 import { pageMetadata } from '../data/site-metadata.mjs';
 import { localizeHtml } from '../data/localize-html.mjs';
-interface Props { head: string; css: string; page: 'index' | 'guide' | 'start' | 'gallery' | 'community'; lang?: 'en' | 'zh' }
+interface Props { head: string; css: string; page: 'index' | 'guide' | 'start' | 'gallery' | 'community' | 'agent-diagrams'; lang?: 'en' | 'zh' }
 const { head, css, page, lang = 'en' } = Astro.props;
 const cloudflare = Astro.site?.origin === 'https://archify.si';
 const metadata = pageMetadata(page, lang, version);

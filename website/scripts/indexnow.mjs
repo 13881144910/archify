@@ -33,7 +33,7 @@ export function parseSitemap(xml) {
     entries.push(value);
     body = body.slice(item[0].length);
   }
-  requireValue(entries.length === allowedUrls.size, 'Sitemap must contain all ten main pages and selected gallery artifacts');
+  requireValue(entries.length === allowedUrls.size, 'Sitemap must contain all main pages and selected gallery artifacts');
   return entries;
 }
 

@@ -11,7 +11,7 @@ Template only: replace placeholders, retain failures and use **unknown/not run**
 
 ## Frozen plan
 
-- Suite revision and source-project pins: <projects.json copy/hash>
+- Suite revision, source-project pins and clean checkout status: <projects.json copy/hash; one status record per project>
 - Base Archify commit + package/tree hash:
 - Candidate commit + package/tree hash:
 - Cases/types and any narrower scope or substitutions, with rationale:

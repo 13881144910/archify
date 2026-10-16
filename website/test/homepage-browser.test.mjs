@@ -66,11 +66,12 @@ test('real Chrome: homepage category and identity remain readable across languag
           scrollTo(0, 0);
           await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         })()`);
-        for (const region of ['hero', 'identity']) {
+        for (const region of ['hero', 'identity', 'guide-discovery']) {
           if (region === 'identity') await evaluate(`document.querySelector('.facts-identity').scrollIntoView({block:'center',behavior:'instant'})`);
+          if (region === 'guide-discovery') await evaluate(`document.querySelector('.guide-discovery').scrollIntoView({block:'center',behavior:'instant'})`);
           await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
           const receipt = await evaluate(`(() => {
-            const selectors = ${JSON.stringify(region === 'hero' ? ['.hero h1', '.hero-sub', '.hero-eyebrow', '.cmd-chip', '.cmd-copy', '.hero-actions .btn'] : ['.facts-identity', '.facts-identity a'])};
+            const selectors = ${JSON.stringify(region === 'hero' ? ['.hero h1', '.hero-sub', '.hero-eyebrow', '.cmd-chip', '.cmd-copy', '.hero-actions .btn'] : region === 'identity' ? ['.facts-identity', '.facts-identity a'] : ['.guide-discovery a'])};
             const scope = ${JSON.stringify(region)} === 'hero' ? document.querySelector('.hero-copy') : document;
             return { lang: document.documentElement.lang, theme: document.documentElement.dataset.theme,
               viewport: innerWidth, scrollY, pageWidth: document.documentElement.scrollWidth,
@@ -90,11 +91,14 @@ test('real Chrome: homepage category and identity remain readable across languag
           assert.equal(receipt.theme, theme);
           assert.equal(receipt.viewport, width, `${name}: requested layout viewport`);
           assert.ok(receipt.pageWidth <= receipt.viewport + 1, `${name}: no page overflow`);
-          assert.equal(receipt.nodes.length, region === 'hero' ? 7 : 3);
+          assert.equal(receipt.nodes.length, region === 'hero' ? 7 : region === 'identity' ? 3 : 1);
           for (const node of receipt.nodes) assert.ok(node.visible && node.fits && node.inView, `${name}: readable ${node.text}`);
           if (region === 'hero') {
             assert.match(receipt.nodes[0].text, /AI agent|AI Agent/);
             assert.match(receipt.nodes[1].text, /diagram skill|画图工具/);
+          } else if (region === 'guide-discovery') {
+            assert.match(receipt.nodes[0].text, lang === 'en' ? /create and check diagrams/ : /画图并检查结果/);
+            assert.equal(receipt.nodes[0].href, `${lang === 'zh' ? 'zh/' : ''}agent-diagrams${mount ? '.html' : ''}`);
           } else {
             assert.deepEqual(receipt.nodes.slice(1).map(node => [node.text, node.href]), [
               ['archify.si', 'https://archify.si/'], ['tt-a1i/archify', 'https://github.com/tt-a1i/archify'],

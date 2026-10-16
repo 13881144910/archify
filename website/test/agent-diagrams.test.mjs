@@ -30,7 +30,7 @@ test('agent guide is readable without JavaScript, honest about examples, and lin
     assert.equal(structuredArticle.url, `https://archify.si/${prefix}agent-diagrams`);
     assert.equal(structuredArticle.inLanguage, lang === 'zh' ? 'zh-Hans' : 'en');
     const ids = new Set(all.map(node => attr(node, 'id')).filter(Boolean));
-    for (const id of ['responsibilities', 'setup', 'cache-scenarios', 'repository-evidence', 'review-and-share', 'questions']) assert.ok(ids.has(id), `${lang}: stable cross-language section ${id}`);
+    for (const id of ['responsibilities', 'setup', 'description-workflow', 'cache-scenarios', 'repository-evidence', 'review-and-share', 'questions']) assert.ok(ids.has(id), `${lang}: stable cross-language section ${id}`);
     const toc = all.find(node => attr(node, 'class') === 'article-toc');
     for (const link of nodes(toc).filter(node => node.tagName === 'a')) {
       const destination = new URL(attr(link, 'href'), baseUri);
@@ -80,4 +80,35 @@ test('README entry points link directly to the matching language guide', () => {
     assert.ok(source.indexOf(link) < source.indexOf('<a id="sponsors">'), `${name}: link stays with quick start`);
   }
   assert.equal(fs.readFileSync(new URL('../../README.md', import.meta.url), 'utf8'), fs.readFileSync(new URL('../../README_EN.md', import.meta.url), 'utf8'));
+});
+
+
+test('description workflow exposes pinned evidence, honest limits and localized setup without changing the artifact', () => {
+  const origin = cloudflare ? 'https://archify.si/' : 'https://tt-a1i.github.io/archify/';
+  for (const lang of ['en', 'zh']) {
+    const prefix = lang === 'zh' ? 'zh/' : '';
+    const all = nodes(parse(fs.readFileSync(new URL(`${prefix}agent-diagrams.html`, output), 'utf8')));
+    const base = new URL(attr(all.find(node => node.tagName === 'base'), 'href'), origin + `${prefix}agent-diagrams.html`);
+    const article = all.find(node => node.tagName === 'article');
+    const start = nodes(article).find(node => attr(node, 'id') === 'description-workflow').parentNode;
+    const siblings = start.parentNode.childNodes;
+    const rest = siblings.slice(siblings.indexOf(start) + 1);
+    const end = rest.findIndex(node => nodes(node).some(child => attr(child, 'id') === 'cache-scenarios'));
+    const section = rest.slice(0, end).flatMap(nodes);
+    const visible = rest.slice(0, end).map(text).join('');
+    assert.match(visible, /1 \+ 4 \+ 3 \+ 2/);
+    assert.match(visible, lang === 'en' ? /not additional leave deductions/ : /不是再次扣减休假额度/);
+    assert.match(visible, lang === 'en' ? /not a fresh agent execution record/ : /不是一次新的 Agent 执行记录/);
+    assert.match(visible, lang === 'en' ? /not real calendar or company leave-policy advice/ : /不是实际日历或公司休假政策建议/);
+    assert.match(visible, lang === 'en' ? /not a real-world guarantee/ : /不是现实保证/);
+    const links = section.filter(node => node.tagName === 'a').map(node => new URL(attr(node, 'href'), base));
+    assert.ok(links.some(url => url.href === origin + 'cases/life/leave-plan.workflow.html'));
+    assert.ok(links.some(url => url.href === 'https://github.com/tt-a1i/archify/blob/68031cf978e0b906aa56c684a394049a3ea9d583/docs/cases/life/leave-plan.workflow.json'));
+    const quickstart = links.find(url => url.searchParams.get('type') === 'workflow');
+    assert.equal(quickstart.href, origin + `${prefix}start${cloudflare ? '' : '.html'}?type=workflow&input=description`);
+  }
+  for (const extension of ['json', 'html']) {
+    const file = `cases/life/leave-plan.workflow.${extension}`;
+    assert.deepEqual(fs.readFileSync(new URL(file, output)), fs.readFileSync(new URL(`../../docs/${file}`, import.meta.url)), 'existing artifact bytes remain unchanged');
+  }
 });

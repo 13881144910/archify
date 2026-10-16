@@ -26,6 +26,18 @@ The [installation reference](https://github.com/tt-a1i/archify/blob/main/README.
 
 Installation instructions are not a guarantee that every agent/version combination has been tested. If setup fails, record the agent, its version, your operating system, and the exact error before changing the diagram itself.
 
+<span id="description-workflow" class="section-anchor" aria-hidden="true"></span>
+
+## No code repository: read a Chinese workflow diagram
+
+Without a code repository, you can start with steps, allowances, and rules. Open the existing [Chinese leave-planning workflow](cases/life/leave-plan.workflow.html) alongside its [revision-pinned JSON source](https://github.com/tt-a1i/archify/blob/68031cf978e0b906aa56c684a394049a3ea9d583/docs/cases/life/leave-plan.workflow.json). This is a walkthrough of an existing source file, not a fresh agent execution record.
+
+Read the two lanes, “休假计划” (leave plan) and “规则提醒” (rule reminders), separately. The diagram has 8 nodes and 7 relationships; its main path has only 6 nodes, from the opening allowance through four allocations to the final balance. Annual leave is allocated as 1 + 4 + 3 + 2, totaling 10 days. The spring allocation also uses 2 compensatory days, bringing the total to 12. Two branches connect expiry and approval reminders; they are not additional leave deductions.
+
+Review order, allowance, and reminders separately: follow the main path to reconcile the remaining balance, then check whether a branch merely adds a constraint. Do not count a reminder as more leave. These are illustrative rules, not real calendar or company leave-policy advice. The “9/10 consecutive days off” labels are not a real-world guarantee; dates and applicable policies need separate verification.
+
+To start from your own description, open the [workflow quick start](start.html?type=workflow&input=description), provide only confirmed steps and rules, and mark unknown conditions.
+
 <span id="cache-scenarios" class="section-anchor" aria-hidden="true"></span>
 
 ## Try two bounded requests: cache hit and cache miss

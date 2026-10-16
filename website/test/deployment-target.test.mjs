@@ -20,7 +20,7 @@ test('built deployment uses host-compatible generated assets and canonical metad
     const canonicalUrl = `https://archify.si/${page === 'index' ? (lang === 'zh' ? 'zh' : '') : `${lang === 'zh' ? 'zh/' : ''}${page}`}`;
     const bases = all.filter(node => node.tagName === 'base');
     assert.equal(bases.length, 1, file);
-    assert.equal(attr(bases[0], 'href'), lang === 'zh' && page !== 'index' ? '../' : './', file);
+    assert.equal(attr(bases[0], 'href'), '../'.repeat(file.split('/').length - 1) || './', file);
     const documentUrl = cloudflare ? canonicalUrl : `https://tt-a1i.github.io/archify/${file}`;
     const baseUri = new URL(attr(bases[0], 'href'), documentUrl);
     const nav = all.find(node => node.tagName === 'nav' && attr(node, 'class') === 'site-nav');

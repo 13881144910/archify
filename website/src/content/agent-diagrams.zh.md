@@ -66,6 +66,8 @@ Archify 根据源文件生成 HTML，并执行对应的渲染与校验。你可�
 
 可参考现有的 [MCO 运行时架构示例](https://archify.si/cases/mco-runtime.architecture.html)及其[结构化源文件](https://github.com/tt-a1i/archify/blob/main/docs/cases/mco-runtime.architecture.json)。它解释的是所标明的提交版本，不代表仓库之后永远保持相同结构。
 
+[对照 MCO 源码：谁解码输出，谁写入文件 →](cases/mco-runtime.html)
+
 <span id="review-and-share" class="section-anchor" aria-hidden="true"></span>
 
 ## 修改、检查和分享

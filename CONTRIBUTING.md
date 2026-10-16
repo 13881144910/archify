@@ -13,6 +13,17 @@ Archify is Agent-first: people describe systems, and the Skill, typed JSON, rend
 
 Do not include secrets, access tokens, credentials, private repository content, personal data, or customer data in fixtures, logs, screenshots, artifacts, or package tests.
 
+## Coordinate related work
+
+These steps apply to contributors, maintainers, and Agents:
+
+- Before implementing, search existing issues and open PRs for the same problem, including related fixes under review.
+- On the relevant issue, briefly state your intended scope and link a draft PR early. For a small fix without an issue, describe the scope in the PR; a separate planning issue or maintainer approval is unnecessary.
+- If work is already in progress, discuss the remaining gap on that issue or PR and agree on collaboration, a distinct scope, or consolidation before starting an overlapping implementation.
+- When consolidating, link both PRs, explain which contributions are retained, and preserve attribution through original commits or appropriate co-author credit. Close the superseded PR once the retained contribution and attribution are present in the continuing PR.
+
+A scope comment signals active work, not permanent ownership. If work pauses or changes direction, leave an update; others can propose taking it forward in the same thread.
+
 ## Prepare a reviewable change
 
 Start from the latest `dev` and target `dev` for fixes and features. Check whether its existing controls already solve the reported case. Record the comparison base and candidate head.
@@ -76,6 +87,10 @@ test merely because it differs from the old implementation. Delete redundant
 source assertions when a behavior test owns that protection. Keep explicit
 geometry, compatibility, accessibility, failure cleanup, and protection against
 lost or corrupted output as observable contracts.
+
+### Real generation comparisons
+
+For PRs that change diagram generation, select and link before/after evidence using the [real repository benchmark](benchmarks/real-repo-generation/README.md). Its initial rollout is an agreed three-PR pilot; record the selected scope or a justified exemption before running. Contributors supply the comparison and session records; maintainers review outcomes and sample evidence. Synthetic error injection alone does not establish real Agent benefit. Reuse unaffected evidence at its recorded revision.
 
 ### CI by affected responsibility
 

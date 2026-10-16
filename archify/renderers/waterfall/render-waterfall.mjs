@@ -199,7 +199,8 @@ function timeNumber(value) {
   const ordinary = number(value);
   if (Math.abs(value) < 1e21 && Math.abs(Number(ordinary.replaceAll(',', '')) - value) <= timeResolution / 100) return ordinary;
   const digits = value === 0 ? 1 : Math.min(17, Math.max(1, Math.floor(Math.log10(Math.abs(value))) - Math.floor(Math.log10(timeResolution)) + 2));
-  return Number(value.toPrecision(digits)).toString();
+  const rounded = Number(value.toPrecision(digits));
+  return Number.isFinite(rounded) ? rounded.toString() : value.toString();
 }
 
 const LABEL_GAP = 7;

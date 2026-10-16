@@ -106,12 +106,14 @@ test('waterfall: unrepresentable derived timing is rejected without writing inva
 });
 
 test('waterfall: finite very large timing labels do not overflow while formatting', () => {
-  const diagram = clone(small);
-  diagram.spans = [{ id: 'request', name: 'Request', start: 1e307, end: 1.1e307 }];
-  const result = run(diagram);
-  assert.equal(result.status, 0, result.stderr || result.error?.message);
-  const html = fs.readFileSync(result.output, 'utf8');
-  assert.doesNotMatch(html, /(?:NaN|Infinity|∞)/);
+  for (const timing of [{ start: 1e307, end: 1.1e307 }, { start: 0, end: Number.MAX_VALUE }]) {
+    const diagram = clone(small);
+    diagram.spans = [{ id: 'request', name: 'Request', ...timing }];
+    const result = run(diagram);
+    assert.equal(result.status, 0, result.stderr || result.error?.message);
+    const html = fs.readFileSync(result.output, 'utf8');
+    assert.doesNotMatch(html, /(?:NaN|Infinity|∞)/);
+  }
 });
 
 test('waterfall: percentages name their denominator and are never summed into the parent', () => {

@@ -392,7 +392,9 @@
     @media(max-width:640px) {
       .container { padding:0 1.25rem; }
       .hero { min-height:0; padding:calc(var(--nav-h) + 3rem) 1.25rem 3rem; }
-      .hero-eyebrow { margin-bottom:1.5rem; }
+      .hero-copy { min-width:0; width:100%; }
+      .hero-eyebrow { max-width:100%; white-space:normal; margin-bottom:1.5rem; }
+      .eyebrow-tag { flex-shrink:0; }
       .hero-works { display:none; }
       .hero-stars { padding-left:0; border-left:0; }
       .hero h1 { font-size:clamp(2.2rem,9.4vw,3.2rem); }
@@ -400,6 +402,8 @@
       .hero-actions { flex-direction:column; align-items:stretch; width:100%; margin-top:2rem; }
       .hero-actions .btn { width:100%; }
       .cmd-chip { justify-content:space-between; font-size:.75rem; }
+      .cmd-chip code { min-width:0; white-space:normal; overflow-wrap:anywhere; }
+      .cmd-copy { flex-shrink:0; }
       .stage { height:320svh; margin-top:0; }
       .stage-pin { padding:calc(var(--nav-h) + .5rem) .75rem .75rem; align-items:flex-start; }
       .stage-window { height:auto; max-height:100%; border-radius:14px; }

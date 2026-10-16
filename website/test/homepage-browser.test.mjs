@@ -70,7 +70,7 @@ test('real Chrome: homepage category and identity remain readable across languag
           if (region === 'identity') await evaluate(`document.querySelector('.facts-identity').scrollIntoView({block:'center',behavior:'instant'})`);
           await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
           const receipt = await evaluate(`(() => {
-            const selectors = ${JSON.stringify(region === 'hero' ? ['.hero h1', '.hero-sub'] : ['.facts-identity', '.facts-identity a'])};
+            const selectors = ${JSON.stringify(region === 'hero' ? ['.hero h1', '.hero-sub', '.hero-eyebrow', '.cmd-chip', '.cmd-copy', '.hero-actions .btn'] : ['.facts-identity', '.facts-identity a'])};
             return { lang: document.documentElement.lang, theme: document.documentElement.dataset.theme,
               viewport: innerWidth, scrollY, pageWidth: document.documentElement.scrollWidth,
               nodes: selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(node => {
@@ -89,7 +89,7 @@ test('real Chrome: homepage category and identity remain readable across languag
           assert.equal(receipt.theme, theme);
           assert.equal(receipt.viewport, width, `${name}: requested layout viewport`);
           assert.ok(receipt.pageWidth <= receipt.viewport + 1, `${name}: no page overflow`);
-          assert.equal(receipt.nodes.length, region === 'hero' ? 2 : 3);
+          assert.equal(receipt.nodes.length, region === 'hero' ? 7 : 3);
           for (const node of receipt.nodes) assert.ok(node.visible && node.fits && node.inView, `${name}: readable ${node.text}`);
           if (region === 'hero') {
             assert.match(receipt.nodes[0].text, /AI agent|AI Agent/);

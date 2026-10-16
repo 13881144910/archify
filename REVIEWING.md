@@ -25,6 +25,8 @@ Use existing tests, receipts, and browser tools. For behavior comparisons, use f
 
 Evidence should be sufficient for the affected contract. Avoid rebuilding an unchanged artifact or replaying unaffected checks merely to restate existing results.
 
+For generation-comparison pilot PRs, use the [real repository benchmark review procedure](benchmarks/real-repo-generation/README.md#6-submit-and-review-one-report): inspect the paired outcomes and sample the source/session evidence before requesting reruns. A missing real-world benefit is an unverified claim; synthetic repair success does not establish it.
+
 ## Give actionable feedback
 
 Lead with whether the approach is worthwhile, then explain findings and a clear disposition:

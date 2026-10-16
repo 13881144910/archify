@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for proposing an improvement. Describe the problem and intended benefit before investing in implementation. Maintainers will discuss scope and compatibility; agreement on direction is not a promise to merge. Small fixes may go directly to a PR under CONTRIBUTING.md.
+        Thanks for proposing an improvement. Describe the problem and intended benefit before investing in implementation. Maintainers will discuss scope and compatibility; agreement on direction is not a promise to merge. Purely mechanical documentation corrections may go directly to a PR under CONTRIBUTING.md.
   - type: textarea
     id: problem
     attributes:

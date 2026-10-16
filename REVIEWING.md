@@ -4,7 +4,9 @@ Use this guide for initial and revised PR reviews. Judge the user value, impleme
 
 ## Check readiness before detailed review
 
-Apply [Choose the right path](CONTRIBUTING.md#choose-the-right-path) first. When prior scope agreement is required but missing, thank the contributor, point to the relevant issue or proposal form, and defer detailed code review until the direction is agreed. Small fixes with a concrete reproduction or rationale can proceed directly.
+Apply [Choose the right path](CONTRIBUTING.md#choose-the-right-path) first. When prior scope agreement is required but missing, thank the contributor, point to the relevant issue or proposal form, and close or defer the PR without detailed code review until the direction is agreed. Purely mechanical documentation corrections may proceed directly.
+
+Check the [AI disclosure and accountability requirements](CONTRIBUTING.md#ai-assistance-and-contributor-responsibility). Disclosure is context for review, not a quality score. Ask about specific unexplained decisions or unsupported claims; never infer a violation solely from writing style.
 
 For missing evidence, describe the material gaps together and request the smallest comparison that resolves them. Resume review when the contributor supplies it; reuse valid existing evidence. Maintainers review and sample the submitted evidence rather than routinely reconstructing every contribution's test run. An issue link alone does not establish scope agreement or review readiness.
 
@@ -16,7 +18,7 @@ Record the current target base and candidate head. Read the linked issue or agre
 
 Identify who benefits and whether the approach is worth maintaining. Consider whether existing capabilities or a smaller change would solve the problem. For a new default, schema field, or acceptance policy, clarify the value and compatibility tradeoff early. Reuse decisions already made in the issue or authorized task.
 
-If a decision is missing, explain how it affects the review and continue checks that do not depend on it. Narrow fixes can proceed on their reproduction without another planning exercise.
+If required scope agreement is missing, use the readiness procedure above before investing in implementation review. Reuse existing agreements rather than creating another planning exercise.
 
 ## Match investigation to impact
 

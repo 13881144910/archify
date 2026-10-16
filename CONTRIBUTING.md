@@ -88,6 +88,10 @@ source assertions when a behavior test owns that protection. Keep explicit
 geometry, compatibility, accessibility, failure cleanup, and protection against
 lost or corrupted output as observable contracts.
 
+### Real generation comparisons
+
+For PRs that change diagram generation, select and link before/after evidence using the [real repository benchmark](benchmarks/real-repo-generation/README.md). Its initial rollout is an agreed three-PR pilot; record the selected scope or a justified exemption before running. Contributors supply the comparison and session records; maintainers review outcomes and sample evidence. Synthetic error injection alone does not establish real Agent benefit. Reuse unaffected evidence at its recorded revision.
+
 ### CI by affected responsibility
 
 CI uses the ownership groups in `scripts/ci-scope.mjs`. Product changes run core

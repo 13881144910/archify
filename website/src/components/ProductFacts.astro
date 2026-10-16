@@ -1,8 +1,10 @@
 ---
+import { canonicalUrl } from '../data/site-urls.mjs';
+
 const facts = [
   {
     question: ['What is Archify?', 'Archify 是什么？'],
-    answer: ['Archify is an open-source Agent Skill for turning a system, process, or plan into a diagram. The agent authors typed JSON, then Archify renders and validates a self-contained interactive HTML artifact. The Skill and renderers are licensed under MIT.', 'Archify 是一个开源 Agent Skill，把系统、流程或计划变成图表。Agent 编写类型化 JSON，再由 Archify 渲染、校验并交付独立的交互 HTML 成品。Skill 和渲染器采用 MIT 许可证。'],
+    answer: ['Archify is an open-source Agent Skill for AI-assisted diagramming in coding agents such as Claude Code and Codex. It turns descriptions of a system, process, or plan into architecture, workflow, sequence, and other structured diagrams. The agent authors typed JSON, then Archify renders and validates a self-contained interactive HTML artifact. The Skill and renderers are licensed under MIT.', 'Archify 是面向 Claude Code、Codex 等 Coding Agent 的开源画图工具，以 Agent Skill 的形式使用。它把系统、流程或计划的描述变成架构图、流程图、时序图等结构化图表。Agent 编写类型化 JSON，再由 Archify 渲染、校验并交付独立的交互 HTML 成品。Skill 和渲染器采用 MIT 许可证。'],
   },
   {
     question: ['What can I provide as input?', '可以提供哪些输入？'],
@@ -14,13 +16,14 @@ const facts = [
   },
   {
     question: ['What do I receive, and what are the limits?', '会得到什么？有哪些边界？'],
-    answer: ['The primary deliverable is an HTML file with inline SVG and its typed JSON source. Open the HTML in a browser to inspect, search, trace routes, switch themes, and export. Validation checks the authored diagram; it does not prove runtime system behavior. Archify is not a hosted collaboration service or a general-purpose WYSIWYG editor.', '主要交付物是内含 SVG 的 HTML 文件和类型化 JSON 源。在浏览器里可以检查、搜索、追踪路径、切换主题和导出。校验检查的是编写出的图表，不证明系统的实际运行行为。Archify 不提供托管协作服务，也不是通用的所见即所得编辑器。'],
+    answer: ['The primary deliverable is an HTML file with inline SVG and its typed JSON source. Open the HTML in a browser to inspect, search, trace routes, switch themes, and export. Validation checks the authored diagram; it does not prove runtime system behavior. Archify is for structured diagrams, not photo or illustration generation. It is not a hosted collaboration service or a general-purpose WYSIWYG editor.', '主要交付物是内含 SVG 的 HTML 文件和类型化 JSON 源。在浏览器里可以检查、搜索、追踪路径、切换主题和导出。校验检查的是编写出的图表，不证明系统的实际运行行为。Archify 用于结构化图表，不用于生成照片或插画；它不提供托管协作服务，也不是通用的所见即所得编辑器。'],
   },
 ];
 ---
 <section class="product-facts" id="about-archify" aria-labelledby="product-facts-title">
   <div class="container">
     <div class="facts-heading"><span class="section-eyebrow" data-en="Product facts" data-zh="产品事实">Product facts</span><h2 id="product-facts-title" data-en="A diagram you can inspect and keep." data-zh="一张能检查、能保留的图。">A diagram you can inspect and keep.</h2></div>
+    <p class="facts-identity"><span data-en="This Archify is the open-source diagram skill at " data-zh="这里的 Archify 指 ">This Archify is the open-source diagram skill at </span><a href={canonicalUrl('index')}>archify.si</a><span data-en=", maintained in the " data-zh=" 上的开源画图技能，项目源码位于 ">, maintained in the </span><a href="https://github.com/tt-a1i/archify">tt-a1i/archify</a><span data-en=" repository." data-zh=" 仓库。"> repository.</span></p>
     <div class="facts-grid">
       {facts.map(fact => <article><h3 data-en={fact.question[0]} data-zh={fact.question[1]}>{fact.question[0]}</h3><p data-en={fact.answer[0]} data-zh={fact.answer[1]}>{fact.answer[0]}</p></article>)}
     </div>

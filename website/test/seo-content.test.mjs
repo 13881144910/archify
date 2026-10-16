@@ -95,3 +95,32 @@ for (const lang of ['en', 'zh']) {
     }
   });
 }
+
+for (const lang of ['en', 'zh']) {
+  test(`initial ${lang} homepage identifies agent diagramming before JavaScript`, () => {
+    const page = read('index', lang);
+    const hero = byClass(page, 'hero-copy')[0];
+    const heading = clean(text(byTag(hero, 'h1')));
+    const lead = clean(text(byClass(hero, 'hero-sub')[0]));
+    assert.match(heading, /AI agent|AI Agent/);
+    assert.match(heading, /diagrams|图/);
+    for (const concept of lang === 'zh'
+      ? ['开源', 'Agent Skill', '架构图', '流程图', '时序图', '代码仓库', '交互式 HTML']
+      : ['open-source', 'skill', 'architecture', 'workflow', 'sequence', 'repository', 'interactive HTML']) {
+      assert.ok(lead.includes(concept), `hero must explain ${concept}`);
+    }
+    const identity = byClass(page, 'facts-identity')[0];
+    const identityText = clean(text(identity));
+    assert.ok(identityText.includes(lang === 'zh' ? '开源画图技能' : 'open-source diagram skill'));
+    assert.deepEqual(links(identity).map(link => [clean(text(link)), attr(link, 'href')]), [
+      ['archify.si', 'https://archify.si/'],
+      ['tt-a1i/archify', 'https://github.com/tt-a1i/archify'],
+    ], 'visible product identity connects the official site and exact source repository');
+    const facts = clean(text(find(page, 'about-archify')));
+    for (const boundary of lang === 'zh'
+      ? ['类型化 JSON', '不证明系统的实际运行行为', '不用于生成照片或插画']
+      : ['typed JSON', 'does not prove runtime system behavior', 'not photo or illustration generation']) {
+      assert.ok(facts.includes(boundary), `product facts must explain ${boundary}`);
+    }
+  });
+}

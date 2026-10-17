@@ -270,8 +270,9 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
     if(typeof value!=='string')return;
     const line=sourceMap[pointer]?.line||sourceMap[pointer.replace(/\/id$/u,'')]?.line||1;
     if(!ID.test(value)||value.length>100)fail(line,component,'IDs must begin with an ASCII letter and contain letters, numbers, hyphens or underscores.','id=cache-flow',pointer);
-    if(identities.has(value))fail(line,component,'Duplicate identity. Give repeated content an explicit distinct ID.','## Another question? {#another-question}',pointer);
-    identities.set(value,pointer);
+    const previous=identities.get(value);
+    if(previous)fail(line,component,`Duplicate ID "${value}": the ${previous.component} on line ${previous.line} already uses it. Panels, blocks, diagrams and steps share one ID namespace.`,component==='panel'?`## Another question? {#${value}-2}`:`omit id=, or use id=${value}-${component}`,pointer);
+    identities.set(value,{pointer,component,line});
   }
   if(document&&typeof document==='object'&&!Array.isArray(document)) {
     identity(document.meta?.id,'/meta/id','document');

@@ -38,6 +38,35 @@ Review order, allowance, and reminders separately: follow the main path to recon
 
 To start from your own description, open the [workflow quick start](start.html?type=workflow&input=description), provide only confirmed steps and rules, and mark unknown conditions.
 
+<span id="mermaid-input" class="section-anchor" aria-hidden="true"></span>
+
+## Use Mermaid as input, not as a promise of automatic conversion
+
+If you already have a Mermaid diagram, paste its source into your configured coding agent. The agent reads the relationships and authors fresh Archify JSON; Archify then renders and checks that JSON. This is not a Mermaid parser, a theme replacement, or a lossless round-trip converter.
+
+For example, this small flowchart describes four steps and four directed relationships:
+
+<pre><code>flowchart LR
+  A[Submit request] --> B[Review request]
+  B -->|Approved| C[Proceed]
+  B -->|Changes needed| D[Revise request]
+  D --> B</code></pre>
+
+Ask your agent:
+
+> Use Archify to turn this Mermaid input into an interactive workflow diagram. Preserve the four steps, the Approved and Changes needed branch labels, and the return from Revise request to Review request. Do not invent people, deadlines, or additional steps. If a construct cannot be represented faithfully, explain the limitation before simplifying it.
+
+This is illustrative input, not a recorded conversion or a checked output.
+
+Review meaning before appearance:
+
+- Does each original step still have the same role?
+- Do both branches retain their labels and destinations?
+- Does revision return to review rather than ending the process?
+- Has anything been omitted, merged, or added?
+
+Keep the original Mermaid alongside the new JSON so you can compare them. Mermaid styling, layout directives, and callbacks should not be assumed to carry over. The [pinned Skill](https://github.com/tt-a1i/archify/blob/88d1ae4498b6a1df610badf690c5406882622d15/archify/SKILL.md#mermaid-input) describes the supported input families. If your goal is to retain Mermaid syntax and render it directly on a web page, use [Mermaid’s own rendering workflow](https://mermaid.ai/open-source/config/usage.html) instead.
+
 <span id="cache-scenarios" class="section-anchor" aria-hidden="true"></span>
 
 ## Try two bounded requests: cache hit and cache miss
@@ -110,7 +139,7 @@ Workflow mode can describe steps, branches, and participants. Class and sequence
 
 ### Can I start with Mermaid?
 
-Yes, an agent can interpret supported Mermaid input and author Archify JSON from its meaning. This is not a promise of complete automatic parsing or lossless round-trip conversion. Check that the relationships and alternatives you need survive the conversion.
+Yes. See [how to use Mermaid as agent input](#mermaid-input) for a small example, a careful prompt, and the meaning to check before accepting the result.
 
 ### Is a repository required?
 

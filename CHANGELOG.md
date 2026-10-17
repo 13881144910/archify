@@ -4,13 +4,39 @@ All notable changes are documented here. Format loosely follows [Keep a Changelo
 
 ## [Unreleased]
 
-> Development identity: `v3.0.2-dev.1`. Not a stable release.
+> Development identity: `v3.1.1-dev.1`. Not a stable release.
+
+### Fixed
+
+- **Workflow migration semantic contracts (#497).** Layout planning no longer checks full-topology requirements against a temporary graph with routed edges removed. Migrated documents retain their authored contracts and must pass complete validation before publication.
+
+- **Timeline 时区刻度（#926）。** 刻度按显示时区在各真实时刻的 UTC 偏移对齐，修复跨夏令时后日刻度漂移到 01:00／23:00、半小时跳变后小时刻度漂移的问题。回拨的重复时刻保持独立，跳过的小时或日期不生成虚构刻度；事件时间、标签精度、时间轴比例与断轴规则保持不变。
+
+### Changed
+- **发布后的开发基线。** 在已发布的 3.1.0 代码和验证产物基础上开启 3.1.1-dev.1 开发周期，同步开发身份与可重现的示例、比较图和网站产物。稳定更新清单继续指向已发布的 3.1.0；本次不创建发布或更改已发布版本。
+
+## [3.1.0] — 2026-10-14
+
+### Release highlights
+- **Ten diagram types.** ERD, Class/interface, Tree, Timeline and Waterfall join Architecture, Workflow, Sequence, Dataflow and Lifecycle, with typed JSON, source evidence and standalone Viewer exports.
+- **Live by default.** Each diagram type uses a matching motion choreography; readers can switch to Still. Motion remains separate from authored topology and export geometry.
+- **Readable authoring and recovery.** Bounded route/label coordination, clearer node cards, wrapped Sequence notes, main-path Lifecycle layouts, long-page radar navigation and executable geometry diagnostics reduce avoidable repair work.
+- **Verified delivery and portability.** Finalize reports input, artifact and browser gates separately; repository evidence, atomic delivery, clipboard/export continuity and Windows path handling fail closed with actionable diagnostics.
+- **Guide and handoff.** Concise artifact-first delivery and a localized optional GitHub link inside the reader-opened Guide.
+
+### Known limitations
+- Large Sequence diagrams may require readable page scrolling; floating controls can overlap content at some initial viewport positions.
+- Some complex Dataflow inputs share visual corridors; long Class generic types can wrap awkwardly. Automatic validation does not establish perceptual quality.
+- Waterfall durations need recorded trace evidence to be called measured; author-supplied illustrative values remain labelled.
+- The independently published DSH plugin remains pinned to Archify 3.0.1. Synchronization requires a separate plugin release and host acceptance; the 3.1.0 Skill release does not update it.
 
 ### Added
 - **Traditional Chinese (Taiwan) Viewer catalog.** `meta.locale: "zh-TW"` now selects a bundled catalog covering all 487 Viewer keys with Taiwan terminology (for example 循序圖, 資料流, 匯出, 檢視), instead of falling back to English. Enrollment is data only: `locales/zh-TW.json` plus one manifest entry. `zh-Hant` and `zh-HK` remain distinct, unbundled tags.
 - **GitLab source links.** Repository evidence on gitlab.com, or on a self-managed host declared with `provider: "gitlab"`, now generates revision-pinned web links (`/-/blob/<revision>/<path>#L<a>-<b>`, `/-/tree/<revision>`) instead of requiring `link_mode: "local-only"`. Nested groups are accepted, SSH and HTTPS origins on the same host match, paths compare case-insensitively, and cited Markdown line ranges open the plain view. Verification is unchanged and `local-only` remains available.
 
 ### Fixed
+
+- **ER 图主干桥接隔离（#896）。** 自动总线不再跨越、接触或覆盖无关关系及其他已生成的桥接；检查包含双方实际描边宽度（含显式 `width`），存在冲突时保留分离的主干段，避免校验通过的图看起来多出关系。实体位置、显式途经点、关系基数及正常共享主干保持不变。
 
 - **WebM 录制失败清理 (#622)。** 画布、捕获流、编码器启动、逐帧绘制或停止失败时，录制 Promise 现在会拒绝并释放已创建的流、临时 URL、动画帧和定时器；晚到的编码事件不能再将失败录制报告为成功。正常编码与最佳努力的最终片段 flush 行为保持不变。
 

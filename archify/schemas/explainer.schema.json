@@ -636,6 +636,7 @@
             "diagram",
             "code",
             "snippet",
+            "chart",
             "diff",
             "image"
           ]
@@ -766,6 +767,18 @@
           "if": {
             "properties": {
               "type": {
+                "const": "chart"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/$defs/chart"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "diff"
               }
             }
@@ -828,6 +841,29 @@
         "revision": {
           "type": "string",
           "pattern": "^[a-fA-F0-9]{40}$"
+        }
+      }
+    },
+    "chart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "const": "chart"
+        },
+        "title": {
+          "$ref": "#/$defs/short"
+        },
+        "text": {
+          "$ref": "#/$defs/text"
         }
       }
     }

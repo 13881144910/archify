@@ -160,6 +160,9 @@ meter{width:100%;height:8px;accent-color:var(--accent)}
 .added{color:var(--good)}.removed{color:var(--bad)}.modified{color:var(--caution)}
 
 /* Code and diff */
+.chart{margin:0;display:flex;flex-direction:column;--pele-bg:transparent;--pele-fg:var(--ink);--pele-muted:var(--muted);--pele-line:var(--rule-strong);--pele-surface:var(--sunk);--pele-surface-alt:var(--zebra);--pele-border:var(--rule-strong);--pele-accent:var(--accent);--pele-font:var(--sans);--pele-font-mono:var(--mono);--pele-series-1:var(--accent);--pele-series-2:var(--caution);--pele-series-3:var(--good);--pele-series-4:var(--violet);--pele-series-5:var(--bad);--pele-series-6:var(--accent-ink);--pele-series-7:var(--muted);--pele-series-8:var(--faint)}
+.chart>svg{display:block;width:min(100%,calc(var(--native-width,100vw) * 1.25));height:auto;margin-inline:auto}
+.chart figcaption{font-size:12px;color:var(--muted);margin-top:8px;padding:0 4px}
 .snippet{border:1px solid var(--rule);border-radius:8px;background:var(--code);overflow:hidden}
 .snippet figcaption{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 12px;border-bottom:1px solid var(--rule);font-size:12px;color:var(--muted);background:var(--panel)}
 .snippet-label{display:flex;align-items:center;gap:8px;min-width:0;color:var(--secondary);font-weight:500}

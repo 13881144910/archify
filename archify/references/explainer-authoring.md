@@ -73,6 +73,7 @@ A diagram replaces the paragraph that would describe it. When the answer involve
 | Ordered actions, checks or stages | `@steps` |
 | A warning, open question or key caveat | `@callout` |
 | A few labelled facts | `@facts` |
+| Numbers compared across items or over time, shares of a whole, a 2×2 priority, flows of quantity | ```` ```mermaid ```` chart fence |
 | One number against a limit | `@metric` |
 | Code that exists in a repository | `@code` |
 | A change to code | `@diff` or a ```` ```diff ```` fence |
@@ -179,6 +180,22 @@ Shorthand timelines are labelled illustrative and display their times in UTC.
 Field rows: `entity.field | type | keys? | references?`, keys `pk`, `fk`, `uk` comma-separated. Relationship rows: `from > to | one:one|one:many|many:one|many:many | label?`.
 
 Other native types (`dataflow`, `lifecycle`, `class`, `waterfall`) and diagrams that need explicit geometry use a same-directory spec file: `@diagram dataflow source=events.dataflow.json`, written with the Skill's native authoring workflow.
+
+## Charts
+
+A ```` ```mermaid ```` fence draws a chart from numbers: `pie`, `xychart-beta` (bar and line), `quadrantChart`, `sankey-beta`, `radar-beta` or `venn-beta`. The page renders it to static SVG in the page theme. An optional `title="..."` becomes the caption.
+
+````md
+```mermaid title="Mean and P99 before and after"
+xychart-beta
+  x-axis ["Before", "After"]
+  y-axis "ms" 0 --> 700
+  bar [80, 600]
+  line [80, 85]
+```
+````
+
+Chart only numbers the reader can trust: values from the user, a source or a measurement. Mark illustrative values in scope. Quote every label that contains spaces or non-ASCII text. Flowcharts, sequences, class, ER, state, timeline and mind-map Mermaid use the native shorthand above, which Archify validates and lets readers explore.
 
 ## Directive reference
 

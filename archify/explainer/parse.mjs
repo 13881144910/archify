@@ -235,7 +235,7 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
         if(cursor<lines.length)cursor++;
         if(!literal.trim()){fail(at+1,'snippet','A code fence needs content.','```bash\nnpm test\n```');continue;}
         const language=fence[2];
-        addBlock(language==='diff'?{type:'diff',text:literal,...(fa.title?{caption:fa.title}:{})}:{type:'snippet',...(language?{language}:{}),...(fa.title?{title:fa.title}:{}),text:literal},at,cursor);
+        addBlock(language==='diff'?{type:'diff',text:literal,...(fa.title?{caption:fa.title}:{})}:language==='mermaid'?{type:'chart',...(fa.title?{title:fa.title}:{}),text:literal}:{type:'snippet',...(language?{language}:{}),...(fa.title?{title:fa.title}:{}),text:literal},at,cursor);
         if(panel)sourceMap[`/panels/${panelIndex}/blocks/${panel.blocks.length-1}/text`]=locate(from,from+literal.length);
         continue;
       }

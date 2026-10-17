@@ -124,3 +124,26 @@ for (const lang of ['en', 'zh']) {
     }
   });
 }
+
+for (const lang of ['en', 'zh']) {
+  test(`initial ${lang} gallery states its evidence limit and offers generic life-diagram starting points`, () => {
+    const page = read('gallery', lang);
+    const limit = clean(text(find(page, 'gallery-evidence-limit')));
+    assert.ok(limit.includes(lang === 'zh' ? '不提供人工视觉评审结果' : 'not human visual-review results'));
+    const description = (function walk(node) {
+      return node.tagName === 'meta' && attr(node, 'name') === 'description' ? attr(node, 'content') : (node.childNodes || []).map(walk).find(Boolean);
+    })(page);
+    assert.ok(description.includes(lang === 'zh' ? '不代表已完成人工视觉评审' : 'do not establish human visual review'));
+    const cards = byClass(page, 'life-card');
+    assert.equal(cards.length, 4);
+    for (const [index, type] of ['workflow', 'lifecycle', 'dataflow', 'sequence'].entries()) {
+      const entryLinks = links(cards[index]);
+      const create = entryLinks.find(link => (attr(link, 'class') || '').split(/\s+/).includes('create-link'));
+      assert.ok(create, `${type}: a next step is available without JavaScript`);
+      assert.equal(clean(text(create)), lang === 'zh' ? '按此类型开始' : 'Create this type');
+      assert.equal(attr(create, 'href'), `${lang === 'zh' ? 'zh/' : ''}start${cloudflare ? '' : '.html'}?type=${type}&input=description&source=gallery`);
+      assert.ok(entryLinks.some(link => attr(link, 'href').endsWith(`.${type}.html?present=1`)), 'existing artifact remains accessible');
+      assert.ok(entryLinks.some(link => attr(link, 'href').endsWith(`.${type}.json`)), 'existing source remains accessible');
+    }
+  });
+}

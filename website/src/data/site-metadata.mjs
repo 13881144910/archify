@@ -21,8 +21,8 @@ const descriptions = {
     zh: ['Archify 快速上手 — 创建第一张图', '为你的 AI Agent 安装 Archify 技能，从自然语言或代码仓库创建图表。选择 Agent、图表类型和输入方式，复制对应的命令与提示词。'],
   },
   gallery: {
-    en: ['Archify Proof Lab — Validated Diagram Gallery', 'Explore validated Archify diagrams with interactive HTML, JSON sources, and recorded checks. Automated validation and human visual review appear separately.'],
-    zh: ['Archify 验证作品集 — 可探索的图表成品', '探索经过验证的 Archify 图表，查看交互式 HTML 成品、对应 JSON 源码与检查记录。自动验证与人工视觉评审分别列出。'],
+    en: ['Archify Proof Lab — Validated Diagram Gallery', 'Explore interactive Archify diagrams, their JSON sources, and automated structure and layout checks. These records do not establish human visual review.'],
+    zh: ['Archify 验证作品集 — 可探索的图表成品', '探索 Archify 交互式图表、对应 JSON 源码及自动结构与布局检查记录。这些记录不代表已完成人工视觉评审。'],
   },
   community: {
     en: ['Archify Community — Packages Built on Archify', 'Explore independent packages built on Archify: skills, recipes, themes, locales, and CLI wrappers, with source, license, compatibility, and evidence.'],

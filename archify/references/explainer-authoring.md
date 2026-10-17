@@ -50,7 +50,7 @@ Deliver it with the command under [Delivery](#delivery).
 
 ### Rules that keep a draft valid
 
-- IDs are unique across the whole document: panels, blocks, diagrams and steps share one namespace. Name a diagram after its content (`handshake-flow`), not after its panel (`handshake`).
+- IDs are unique across the whole document: panels, blocks, diagrams and steps share one namespace. Give a block an `id` only when a step, link or patch targets it; omit it on callouts, facts and lists. Name a diagram after its content (`handshake-flow`), not after its panel (`handshake`).
 - Prose is plain text. Wrap file paths, globs, `<placeholders>`, operators and code in backticks: a bare `<`, `>` or `*` in prose fails as HTML or emphasis. Inline code is shown literally.
 - Directive rows are pipe rows, one per line, each with the documented number of cells: `| first | second |`. Write a literal pipe inside a cell as `\|`. A blank line or the next `##` or `@` line ends the rows.
 - Directive arguments are `key=value`; quote values with spaces using double quotes and JSON escaping.

@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validateSchema } from '../renderers/shared/validator.mjs';
+import { textUnits } from '../renderers/shared/utils.mjs';
 import { throwDiagnosticError } from '../renderers/shared/diagnostics.mjs';
 import { createOwnedTempDirectory } from '../renderers/shared/owned-temp-directory.mjs';
 
@@ -165,6 +166,8 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
         else expect(entry, 2, 3, 'api | API | backend');
         context.rowMap[`/${diagramType === 'architecture' ? 'components' : 'nodes'}/${nodes.length}`] = entry.context.line;
         const node = { id: safeId(entry.parts[0], entry.context), label: entry.parts[1], type: entry.parts[2] || 'backend' };
+        const labelWidth = Math.ceil(textUnits(node.label) * 6.8 + 12);
+        if (diagramType === 'workflow' && labelWidth > 200) node.width = labelWidth;
         if (entry.parts[3]) nodeLanes.set(node.id, { lane: safeId(entry.parts[3], entry.context), context: entry.context });
         nodes.push(node);
       }
@@ -174,8 +177,9 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
     if (diagramType === 'architecture') {
       const cols = Math.max(1, ...placed.map(node => node.col + 1));
       if (cols > 12) fail(context, 'diagram-shorthand-limit', 'This architecture needs more than twelve native grid columns.', 'Use native JSON with explicit component positions.');
-      spec.layout = { mode: 'grid', cols, cellW: 176, cellH: 76, gapX: 100, gapY: 110 };
-      spec.components = placed;
+      const fitWidth = node => Math.ceil(textUnits(node.label) * 6.6 + 16);
+      spec.layout = { mode: 'grid', cols, cellW: Math.max(176, ...placed.map(fitWidth)), cellH: 76, gapX: 100, gapY: 110 };
+      spec.components = placed.map(node => fitWidth(node) > 120 ? { ...node, size: [fitWidth(node), 60] } : node);
       spec.connections = edges;
     } else if (lanes.size) {
       for (const [id, { lane, context: ctx }] of nodeLanes) if (!lanes.has(lane)) fail(ctx, 'diagram-lane', `Node ${id} names an undeclared lane.`, 'lane locate | Locate the cause');

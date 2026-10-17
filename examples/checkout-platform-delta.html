@@ -10644,6 +10644,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         else open(false);
       });
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -10660,6 +10661,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;) { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         var available = options();
         var active = available.indexOf(document.activeElement);
         switch (e.key) {
@@ -12083,6 +12085,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       });
       // APG menu-button pattern: ArrowDown/ArrowUp on the trigger opens the menu.
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -12098,6 +12101,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;)    { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
 
         var available = items().filter(function (i) { return !i.hidden &amp;&amp; !i.disabled; });
         var current = available.indexOf(document.activeElement);
@@ -19580,6 +19584,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
        ============================================================ */
     document.addEventListener(&#39;keydown&#39;, function (e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.shiftKey &amp;&amp; (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39; || e.key === &#39;Home&#39; || e.key === &#39;End&#39;)) return;
       if (e.defaultPrevented) return;
       var t = e.target;
       if (t &amp;&amp; (t.tagName === &#39;INPUT&#39; || t.tagName === &#39;TEXTAREA&#39; || t.isContentEditable)) return;
@@ -25744,6 +25749,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         else open(false);
       });
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -25760,6 +25766,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;) { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         var available = options();
         var active = available.indexOf(document.activeElement);
         switch (e.key) {
@@ -27183,6 +27190,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       });
       // APG menu-button pattern: ArrowDown/ArrowUp on the trigger opens the menu.
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -27198,6 +27206,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;)    { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
 
         var available = items().filter(function (i) { return !i.hidden &amp;&amp; !i.disabled; });
         var current = available.indexOf(document.activeElement);
@@ -34680,6 +34689,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
        ============================================================ */
     document.addEventListener(&#39;keydown&#39;, function (e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.shiftKey &amp;&amp; (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39; || e.key === &#39;Home&#39; || e.key === &#39;End&#39;)) return;
       if (e.defaultPrevented) return;
       var t = e.target;
       if (t &amp;&amp; (t.tagName === &#39;INPUT&#39; || t.tagName === &#39;TEXTAREA&#39; || t.isContentEditable)) return;

@@ -131,7 +131,7 @@ Actor rows: `actor <id> | label | type`. Message rows: `from | to | label | vari
 | trace > fix | cause found | emphasis |
 ```
 
-Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Nodes widen to fit their labels. Keep edge labels to one or two words.
+Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Nodes widen to fit their labels, so a node label names the step in a few words (up to about 10 Chinese characters or 4 English words) and `@steps` carries the detail. Keep edge labels to one or two words.
 
 Group the steps of a process into phases: declare `lane <id> | label` rows, then give each workflow node its phase as a fourth cell. Up to six nodes draw as one row with the phase labels above it; a longer process wraps into one row per phase.
 

@@ -153,7 +153,7 @@
     });
   }
   // Edge labels are secondary to node text and may sit a little below the reading floor.
-  const secondary = text => text.closest('[data-edge-id]') ? .8 : 1;
+  const secondary = text => text.closest('[data-edge-id]') ? .7 : 1;
   function textFloor() {
     const bodySize = parseFloat(getComputedStyle(document.querySelector('.block-prose>p') || document.body).fontSize);
     return window.innerWidth >= 1440 ? Math.max(10,bodySize * .75) : 10;

@@ -63,6 +63,18 @@ function duplicateCheck(items, context, kind) {
   }
 }
 
+// Estimated native workflow canvas width for a column assignment: the widest node per column plus the
+// column gaps, which widen for edge labels. Measured within about 10% of real canvases. The native gate
+// projects 8px edge labels onto a 930px reader, so 1240px is the hard limit; this keeps a margin.
+const READABLE_WORKFLOW_WIDTH = 1100;
+function workflowWidth(nodes, edges) {
+  const columns = Math.max(...nodes.map(node => node.col)) + 1;
+  const widest = Array.from({ length: columns }, (_, col) => Math.max(92, ...nodes.filter(node => node.col === col).map(node => node.width || 0)));
+  const colOf = new Map(nodes.map(node => [node.id, node.col]));
+  const gaps = Array.from({ length: columns - 1 }, (_, col) => Math.max(34, ...edges.filter(edge => colOf.get(edge.from) === col && colOf.get(edge.to) === col + 1).map(edge => (edge.label ? textUnits(edge.label) * 5.4 : 0) + 16)));
+  return widest.reduce((sum, width) => sum + width, 0) + gaps.reduce((sum, gap) => sum + gap, 0) + 80;
+}
+
 // Placement supplies native grid/lane hints only. Native renderers own sizing,
 // ports, routes, labels, and all quality validation.
 function rankedPlacement(nodes, edges) {
@@ -197,26 +209,29 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
       const first = lanes.keys().next().value;
       const order = [...lanes.keys()];
       const ranked = [...placed].sort((a, b) => a.col - b.col || a.row - b.row).map(({ row, col, ...node }) => ({ ...node, lane: nodeLanes.get(node.id)?.lane || first }));
-      // Up to six nodes read best as one row with phase labels above it; longer processes wrap into lane rows.
-      if (ranked.length <= 6 && placed.every(node => node.row === 0)) {
-        const row = ranked.sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane));
-        spec.lanes = [{ id: 'flow', label: spec.meta.title }];
-        spec.nodes = row.map(({ lane, ...node }, col) => ({ ...node, lane: 'flow', col }));
-        spec.phases = order.map(id => ({ id, label: lanes.get(id).label, cols: row.flatMap((node, col) => node.lane === id ? [col] : []) })).filter(phase => phase.cols.length).map(({ cols, ...phase }) => ({ ...phase, fromCol: cols[0], toCol: cols.at(-1) }));
-      } else {
-        // Each phase row starts under the end of the previous one when the staircase fits six columns,
-        // so the hand-off edge drops straight down instead of crossing back over the rows.
-        spec.lanes = [...lanes.values()].filter(lane => ranked.some(node => node.lane === lane.id));
-        const sizes = spec.lanes.map(lane => ranked.filter(node => node.lane === lane.id).length);
-        const stair = sizes.reduce((sum, size) => sum + size, 0) - (sizes.length - 1) <= 6;
+      // Prefer, in order: one row with phase labels above it; phase rows that step down so each hand-off
+      // edge drops straight; phase rows that each restart at the left. Take the first that stays within
+      // the readable width, since a wider canvas shrinks its edge labels below the native text floor.
+      const row = [...ranked].sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane));
+      const used = [...lanes.values()].filter(lane => ranked.some(node => node.lane === lane.id));
+      const sizes = used.map(lane => ranked.filter(node => node.lane === lane.id).length);
+      const wrapped = stair => {
         const starts = sizes.map((_, i) => stair ? sizes.slice(0, i).reduce((sum, size) => sum + size - 1, 0) : 0);
-        const nextCol = new Map(spec.lanes.map((lane, i) => [lane.id, starts[i]]));
-        spec.nodes = ranked.map(node => {
-          const laneCol = nextCol.get(node.lane);
-          nextCol.set(node.lane, laneCol + 1);
-          return { ...node, col: laneCol };
-        });
-      }
+        const nextCol = new Map(used.map((lane, i) => [lane.id, starts[i]]));
+        return ranked.map(node => { const col = nextCol.get(node.lane); nextCol.set(node.lane, col + 1); return { ...node, col }; });
+      };
+      const single = row.map(({ lane, ...node }, col) => ({ ...node, lane: 'flow', col }));
+      const candidates = [
+        ...(ranked.length <= 6 && placed.every(node => node.row === 0) ? [{ nodes: single, single: true }] : []),
+        ...(sizes.reduce((sum, size) => sum + size, 0) - (sizes.length - 1) <= 6 ? [{ nodes: wrapped(true) }] : []),
+        { nodes: wrapped(false) },
+      ];
+      const chosen = candidates.find(candidate => workflowWidth(candidate.nodes, edges) <= READABLE_WORKFLOW_WIDTH) || candidates.at(-1);
+      spec.nodes = chosen.nodes;
+      if (chosen.single) {
+        spec.lanes = [{ id: 'flow', label: spec.meta.title }];
+        spec.phases = order.map(id => ({ id, label: lanes.get(id).label, cols: row.flatMap((node, col) => node.lane === id ? [col] : []) })).filter(phase => phase.cols.length).map(({ cols, ...phase }) => ({ ...phase, fromCol: cols[0], toCol: cols.at(-1) }));
+      } else spec.lanes = used;
       if (spec.nodes.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'A workflow lane holds at most six nodes.', 'Split the process into another lane.');
       spec.edges = edges;
     } else {

@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { sameEntry } from '../archify/renderers/shared/path-semantics.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -277,7 +278,9 @@ async function stopChrome(chrome, profileRoot, timeoutMs = 5000) {
   forcedDelay.cancel();
   releaseChildStreams(chrome);
   if (!forced && !settled) {
-    throw new Error(`Chrome did not exit; profile retained at ${profileRoot}`);
+    const error = new Error(`Chrome did not exit; profile retained at ${profileRoot}`);
+    error.retainProfile = true;
+    throw error;
   }
 }
 
@@ -376,6 +379,20 @@ function buildGif(ffmpeg, framesRoot) {
   if (result.status !== 0) throw new Error(`ffmpeg failed:\n${result.stderr || result.stdout}`);
 }
 
+// The owner of the temporary root must honor Chrome shutdown failure too.
+export async function withCaptureDirectory(capture) {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'archify-readme-showcase-'));
+  let retainProfile = false;
+  try {
+    return await capture(tempRoot);
+  } catch (error) {
+    retainProfile = error.retainProfile === true;
+    throw error;
+  } finally {
+    if (!retainProfile) fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
 async function main() {
   for (const scene of scenes) {
     const artifact = path.join(repoRoot, scene.artifact);
@@ -384,8 +401,7 @@ async function main() {
   const chromePath = findChrome();
   if (!chromePath) throw new Error('Chrome or Chromium is required. Set ARCHIFY_CHROME to its executable path.');
   const ffmpeg = requireCommand('ffmpeg', 'Install it with your system package manager.');
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'archify-readme-showcase-'));
-  try {
+  await withCaptureDirectory(async (tempRoot) => {
     const { framesRoot, frameCount } = await captureFrames(chromePath, tempRoot);
     buildGif(ffmpeg, framesRoot);
     const receipt = {
@@ -413,13 +429,11 @@ async function main() {
     console.log(`README showcase ${frameCount} frames / ${receipt.durationSeconds.toFixed(1)}s / ${receipt.bytes} bytes`);
     console.log(outputPath);
     console.log(receiptPath);
-  } finally {
-    fs.rmSync(tempRoot, { recursive: true, force: true });
-  }
+  });
 }
 
 const invokedDirectly = process.argv[1]
-  && import.meta.url === pathToFileURL(process.argv[1]).href;
+  && sameEntry(fileURLToPath(import.meta.url), process.argv[1]).status === 'match';
 if (invokedDirectly) {
   main().catch(error => {
     console.error(error.stack || error.message);

@@ -172,7 +172,7 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
     } else {
       if (placed.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'Native workflow columns are limited to 0–5.', 'Use native workflow JSON with branches distributed across lanes.');
       spec.lanes = Array.from({ length: Math.max(1, ...placed.map(node => node.row + 1)) }, (_, row) => ({ id: `lane-${row}`, label: row ? `分支 ${row}` : spec.meta.title }));
-      spec.nodes = placed.map(({ row, ...node }) => ({ ...node, lane: `lane-${row}`, width: 168 }));
+      spec.nodes = placed.map(({ row, ...node }) => ({ ...node, lane: `lane-${row}` }));
       spec.edges = edges;
     }
   } else if (diagramType === 'tree') {

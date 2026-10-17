@@ -99,7 +99,8 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
     }
     function cells(raw, line) {
       const trimmed = raw.trim();
-      const value = trimmed.startsWith('|') && trimmed.endsWith('|') ? trimmed.slice(1,-1) : trimmed;
+      let value = trimmed.startsWith('|') ? trimmed.slice(1) : trimmed;
+      if (value.endsWith('|') && !/(^|[^\\])(\\\\)*\\\|$/u.test(value)) value = value.slice(0,-1);
       const result = []; let cell = '', code = false;
       for (let i = 0; i < value.length; i++) {
         const char = value[i];

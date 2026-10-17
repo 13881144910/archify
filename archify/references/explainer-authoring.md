@@ -111,7 +111,7 @@ Actor rows: `actor <id> | label | type`. Message rows: `from | to | label | vari
 | trace > fix | cause found | emphasis |
 ```
 
-Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Workflows allow six columns from start to end; architecture allows twelve. Use `@architecture` for components that talk to each other and `@workflow` for steps a reader follows.
+Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Nodes widen to fit their labels. Keep a workflow to five nodes along its longest path and edge labels to one or two words: a longer chain shrinks its text below the readable size; use `@steps` for long sequences. Architecture allows twelve columns. Use `@architecture` for components that talk to each other and `@workflow` for steps a reader follows.
 
 **`@tree`**: one row per node, `id | label | parent`; the root's parent is `-`.
 
@@ -154,7 +154,7 @@ Other native types (`dataflow`, `lifecycle`, `class`, `waterfall`) and diagrams 
 | Directive | Header arguments | Rows |
 | --- | --- | --- |
 | `@answer` | `scope="..."` | none |
-| `@meta` | `locale`, `quality_profile`, `repo_url`, `repo_revision` | none |
+| `@meta` | `locale` (`en`, `zh-CN`, `zh-TW`, `es`, `ko`, `ar`), `quality_profile`, `repo_url`, `repo_revision` | none |
 | `@source <id>` | `title`, `url`, or `path` with `lines=start:end` | none |
 | `@steps` | `id` | `id | title | detail? | diagram-id? | node? | from~to? | edge-ids?` (node and route are exclusive) |
 | `@callout` | `id`, `level=note|warning|open-question`, `title` | one cell per row; rows join into paragraphs |

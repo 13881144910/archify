@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { parse } from 'parse5';
 import { parseSitemap } from '../scripts/indexnow.mjs';
+import { stripPublishedArtifactMetadata } from '../scripts/publish-seo.mjs';
 const cloudflare = process.env.ARCHIFY_SITE_TARGET === 'cloudflare';
 const output = new URL(cloudflare ? '../dist-cloudflare/' : '../dist/', import.meta.url);
 const origin = cloudflare ? 'https://archify.si/' : 'https://tt-a1i.github.io/archify/';
@@ -57,8 +58,11 @@ test('MCO case exposes pinned source, honest limits, stable sections and nested 
 test('MCO case inventory includes both wrappers and preserves original artifact and typed source bytes', () => {
   const urls = parseSitemap(fs.readFileSync(new URL('sitemap.xml', output), 'utf8'));
   for (const prefix of ['', 'zh/']) assert.ok(urls.includes(`https://archify.si/${prefix}cases/mco-runtime`));
+  assert.ok(urls.includes('https://archify.si/cases/mco-runtime.architecture'), 'the standalone artifact is distinct from the explanatory article');
   for (const extension of ['html', 'json']) {
     const file = `cases/mco-runtime.architecture.${extension}`;
-    assert.deepEqual(fs.readFileSync(new URL(file, output)), fs.readFileSync(new URL(`../../docs/${file}`, import.meta.url)), file);
+    const published = fs.readFileSync(new URL(file, output));
+    const original = extension === 'html' ? Buffer.from(stripPublishedArtifactMetadata(published.toString('utf8'))) : published;
+    assert.deepEqual(original, fs.readFileSync(new URL(`../../docs/${file}`, import.meta.url)), file);
   }
 });

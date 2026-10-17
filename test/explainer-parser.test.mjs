@@ -148,3 +148,12 @@ test('plain code fences become literal snippets, diff fences become diffs, and t
  assert.equal(parseExplainer(draft('```js\nopen()')).document,null);
  assert.equal(parseExplainer(draft('```js lines=1:2\nx\n```')).document,null);
 });
+
+test('a callout may take the following paragraph and may share its panel ID without failing',()=>{
+  const {document}=parse('# Title\n\nAnswer.\n\n## Pitfalls {#pitfalls}\n\n@callout id=pitfalls level=warning title="Stop first"\n\nDo not pay before checking the deed.\nAsk for the owner ID.\n\n## Next {#next}\n\nText.');
+  const callout=document.panels[0].blocks[0];
+  assert.equal(document.panels[0].blocks.length,1);
+  assert.equal(callout.id,'pitfalls-callout');
+  assert.equal(callout.text,'Do not pay before checking the deed.\nAsk for the owner ID.');
+  assert.equal(parseExplainer('# T\n\nA.\n\n## Q {#flow}\n\n@sequence id=flow\n| a | b | hi |').document,null,'a diagram keeps its ID, so a clash with its panel still fails');
+});

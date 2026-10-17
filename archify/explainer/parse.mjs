@@ -90,6 +90,9 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
     }
     function addBlock(block, at, until, rows = []) {
       if (!panel) { fail(at + 1,block.type,'Blocks must follow a question panel heading.','## What should I know?'); return; }
+      // A block named after its own panel points at the same place; keep both reachable instead of failing.
+      // Diagrams keep their ID because node and route links name it.
+      if (block.id && block.id === panel.id && block.type !== 'diagram') block.id = `${panel.id}-${block.type}`;
       block.id ||= stable(block.type,`${panel.id}\0${JSON.stringify(block)}`);
       if (block.type === 'comparison') for (const row of block.rows) row.id ||= stable('row', `${block.id}\0${row.label}`);
       const pointer = `/panels/${panelIndex}/blocks/${panel.blocks.length}`;
@@ -162,6 +165,12 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
       } else {
         // A directive row never starts with an empty cell; "|| id |" is a line-number prefix copied from a file viewer.
         while (cursor<lines.length && lines[cursor].trim() && !/^(?:#{1,2}\s|@)/u.test(lines[cursor].trim())) { rows.push({cells:cells(lines[cursor].replace(/^(\s*)\|\|(?=\s)/u,'$1|'),cursor),line:cursor}); cursor++; }
+        // A callout with no rows takes the plain paragraph that follows it as its text.
+        if (type==='callout' && !rows.length && a.text===undefined) {
+          let next=cursor; while (next<lines.length && !lines[next].trim()) next++;
+          const paragraph=[]; while (next<lines.length && lines[next].trim() && !/^(?:#{1,2}\s|@|\||[-*+]\s|\d+\.\s|```|~~~)/u.test(lines[next].trim())) { paragraph.push({cells:[lines[next].trim()],line:next}); next++; }
+          if (paragraph.length) { rows.push(...paragraph); cursor=next; }
+        }
       }
       const allowed = {
         source:['title','url','path','lines','revision'],meta:['locale','quality_profile','repo_url','repo_revision','repo_provider','repo_link_mode'],answer:['scope'],

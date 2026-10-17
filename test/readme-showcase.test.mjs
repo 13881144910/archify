@@ -75,7 +75,9 @@ function git(cwd, args, env = process.env) {
 // up from that override: a missing directory there would hide the installed Bash.
 function gitBashForWindows(cwd, env = process.env) {
   const discoveryEnv = { ...env };
-  delete discoveryEnv.GIT_EXEC_PATH;
+  for (const key of Object.keys(discoveryEnv)) {
+    if (key.toUpperCase() === 'GIT_EXEC_PATH') delete discoveryEnv[key];
+  }
   const execPath = git(cwd, ['--exec-path'], discoveryEnv);
   const gitExe = path.resolve(execPath, '..', '..', 'bin', 'git.exe');
   const gitBash = path.resolve(execPath, '..', '..', '..', 'bin', 'bash.exe');
@@ -380,11 +382,13 @@ test('all README languages end with the self-hosted star history chart', () => {
 
 test('Windows Git Bash discovery ignores GIT_EXEC_PATH', { skip: process.platform !== 'win32' }, () => {
   const missing = path.join(os.tmpdir(), 'archify-missing-git-exec-path');
-  const overridden = gitBashForWindows(repoRoot, { ...process.env, GIT_EXEC_PATH: missing });
   const normal = gitBashForWindows(repoRoot);
-  assert.equal(overridden.gitBash, normal.gitBash);
-  assert.equal(fs.existsSync(overridden.gitBash), true);
-  assert.equal(fs.existsSync(overridden.gitExe), true);
+  for (const key of ['GIT_EXEC_PATH', 'Git_Exec_Path', 'git_exec_path']) {
+    const overridden = gitBashForWindows(repoRoot, { ...process.env, [key]: missing });
+    assert.equal(overridden.gitBash, normal.gitBash);
+    assert.equal(fs.existsSync(overridden.gitBash), true);
+    assert.equal(fs.existsSync(overridden.gitExe), true);
+  }
   assert.equal(fs.existsSync(missing), false);
 });
 

@@ -20,7 +20,6 @@ test('agent guide is readable without JavaScript, honest about examples, and lin
     const article = all.find(node => node.tagName === 'article');
     assert.ok(article);
     assert.equal(nodes(article).filter(node => node.tagName === 'h1').length, 1);
-    assert.equal(nodes(article).filter(node => node.tagName === 'blockquote').length, 2);
     const visible = text(article);
     assert.match(visible, lang === 'en' ? /two separate sequence diagrams/i : /分别画两张时序图/);
     assert.match(visible, lang === 'en' ? /not the output of this prompt/ : /不是上述提示词的生成结果/);
@@ -31,7 +30,7 @@ test('agent guide is readable without JavaScript, honest about examples, and lin
     assert.equal(structuredArticle.url, `https://archify.si/${prefix}agent-diagrams`);
     assert.equal(structuredArticle.inLanguage, lang === 'zh' ? 'zh-Hans' : 'en');
     const ids = new Set(all.map(node => attr(node, 'id')).filter(Boolean));
-    for (const id of ['responsibilities', 'setup', 'description-workflow', 'cache-scenarios', 'repository-evidence', 'review-and-share', 'questions']) assert.ok(ids.has(id), `${lang}: stable cross-language section ${id}`);
+    for (const id of ['responsibilities', 'setup', 'description-workflow', 'mermaid-input', 'cache-scenarios', 'repository-evidence', 'review-and-share', 'questions']) assert.ok(ids.has(id), `${lang}: stable cross-language section ${id}`);
     const toc = all.find(node => attr(node, 'class') === 'article-toc');
     for (const link of nodes(toc).filter(node => node.tagName === 'a')) {
       const destination = new URL(attr(link, 'href'), baseUri);
@@ -94,7 +93,7 @@ test('description workflow exposes pinned evidence, honest limits and localized 
     const start = nodes(article).find(node => attr(node, 'id') === 'description-workflow').parentNode;
     const siblings = start.parentNode.childNodes;
     const rest = siblings.slice(siblings.indexOf(start) + 1);
-    const end = rest.findIndex(node => nodes(node).some(child => attr(child, 'id') === 'cache-scenarios'));
+    const end = rest.findIndex(node => nodes(node).some(child => attr(child, 'id') === 'mermaid-input'));
     const section = rest.slice(0, end).flatMap(nodes);
     const visible = rest.slice(0, end).map(text).join('');
     assert.match(visible, /1 \+ 4 \+ 3 \+ 2/);
@@ -113,5 +112,54 @@ test('description workflow exposes pinned evidence, honest limits and localized 
     const published = fs.readFileSync(new URL(file, output));
     const original = extension === 'html' ? Buffer.from(stripPublishedArtifactMetadata(published.toString('utf8'))) : published;
     assert.deepEqual(original, fs.readFileSync(new URL(`../../docs/${file}`, import.meta.url)), 'existing artifact bytes remain unchanged outside the publication metadata block');
+  }
+});
+
+test('Mermaid guidance preserves the literal example, explains semantic reauthoring and is linked from localized Start pages', () => {
+  const origin = cloudflare ? 'https://archify.si/' : 'https://tt-a1i.github.io/archify/';
+  for (const lang of ['en', 'zh']) {
+    const prefix = lang === 'zh' ? 'zh/' : '';
+    const all = nodes(parse(fs.readFileSync(new URL(`${prefix}agent-diagrams.html`, output), 'utf8')));
+    const base = new URL(attr(all.find(node => node.tagName === 'base'), 'href'), origin + `${prefix}agent-diagrams.html`);
+    const article = all.find(node => node.tagName === 'article');
+    const start = nodes(article).find(node => attr(node, 'id') === 'mermaid-input').parentNode;
+    const siblings = start.parentNode.childNodes;
+    const rest = siblings.slice(siblings.indexOf(start) + 1);
+    const end = rest.findIndex(node => nodes(node).some(child => attr(child, 'id') === 'cache-scenarios'));
+    assert.ok(end > 0, 'the Mermaid section is bounded before the next topic');
+    const section = rest.slice(0, end).flatMap(nodes);
+    const visible = rest.slice(0, end).map(text).join('');
+    const source = text(section.find(node => node.tagName === 'pre'));
+    assert.match(source, /^flowchart LR\n/);
+    assert.deepEqual(Object.fromEntries([...source.matchAll(/([A-Z])\[([^\]]+)\]/g)].map(match => [match[1], match[2]])), {
+      A: 'Submit request', B: 'Review request', C: 'Proceed', D: 'Revise request',
+    });
+    const relationships = [...source.matchAll(/^\s*([A-Z])(?:\[[^\]]+\])?\s*-->(?:\|([^|]+)\|)?\s*([A-Z])/gm)]
+      .map(([, from, label = '', to]) => ({ from, to, label }));
+    assert.deepEqual(relationships, [
+      { from: 'A', to: 'B', label: '' },
+      { from: 'B', to: 'C', label: 'Approved' },
+      { from: 'B', to: 'D', label: 'Changes needed' },
+      { from: 'D', to: 'B', label: '' },
+    ]);
+    assert.match(visible, lang === 'en' ? /authors fresh Archify JSON/ : /编写新的 Archify JSON/);
+    assert.match(visible, lang === 'en' ? /not a Mermaid parser.*lossless round-trip converter/ : /不是 Mermaid 解析器.*不承诺无损往返转换/);
+    assert.match(visible, lang === 'en' ? /not a recorded conversion or a checked output/ : /不是一次实测转换，也不是已经校验过的成品/);
+    const prompt = text(section.find(node => node.tagName === 'blockquote'));
+    for (const label of ['Approved', 'Changes needed', 'Revise request', 'Review request']) assert.ok(prompt.includes(label));
+    assert.match(prompt, lang === 'en' ? /explain the limitation before simplifying/ : /先说明限制，再讨论简化方式/);
+    assert.equal(section.filter(node => node.tagName === 'li').length, 4, 'the semantic review checklist is readable without JavaScript');
+    const links = section.filter(node => node.tagName === 'a').map(node => new URL(attr(node, 'href'), base).href);
+    assert.ok(links.includes('https://github.com/tt-a1i/archify/blob/88d1ae4498b6a1df610badf690c5406882622d15/archify/SKILL.md#mermaid-input'));
+    assert.ok(links.includes('https://mermaid.ai/open-source/config/usage.html'));
+    assert.ok(nodes(article).some(node => node.tagName === 'a' && new URL(attr(node, 'href'), base).hash === '#mermaid-input'), 'the FAQ points to the full explanation');
+
+    const entryNodes = nodes(parse(fs.readFileSync(new URL(`${prefix}start.html`, output), 'utf8')));
+    const entryBase = new URL(attr(entryNodes.find(node => node.tagName === 'base'), 'href'), origin + `${prefix}start.html`);
+    const help = entryNodes.find(node => (attr(node, 'class') || '').split(/\s+/).includes('mermaid-guide-link'));
+    const link = nodes(help).find(node => node.tagName === 'a');
+    assert.equal(text(link), lang === 'en' ? 'Already have Mermaid? Learn how to use it as agent input →' : '已有 Mermaid？了解怎样把它交给 Agent →');
+    assert.equal(new URL(attr(link, 'href'), entryBase).href, origin + `${prefix}agent-diagrams${cloudflare ? '' : '.html'}#mermaid-input`);
+    assert.deepEqual(entryNodes.filter(node => attr(node, 'data-input')).map(node => attr(node, 'data-input')), ['description', 'repository'], 'Mermaid help does not introduce a new input mode');
   }
 });

@@ -117,11 +117,17 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
         })()`);
         // Capture bounded viewport tiles so long mobile prompts and limits are not
         // silently cropped or squeezed into an unreadable full-page thumbnail.
-        for (const region of ['opening', 'description-workflow', 'cache-example', 'review-limits']) {
+        for (const [region, startId, endId] of [
+          ['opening', null, 'responsibilities'],
+          ['description-workflow', 'description-workflow', 'mermaid-input'],
+          ['mermaid-input', 'mermaid-input', 'cache-scenarios'],
+          ['cache-example', 'cache-scenarios', 'repository-evidence'],
+          ['review-limits', 'review-and-share', 'questions'],
+        ]) {
           const bounds = await evaluate(`(() => {
             const article = document.querySelector('.article-body');
-            const start = ${JSON.stringify(region)} === 'opening' ? article.querySelector('h1') : document.getElementById(${JSON.stringify(region === 'description-workflow' ? 'description-workflow' : region === 'cache-example' ? 'cache-scenarios' : 'review-and-share')});
-            const end = document.getElementById(${JSON.stringify(region === 'opening' ? 'responsibilities' : region === 'description-workflow' ? 'cache-scenarios' : region === 'cache-example' ? 'repository-evidence' : 'questions')});
+            const start = ${JSON.stringify(startId)} ? document.getElementById(${JSON.stringify(startId)}) : article.querySelector('h1');
+            const end = document.getElementById(${JSON.stringify(endId)});
             return { top: start.getBoundingClientRect().top + scrollY, bottom: end.getBoundingClientRect().top + scrollY, nav: document.querySelector('.site-nav').getBoundingClientRect().bottom };
           })()`);
           const inset = bounds.nav + 20;
@@ -165,11 +171,46 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
       assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
       assert.equal(await evaluate('location.hash'), '#description-workflow');
       const workflowLocalePosition = await assertSectionVisible();
+      await evaluate(`document.querySelector('.article-toc a[href$="#mermaid-input"]').click()`);
+      await settled();
+      assert.equal(await evaluate('location.hash'), '#mermaid-input');
+      const mermaidPosition = await assertSectionVisible();
+      await loadedAction(() => evaluate(`document.querySelector('[data-language-switch]').click()`));
+      assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', other)).pathname);
+      assert.equal(await evaluate('location.hash'), '#mermaid-input');
+      const mermaidLocalePosition = await assertSectionVisible();
+      await loadedAction(() => evaluate(`document.querySelector('[data-language-switch]').click()`));
+      assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
+      assert.equal(await evaluate('location.hash'), '#mermaid-input');
       await loadedAction(() => evaluate(`document.querySelector('.article-body a[href*="type=workflow"]').click()`));
       assert.equal(await evaluate('location.pathname'), new URL(urlFor('start', lang)).pathname);
       assert.equal(await evaluate('new URL(location.href).searchParams.get("input")'), 'description');
       assert.equal(await evaluate(`document.querySelector('[data-type="workflow"]').getAttribute('aria-selected')`), 'true');
       assert.equal(await evaluate(`document.querySelector('[data-input="description"]').getAttribute('aria-selected')`), 'true');
+      for (const theme of ['light', 'dark']) {
+        await evaluate(`if (document.documentElement.dataset.theme !== ${JSON.stringify(theme)}) document.querySelector('[data-theme-toggle]').click()`);
+        await evaluate(`document.querySelector('.mermaid-guide-link').scrollIntoView({ block: 'center', behavior: 'instant' })`);
+        await settled();
+        const help = await evaluate(`(() => {
+          const link = document.querySelector('.mermaid-guide-link a'), style = getComputedStyle(link);
+          const range = document.createRange(); range.selectNodeContents(link);
+          const rects = [...range.getClientRects()];
+          return { theme: document.documentElement.dataset.theme, pageWidth: document.documentElement.scrollWidth, visible: style.visibility === 'visible' && style.display !== 'none', rects: rects.map(({ left, right, top, bottom }) => ({ left, right, top, bottom })), navBottom: document.querySelector('.site-nav').getBoundingClientRect().bottom };
+        })()`);
+        assert.equal(help.theme, theme);
+        assert.ok(help.visible && help.rects.length > 0, 'Start help is visible');
+        assert.ok(help.pageWidth <= width + 1, 'Start has no horizontal page overflow');
+        assert.ok(help.rects.every(box => box.left >= 0 && box.right <= width && box.top >= help.navBottom && box.bottom <= 1000), 'the complete Start help link is readable below navigation');
+        const name = `agent-diagrams-${lang}-${width}-${theme}-start-help.png`;
+        const image = await browser.cdp.send('Page.captureScreenshot', { format: 'png' }, session);
+        fs.writeFileSync(path.join(output, name), Buffer.from(image.data, 'base64'));
+        manifest.screenshots.push({ file: name, width, height: 1000, lang, theme, region: 'start-help', reading: help });
+        saveManifest();
+      }
+      await loadedAction(() => evaluate(`document.querySelector('.mermaid-guide-link a').click()`));
+      assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
+      assert.equal(await evaluate('location.hash'), '#mermaid-input');
+      const mermaidStartPosition = await assertSectionVisible();
       await navigate(urlFor('agent-diagrams', other));
       await loadedAction(() => evaluate(`document.querySelector('.article-body a[href="cases/life/leave-plan.workflow.html"]').click()`));
       assert.equal(await evaluate('location.pathname'), `${mount}/cases/life/leave-plan.workflow.html`);
@@ -182,7 +223,7 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
       await navigate(urlFor('guide', lang));
       await loadedAction(() => evaluate(`document.querySelector('.agent-guide-link a').click()`));
       assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
-      manifest.navigation.push({ width, lang, result: 'passed', tocPosition, localePosition, workflowPosition, workflowLocalePosition, paths: ['toc', 'language with fragment', 'workflow section and locale', 'workflow description quick start', 'existing leave artifact', 'article to start', 'start to article', 'guide to article'] });
+      manifest.navigation.push({ width, lang, result: 'passed', tocPosition, localePosition, workflowPosition, workflowLocalePosition, mermaidPosition, mermaidLocalePosition, mermaidStartPosition, paths: ['toc', 'language with fragment', 'workflow section and locale', 'Mermaid section and locale', 'workflow description quick start', 'Start Mermaid help', 'existing leave artifact', 'article to start', 'start to article', 'guide to article'] });
       saveManifest();
     }
   } finally {

@@ -38,6 +38,35 @@ Archify 根据源文件生成 HTML，并执行对应的渲染与校验。你可�
 
 想从自己的描述开始，可打开[工作流快速开始](start.html?type=workflow&input=description)，只提供已确认的步骤和规则，并标出未知条件。
 
+<span id="mermaid-input" class="section-anchor" aria-hidden="true"></span>
+
+## 把 Mermaid 交给 Agent，而不是承诺自动转换
+
+如果已有 Mermaid 图，可以把源文本交给已配置好的 Coding Agent。Agent 理解其中的关系，再编写新的 Archify JSON；Archify 渲染并检查这份 JSON。这不是 Mermaid 解析器、换肤工具，也不承诺无损往返转换。
+
+例如，下面的流程图描述了四个步骤和四条有方向的关系：
+
+<pre><code>flowchart LR
+  A[Submit request] --> B[Review request]
+  B -->|Approved| C[Proceed]
+  B -->|Changes needed| D[Revise request]
+  D --> B</code></pre>
+
+可以这样要求 Agent：
+
+> 用 Archify 把这段 Mermaid 输入画成交互式工作流图。保留四个步骤、Approved 和 Changes needed 两个分支标签，以及从 Revise request 返回 Review request 的关系。不要添加人物、期限或额外步骤。如果某种结构无法忠实表达，先说明限制，再讨论简化方式。
+
+这是示例输入，不是一次实测转换，也不是已经校验过的成品。
+
+先检查含义，再看外观：
+
+- 原来的每个步骤是否仍承担相同职责？
+- 两个分支的标签和目标是否保留？
+- 修改后是否回到审阅，而不是直接结束？
+- 是否遗漏、合并或新增了内容？
+
+保留原始 Mermaid，与新的 JSON 对照检查。不要假定 Mermaid 的样式、布局指令或回调会一并保留。[固定版本的 Skill](https://github.com/tt-a1i/archify/blob/88d1ae4498b6a1df610badf690c5406882622d15/archify/SKILL.md#mermaid-input) 说明了受支持的输入类型。如果只想保留 Mermaid 语法并在网页中直接渲染，应使用 [Mermaid 自己的渲染方式](https://mermaid.ai/open-source/config/usage.html)。
+
 <span id="cache-scenarios" class="section-anchor" aria-hidden="true"></span>
 
 ## 第一个例子：分别画缓存命中与未命中
@@ -110,7 +139,7 @@ Archify 根据源文件生成 HTML，并执行对应的渲染与校验。你可�
 
 ### 能从 Mermaid 开始吗？
 
-可以让 Agent 理解受支持的 Mermaid 输入，并按含义重新编写 Archify JSON。这不等于承诺完整自动解析或无损往返转换。转换后要检查重要关系和分支是否保留下来。
+可以。参见[怎样把 Mermaid 交给 Agent](#mermaid-input)，了解一个小例子、提示词，以及接受结果前要检查的含义。
 
 ### 必须有代码仓库吗？
 

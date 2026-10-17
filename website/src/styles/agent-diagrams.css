@@ -17,6 +17,8 @@
 .article-body a, .article-footer a { color:var(--accent-text); text-underline-offset:4px; }
 .article-body ul { padding-left:1.3rem; color:var(--text-2); }
 .article-body li { margin:.65rem 0; }
+.article-body pre { margin:1.5rem 0; padding:1rem; border:1px solid var(--line-hi); border-radius:12px; background:var(--surface); color:var(--text); font:400 .85rem/1.75 var(--font-mono); white-space:pre-wrap; overflow-wrap:anywhere; }
+.article-body pre code { font:inherit; }
 .article-body blockquote { margin:1.5rem 0; padding:.6rem 1.4rem; border-left:3px solid var(--accent); background:var(--surface); border-radius:0 12px 12px 0; }
 .article-body blockquote p { color:var(--text); }
 .article-footer { position:relative; max-width:1180px; margin:auto; padding:2rem 24px 4rem; border-top:1px solid var(--line-hi); display:flex; flex-wrap:wrap; gap:2rem; }

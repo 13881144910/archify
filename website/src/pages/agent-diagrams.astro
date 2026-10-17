@@ -7,7 +7,7 @@ import head from '../data/agent-diagrams-head.html?raw';
 import css from '../styles/agent-diagrams.css?raw';
 const { lang = 'en' } = Astro.props;
 const Content = lang === 'zh' ? Chinese : English;
-const sectionIds = ['responsibilities', 'setup', 'description-workflow', 'cache-scenarios', 'repository-evidence', 'review-and-share', 'questions'];
+const sectionIds = ['responsibilities', 'setup', 'description-workflow', 'mermaid-input', 'cache-scenarios', 'repository-evidence', 'review-and-share', 'questions'];
 const headings = (lang === 'zh' ? chineseHeadings() : englishHeadings()).filter(heading => heading.depth === 2).map((heading, index) => ({ ...heading, slug: sectionIds[index] }));
 
 ---

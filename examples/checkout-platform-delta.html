@@ -10730,6 +10730,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         else open(false);
       });
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -10746,6 +10747,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;) { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         var available = options();
         var active = available.indexOf(document.activeElement);
         switch (e.key) {
@@ -12169,6 +12171,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       });
       // APG menu-button pattern: ArrowDown/ArrowUp on the trigger opens the menu.
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -12184,6 +12187,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;)    { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
 
         var available = items().filter(function (i) { return !i.hidden &amp;&amp; !i.disabled; });
         var current = available.indexOf(document.activeElement);
@@ -14811,6 +14815,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         syncRelationshipPreview();
       });
       relationshipList.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         if (event.key !== &#39;ArrowDown&#39; &amp;&amp; event.key !== &#39;ArrowUp&#39; &amp;&amp; event.key !== &#39;Home&#39; &amp;&amp; event.key !== &#39;End&#39;) return;
         var buttons = Array.prototype.slice.call(relationshipList.querySelectorAll(&#39;[data-relationship-target]&#39;));
         if (!buttons.length) return;
@@ -17599,6 +17604,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       closeBtn.addEventListener(&#39;click&#39;, function () { close(); });
       input.addEventListener(&#39;input&#39;, function () { render(input.value); });
       input.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var buttons = resultButtons();
         if (event.key === &#39;ArrowDown&#39; &amp;&amp; buttons.length) {
           event.preventDefault();
@@ -17609,6 +17615,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         }
       });
       results.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var buttons = resultButtons();
         var index = buttons.indexOf(document.activeElement);
         if (index &lt; 0 || !buttons.length) return;
@@ -17643,6 +17650,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         count: items.length
       };
     })();
+
 
     /* ============================================================
        Node Outline — a rail index of the semantic nodes, grouped by their
@@ -18748,6 +18756,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         if (journeyPlaying &amp;&amp; event.target.closest(&#39;[data-route-journey-index]&#39;)) pauseJourney({ preserveElapsed: true });
       });
       path.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var button = event.target.closest(&#39;[data-route-journey-index]&#39;);
         if (!button) return;
         var index = Number(button.getAttribute(&#39;data-route-journey-index&#39;));
@@ -19423,6 +19432,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         select(button.getAttribute(&#39;data-kind&#39;));
       });
       kindsRoot.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var buttons = Array.prototype.slice.call(kindsRoot.querySelectorAll(&#39;button:not(:disabled)&#39;));
         var index = buttons.indexOf(document.activeElement);
         var next = null;
@@ -19660,6 +19670,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
        ============================================================ */
     document.addEventListener(&#39;keydown&#39;, function (e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.shiftKey &amp;&amp; (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39; || e.key === &#39;Home&#39; || e.key === &#39;End&#39;)) return;
       if (e.defaultPrevented) return;
       var t = e.target;
       if (t &amp;&amp; (t.tagName === &#39;INPUT&#39; || t.tagName === &#39;TEXTAREA&#39; || t.isContentEditable)) return;
@@ -25867,6 +25878,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         else open(false);
       });
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -25883,6 +25895,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;) { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         var available = options();
         var active = available.indexOf(document.activeElement);
         switch (e.key) {
@@ -27306,6 +27319,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       });
       // APG menu-button pattern: ArrowDown/ArrowUp on the trigger opens the menu.
       btn.addEventListener(&#39;keydown&#39;, function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
         if (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39;) {
           e.preventDefault();
           if (!isOpen()) open(e.key === &#39;ArrowUp&#39;);
@@ -27321,6 +27335,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       menu.addEventListener(&#39;keydown&#39;, function (e) {
         if (e.key === &#39;Escape&#39;) { e.preventDefault(); close(true); return; }
         if (e.key === &#39;Tab&#39;)    { close(false); return; }
+        if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
 
         var available = items().filter(function (i) { return !i.hidden &amp;&amp; !i.disabled; });
         var current = available.indexOf(document.activeElement);
@@ -29948,6 +29963,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         syncRelationshipPreview();
       });
       relationshipList.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         if (event.key !== &#39;ArrowDown&#39; &amp;&amp; event.key !== &#39;ArrowUp&#39; &amp;&amp; event.key !== &#39;Home&#39; &amp;&amp; event.key !== &#39;End&#39;) return;
         var buttons = Array.prototype.slice.call(relationshipList.querySelectorAll(&#39;[data-relationship-target]&#39;));
         if (!buttons.length) return;
@@ -32736,6 +32752,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       closeBtn.addEventListener(&#39;click&#39;, function () { close(); });
       input.addEventListener(&#39;input&#39;, function () { render(input.value); });
       input.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var buttons = resultButtons();
         if (event.key === &#39;ArrowDown&#39; &amp;&amp; buttons.length) {
           event.preventDefault();
@@ -32746,6 +32763,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         }
       });
       results.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var buttons = resultButtons();
         var index = buttons.indexOf(document.activeElement);
         if (index &lt; 0 || !buttons.length) return;
@@ -32780,6 +32798,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         count: items.length
       };
     })();
+
 
     /* ============================================================
        Node Outline — a rail index of the semantic nodes, grouped by their
@@ -33885,6 +33904,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         if (journeyPlaying &amp;&amp; event.target.closest(&#39;[data-route-journey-index]&#39;)) pauseJourney({ preserveElapsed: true });
       });
       path.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var button = event.target.closest(&#39;[data-route-journey-index]&#39;);
         if (!button) return;
         var index = Number(button.getAttribute(&#39;data-route-journey-index&#39;));
@@ -34560,6 +34580,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         select(button.getAttribute(&#39;data-kind&#39;));
       });
       kindsRoot.addEventListener(&#39;keydown&#39;, function (event) {
+        if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
         var buttons = Array.prototype.slice.call(kindsRoot.querySelectorAll(&#39;button:not(:disabled)&#39;));
         var index = buttons.indexOf(document.activeElement);
         var next = null;
@@ -34797,6 +34818,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
        ============================================================ */
     document.addEventListener(&#39;keydown&#39;, function (e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.shiftKey &amp;&amp; (e.key === &#39;ArrowDown&#39; || e.key === &#39;ArrowUp&#39; || e.key === &#39;Home&#39; || e.key === &#39;End&#39;)) return;
       if (e.defaultPrevented) return;
       var t = e.target;
       if (t &amp;&amp; (t.tagName === &#39;INPUT&#39; || t.tagName === &#39;TEXTAREA&#39; || t.isContentEditable)) return;

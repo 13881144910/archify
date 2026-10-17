@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { stripPublishedArtifactMetadata } from '../scripts/publish-seo.mjs';
 import { parse } from 'parse5';
 import { parseSitemap } from '../scripts/indexnow.mjs';
 
@@ -109,6 +110,8 @@ test('description workflow exposes pinned evidence, honest limits and localized 
   }
   for (const extension of ['json', 'html']) {
     const file = `cases/life/leave-plan.workflow.${extension}`;
-    assert.deepEqual(fs.readFileSync(new URL(file, output)), fs.readFileSync(new URL(`../../docs/${file}`, import.meta.url)), 'existing artifact bytes remain unchanged');
+    const published = fs.readFileSync(new URL(file, output));
+    const original = extension === 'html' ? Buffer.from(stripPublishedArtifactMetadata(published.toString('utf8'))) : published;
+    assert.deepEqual(original, fs.readFileSync(new URL(`../../docs/${file}`, import.meta.url)), 'existing artifact bytes remain unchanged outside the publication metadata block');
   }
 });

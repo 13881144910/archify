@@ -83,11 +83,14 @@ test('Bottom node index preserves readable rows and native Viewer interaction', 
       const lines = firstLine(item.querySelector('strong'));
       const name = lines[0];
       const nameLastLine = lines.at(-1);
+      const dot = item.querySelector('.node-outline-dot').getBoundingClientRect();
       const small = item.querySelector('small');
       const description = small && firstLine(small)[0];
       return {
         id: item.dataset.outlineNode,
         nameLines: lines.length,
+        swatchCenter: dot.top + dot.height / 2,
+        firstLineCenter: name.top + name.height / 2,
         hasDescription: !!small,
         descriptionTop: description?.top,
         descriptionLeft: description?.left,
@@ -96,6 +99,7 @@ test('Bottom node index preserves readable rows and native Viewer interaction', 
       };
     }))()`);
     for (const item of items) {
+      assert.ok(Math.abs(item.swatchCenter - item.firstLineCenter) <= 3, `${item.id}: swatch is not aligned with the name's first line`);
       if (item.hasDescription) {
         assert.ok(item.descriptionTop >= item.nameBottom - 1, `${item.id}: description is not below the name`);
         assert.ok(Math.abs(item.descriptionLeft - item.nameLeft) <= 1, `${item.id}: description is not left-aligned with the name`);

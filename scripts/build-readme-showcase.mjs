@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { sameEntry } from '../archify/renderers/shared/path-semantics.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -379,7 +380,7 @@ async function main() {
 }
 
 const invokedDirectly = process.argv[1]
-  && import.meta.url === pathToFileURL(process.argv[1]).href;
+  && sameEntry(fileURLToPath(import.meta.url), process.argv[1]).status === 'match';
 if (invokedDirectly) {
   main().catch(error => {
     console.error(error.stack || error.message);

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -470,4 +470,30 @@ test('Star History publishing advances the data branch without a force push', ()
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
   }
+});
+
+
+test('showcase CLI runs through a filesystem alias while imports remain inert', (t) => {
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'archify-showcase-alias-'));
+  t.after(() => fs.rmSync(scratch, {recursive:true, force:true}));
+  const script = path.join(repoRoot, 'scripts/build-readme-showcase.mjs');
+  const alias = path.join(scratch, 'showcase.mjs');
+  try { fs.symlinkSync(script, alias, 'file'); }
+  catch (error) {
+    if (process.platform === 'win32' && ['EPERM','EACCES'].includes(error.code)) {
+      t.skip('Windows host does not permit creating file symlinks'); return;
+    }
+    throw error;
+  }
+  // A deliberately empty tool search path makes actual main() fail quickly,
+  // without launching a browser or generating a GIF.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'path'));
+  env.PATH = '';
+  const direct = spawnSync(process.execPath, [script], {env, encoding:'utf8'});
+  const linked = spawnSync(process.execPath, [alias], {env, encoding:'utf8'});
+  assert.equal(direct.status, 1, direct.stderr);
+  assert.equal(linked.status, 1, 'alias must execute main, not silently succeed');
+  assert.match(linked.stderr, /ffmpeg|Chrome or Chromium is required/);
+  const imported = spawnSync(process.execPath, ['--input-type=module','--eval', `await import(${JSON.stringify(pathToFileURL(alias).href)})`], {env,encoding:'utf8'});
+  assert.equal(imported.status, 0, imported.stderr);
 });

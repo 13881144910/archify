@@ -93,3 +93,13 @@ test('writing: long paragraphs, an all-bold conclusion and a disclaimer-style sc
   assert.deepEqual(rules([entry('本页讨论功能方向，尚未实现。依据用户陈述，本次没有核对历史记录。页面只是阅读体验样例，不构成任何法律审查意见，也没有经过实际运行验证。', {component: 'scope'})]), ['scope-length']);
   assert.deepEqual(rules([entry('示例 · 8 人团队', {component: 'scope'})]), []);
 });
+
+test('writing: Chinese and English controlled-language hints stay precise', () => {
+  const rules = text => lintExplainerWriting([entry(text)]).map(item => item.evidence.rule);
+  assert.deepEqual(rules('综上所述，先做出决定再加以验证。'), ['filler', 'light-verb', 'light-verb']);
+  assert.deepEqual(rules('重试 3 次以上会放大延迟。'), ['number-boundary']);
+  assert.deepEqual(rules('负责处理用户提交的订单的服务的日志很大。'), ['de-chain']);
+  assert.deepEqual(rules('In order to utilize the cache, read it first.'), ['plain-word', 'plain-word']);
+  assert.deepEqual(rules('In summary, this cutting-edge design is seamless.'), ['filler', 'cliche', 'cliche']);
+  assert.deepEqual(lintExplainerWriting(['任务进行中。', '目的的确清楚。', '重试超过 3 次。', '服务以下游为准。', 'Use the cache before the database.'].map(text => entry(text))), []);
+});

@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {ChromeVisualBrowser,findChrome,runBrowserCheck} from '../archify/bin/visual-check.mjs';
+import {unpackPageBundle} from '../archify/explainer/page-bundle.mjs';
 import {inspectPublicHtml,inspectExplainerBrowser,inspectNativePreviewLayout,inspectNativeViewer,explainerObservation,explainerObservationDiagnostics} from '../archify/explainer/browser-check.mjs';
 // Explicit developer diagnostics only; ordinary explainer tests never launch Chrome.
 const chrome=process.env.ARCHIFY_EXPLAINER_BROWSER_TESTS==='1' ? findChrome() : null;
@@ -77,7 +78,7 @@ test('wide frozen native previews keep every node visible at 1280 and reclaim th
   const oversizedPrepared=await prepareExplainerDiagrams(oversized,{baseDir:dir,sourcePath:path.join(dir,'oversized.json'),quality:'showcase'}),hugeFile=artifact('oversized-native',renderExplainer(oversized,{sourceText:JSON.stringify(oversized),preparedDiagrams:oversizedPrepared,preparedSources:{sources:{example:{title:'Example'}}}}));
   const huge=await inspectExplainerBrowser(browser,{artifactPath:hugeFile,width:1440,height:900,theme:'light'});assert.equal(huge.nativeText[0].fit,'insufficient');assert.equal(parseFloat(huge.nativeText[0].minWidth),0);assert.ok(huge.nativeText[0].scrollWidth<=huge.nativeText[0].clientWidth+1);assert.ok(huge.interactionFailures.some(e=>e.name==='diagram-fit'&&e.measurement.requiredWidth>e.measurement.clientWidth),'An actually overwide graph must fail with measured fit evidence');assert.ok(huge.interactionFailures.some(e=>e.name==='diagram-text'));
   const corrupted=artifact('responsive-retained-floor',html.replace('</style>','\n.diagram-preview>svg{min-width:1321px!important}\n</style>'));await browser.resetPage();await inspectPublicHtml(browser,{artifactPath:corrupted,width:1280,theme:'light',keyboard:false});assert.ok((await inspectNativePreviewLayout(browser)).some(e=>e.outsidePreview.length>0),'A retained desktop floor must be detected through actual clipped node bounds');
-  const embedded=await pageValue(browser,"Object.fromEntries(Object.entries(JSON.parse(document.querySelector('#archify-explainer-prepared').textContent).preparedDiagrams.diagrams).map(([id,c])=>[id,{html:c.html,sha256:c.sha256,bytes:c.bytes}]))");
+  const embedded=Object.fromEntries(Object.entries(unpackPageBundle(await pageValue(browser,"JSON.parse(document.querySelector('#archify-explainer-prepared').textContent)")).preparedDiagrams.diagrams).map(([id,c])=>[id,{html:c.html,sha256:c.sha256,bytes:c.bytes}]));
   for(const [id,c]of Object.entries(embedded)){assert.equal(hash(c.html),frozen[id].sha256);assert.equal(Buffer.byteLength(c.html),frozen[id].bytes);assert.equal(c.sha256,frozen[id].sha256);assert.equal(c.bytes,frozen[id].bytes);}
  }finally{await browser.close();}
 });

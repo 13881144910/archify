@@ -140,13 +140,21 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
       spec.participants.push(actor); byId.set(actor.id, actor); aliases.set(label, actor.id);
       return actor.id;
     };
+    // "phase | label" rows open a labelled band over the messages that follow, up to the next phase.
+    const phases = [];
     for (const entry of entries.filter(entry => !entry.parts[0].startsWith('actor '))) {
+      if (entry.parts[0] === 'phase') { expect(entry, 2, 2, 'phase | TCP handshake'); phases.push({ label: entry.parts[1], first: spec.messages.length, context: entry.context }); continue; }
       expect(entry, 3, 4, 'Client | API | 请求记录 | return');
       const [fromLabel, toLabel, label, variant] = entry.parts;
       const from = actorId(fromLabel, entry.context), to = actorId(toLabel, entry.context);
       context.rowMap[`/messages/${spec.messages.length}`] = entry.context.line;
       spec.messages.push({ id: edgeId(from, to), from, to, label, y: 160 + spec.messages.length * 48, ...(variant ? { variant } : {}) });
     }
+    phases.forEach((phase, index) => {
+      const last = (phases[index + 1]?.first ?? spec.messages.length) - 1;
+      if (last < phase.first) fail(phase.context, 'diagram-row', 'A phase needs at least one message after it.', 'phase | TCP handshake\n| browser | server | SYN |');
+      (spec.segments ||= []).push({ from: spec.messages[phase.first].y - 22, to: spec.messages[last].y + 16, label: phase.label });
+    });
     duplicateCheck(spec.participants, context, 'actor');
     if (!spec.messages.length) fail(context, 'diagram-rows', 'Sequence shorthand needs a message.', 'client | api | 请求记录');
   } else if (diagramType === 'architecture' || diagramType === 'workflow') {
@@ -436,8 +444,8 @@ export async function prepareExplainerDiagrams(document, { repoRoot, baseDir, qu
       if (!svgMatch) fail(context, 'diagram-svg', 'The native renderer produced no primary semantic SVG.', 'Use a supported native diagram renderer.');
       const canonicalSvg = svgMatch[0], semantic = semanticOf(canonicalSvg);
       const svg = changesPreview(canonicalSvg, block.changes, semantic, context);
-      const styles = [...html.matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/g)].map(match => match[0]).join('\n');
-      diagrams[block.id] = { diagramType: block.diagramType, spec: original, html, svg, canonicalSvg, styles, sha256: hash(bytes), bytes: bytes.length,
+      // Preview styles are derived from html at render time; storing them again would double the page.
+      diagrams[block.id] = { diagramType: block.diagramType, spec: original, html, svg, sha256: hash(bytes), bytes: bytes.length,
         specification: freezeBytes(originalBytes), checks: { validate: { ok: true }, render: { ok: true }, check }, semantic,
         ...(block.changes ? { changes: block.changes.map(change => ({ ...change })) } : {}) };
     } finally { await temporary.cleanup(); }

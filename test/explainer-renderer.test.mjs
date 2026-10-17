@@ -4,13 +4,14 @@ import { createHash } from 'node:crypto';
 import { parse } from 'parse5';
 import { renderExplainer } from '../archify/explainer/render.mjs';
 import { computeExplainerRevision } from '../archify/explainer/revision.mjs';
+import { unpackPageBundle } from '../archify/explainer/page-bundle.mjs';
 
 const sha = value => createHash('sha256').update(value).digest('hex');
 const all = (node, test) => [ ...(test(node) ? [node] : []), ...(node.childNodes || []).flatMap(child=>all(child,test)) ];
 const attr = (node,key) => node.attrs?.find(attribute=>attribute.name === key)?.value;
 const text = node => node.nodeName === '#text' ? node.value : (node.childNodes || []).map(text).join('');
 const find = (tree,id) => all(tree,node=>attr(node,'id') === id)[0];
-const payload = (tree,id) => JSON.parse(text(find(tree,id)));
+const payload = (tree,id) => unpackPageBundle(JSON.parse(text(find(tree,id))));
 const source = {id:'code-source',title:'Real excerpt',path:'src/example.mjs',lines:[2,3]};
 const nativeHtml = '<!doctype html><html><body><svg id="diagram-svg"></svg><script>const sample = "native";</script></body></html>';
 const diagram = {diagramType:'architecture',spec:{meta:{title:'Actual relationships'}},html:nativeHtml,svg:'<svg id="diagram-svg" viewBox="0 0 200 80"><defs><marker id="arrow"></marker></defs><g data-node-id="api"><text x="10" y="30">API</text></g><path data-edge-id="write" data-edge-from="api" data-edge-to="redis" marker-end="url(#arrow)"/><g data-node-id="redis"><text x="90" y="30">Redis</text></g></svg>',styles:'<style>:root,[data-theme="dark"]{--native-ink:#eee}[data-theme="light"]{--native-ink:#123}body{height:100vh}text{fill:var(--native-ink)}</style>',sha256:sha(nativeHtml),bytes:Buffer.byteLength(nativeHtml),semantic:{nodes:[{id:'api',label:'API'},{id:'redis',label:'Redis'}],edges:[{id:'write',from:'api',to:'redis',label:'writes'}]}};

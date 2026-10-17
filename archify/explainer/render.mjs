@@ -5,6 +5,7 @@ import { parseExplainerDiff } from './diff.mjs';
 import { computeExplainerRevision } from './revision.mjs';
 import { layoutExplainerPanels } from './layout.mjs';
 import { compileExplainerChart } from './charts.mjs';
+import { packPageBundle } from './page-bundle.mjs';
 
 const css = fs.readFileSync(new URL('./reader.css', import.meta.url), 'utf8');
 const js = fs.readFileSync(new URL('./reader.js', import.meta.url), 'utf8');
@@ -55,7 +56,7 @@ export function renderExplainer(document, options = {}) {
         break;
       }
       case 'steps': body = `<ol class="steps">${block.items.map(item => `<li id="${escape(item.id)}"><b>${item.target ? nativeLink(item.target,i(item.text)) : i(item.text)}</b>${item.detail ? `<p>${i(item.detail)}</p>` : ''}</li>`).join('')}</ol>`; break;
-      case 'diagram': { const diagram = diagrams[block.id]; if (!diagram?.svg || !diagram?.html) unavailable(block,`Missing prepared native diagram: ${block.id}`); const title = diagram.spec?.meta?.title || block.id; const svg = staticSvg(diagram.svg, block.id); const previewClass = previewPrefix(block.id); const nativeStyle = scopeNativeCss(diagram.styles || '', '.' + previewClass, previewClass + '-'); const nativeWidth = Number(diagram.svg.match(/viewBox=["'][^"']*?[\d.-]+[ ,]+[\d.-]+[ ,]+([\d.]+)/)?.[1]); const singleLane = diagram.spec?.lanes?.length === 1 ? ' single-lane' : ''; body = `<figure class="diagram"><div class="diagram-preview ${previewClass}${singleLane}" role="img" aria-label="${escape(title)}"${nativeWidth > 0 ? ` style="--native-width:${Math.round(nativeWidth)}px"` : ''}><style>${nativeStyle}</style>${svg}</div><figcaption><span>${escape(title)}</span><button class="text-button interactive" type="button" data-open-diagram="${escape(block.id)}">${words.explore} ↗</button></figcaption></figure><p class="diagram-fit-status fine" role="status" hidden></p><details class="diagram-semantics" open><summary>${words.graph}</summary><ul>${(diagram.semantic?.nodes || []).map(node => `<li>${escape(node.label || node.id)} <code>${escape(node.id)}</code></li>`).join('')}${(diagram.semantic?.edges || []).map(edge => `<li><code>${escape(edge.from)}</code> → <code>${escape(edge.to)}</code>${edge.label ? ` · ${escape(edge.label)}` : ''}</li>`).join('')}</ul></details>${block.changes?.length ? `<dl class="changes"><dt>${words.changes}</dt>${block.changes.map(change => `<dd><span class="chip ${escape(change.change)}">${words[change.change]}</span> <code>${escape(change.target)}</code></dd>`).join('')}</dl>` : ''}`; break; }
+      case 'diagram': { const diagram = diagrams[block.id]; if (!diagram?.svg || !diagram?.html) unavailable(block,`Missing prepared native diagram: ${block.id}`); const title = diagram.spec?.meta?.title || block.id; const svg = staticSvg(diagram.svg, block.id); const previewClass = previewPrefix(block.id); const nativeStyle = scopeNativeCss(diagram.styles ?? nativeStyles(diagram.html), '.' + previewClass, previewClass + '-', diagram.svg); const nativeWidth = Number(diagram.svg.match(/viewBox=["'][^"']*?[\d.-]+[ ,]+[\d.-]+[ ,]+([\d.]+)/)?.[1]); const singleLane = diagram.spec?.lanes?.length === 1 ? ' single-lane' : ''; body = `<figure class="diagram"><div class="diagram-preview ${previewClass}${singleLane}" role="img" aria-label="${escape(title)}"${nativeWidth > 0 ? ` style="--native-width:${Math.round(nativeWidth)}px"` : ''}><style>${nativeStyle}</style>${svg}</div><figcaption><span>${escape(title)}</span><button class="text-button interactive" type="button" data-open-diagram="${escape(block.id)}">${words.explore} ↗</button></figcaption></figure><p class="diagram-fit-status fine" role="status" hidden></p><details class="diagram-semantics" open><summary>${words.graph}</summary><ul>${(diagram.semantic?.nodes || []).map(node => `<li>${escape(node.label || node.id)} <code>${escape(node.id)}</code></li>`).join('')}${(diagram.semantic?.edges || []).map(edge => `<li><code>${escape(edge.from)}</code> → <code>${escape(edge.to)}</code>${edge.label ? ` · ${escape(edge.label)}` : ''}</li>`).join('')}</ul></details>${block.changes?.length ? `<dl class="changes"><dt>${words.changes}</dt>${block.changes.map(change => `<dd><span class="chip ${escape(change.change)}">${words[change.change]}</span> <code>${escape(change.target)}</code></dd>`).join('')}</dl>` : ''}`; break; }
       case 'chart': { const chart = compileExplainerChart(block.text); if (chart.error) unavailable(block, chart.error); body = `<figure class="chart" style="--native-width:${Math.round(chart.width)}px">${chart.svg.replace(/^<svg\b[^>]*>/, tag => tag.replace(/\s(?:width|height)="[^"]*"/g, ''))}${block.title ? `<figcaption>${i(block.title)}</figcaption>` : ''}</figure>`; break; }
       case 'snippet': body = `<figure class="snippet"><figcaption><span class="snippet-label">${block.title ? i(block.title) : ''}${block.language ? `<code class="snippet-language">${escape(block.language)}</code>` : ''}</span><button class="text-button interactive" type="button" data-copy>${words.copy}</button></figcaption><pre><code${block.language ? ` class="language-${escape(block.language)}"` : ''}>${escape(block.text)}</code></pre></figure>`; break;
       case 'code': { const source = sources[block.source]; if (!source?.path || typeof source.text !== 'string') unavailable(block,`Code requires a Git excerpt: ${block.source}`); body = `<figure class="code"><figcaption>${i(`[](source:${block.source})`)}<span>${escape(source.path)}:${escape(source.lines?.join('–'))}</span></figcaption><pre><code${block.language ? ` class="language-${escape(block.language)}"` : ''}>${escape(source.text)}</code></pre></figure>`; break; }
@@ -96,7 +97,7 @@ export function renderExplainer(document, options = {}) {
   manifest.dependencies = (bundle.dependencies || []).map(({contentBase64,...entry})=>entry);
   if (!preparedBundle) bundle.digest = hash(JSON.stringify(bundle));
   if (bundle.sourceText !== sourceText || JSON.stringify(bundle.document) !== JSON.stringify(document)) throw new Error('Prepared bundle differs from rendered source or canonical document.');
-  return `<!doctype html>\n<html lang="${escape(locale)}" data-archify-artifact="explainer" data-artifact="${escape(document.meta.id)}" data-revision="${revision}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="description" content="${escape(document.answer.summary)}"><title>${escape(document.meta.title)} · Archify</title><style>${css}</style></head><body><a class="skip-link" href="#board">${locale.startsWith('en')?'Skip to content':'跳至正文'}</a><div class="shell"><header class="masthead"><h1>${escape(document.meta.title)}</h1><div class="tools interactive"><div class="theme-controls" role="group" aria-label="${locale.startsWith('en')?'Theme':'主题'}">${['auto','light','dark'].map(theme=>`<button type="button" data-theme-choice="${theme}" aria-pressed="${theme === 'auto'}">${words[theme]}</button>`).join('')}</div><button type="button" data-print>${words.print}</button></div></header><main id="board"><div class="board">${panels}</div></main><footer>${footnotesHtml}<section class="sources"><h2>${words.sources}</h2><ol>${sourceList}</ol></section><p class="colophon">Archify</p></footer></div><dialog class="viewer-dialog" id="diagram-dialog" aria-labelledby="diagram-dialog-title"><header><h2 id="diagram-dialog-title"></h2><button type="button" data-close-diagram>${words.close} ×</button></header><p class="dialog-loading" role="status">${words.loading}</p></dialog><div id="toast" role="status" aria-live="polite"></div><script type="application/json" id="archify-explainer-prepared">${json(bundle)}</script><script type="application/json" id="explainer-manifest">${json(manifest)}</script><script type="application/json" id="explainer-reader-words">${json(words)}</script><script>${js}</script></body></html>`;
+  return `<!doctype html>\n<html lang="${escape(locale)}" data-archify-artifact="explainer" data-artifact="${escape(document.meta.id)}" data-revision="${revision}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="description" content="${escape(document.answer.summary)}"><title>${escape(document.meta.title)} · Archify</title><style>${css}</style></head><body><a class="skip-link" href="#board">${locale.startsWith('en')?'Skip to content':'跳至正文'}</a><div class="shell"><header class="masthead"><h1>${escape(document.meta.title)}</h1><div class="tools interactive"><div class="theme-controls" role="group" aria-label="${locale.startsWith('en')?'Theme':'主题'}">${['auto','light','dark'].map(theme=>`<button type="button" data-theme-choice="${theme}" aria-pressed="${theme === 'auto'}">${words[theme]}</button>`).join('')}</div><button type="button" data-print>${words.print}</button></div></header><main id="board"><div class="board">${panels}</div></main><footer>${footnotesHtml}<section class="sources"><h2>${words.sources}</h2><ol>${sourceList}</ol></section><p class="colophon">Archify</p></footer></div><dialog class="viewer-dialog" id="diagram-dialog" aria-labelledby="diagram-dialog-title"><header><h2 id="diagram-dialog-title"></h2><button type="button" data-close-diagram>${words.close} ×</button></header><p class="dialog-loading" role="status">${words.loading}</p></dialog><div id="toast" role="status" aria-live="polite"></div><script type="application/json" id="archify-explainer-prepared">${json(packPageBundle(bundle))}</script><script type="application/json" id="explainer-manifest">${json(manifest)}</script><script type="application/json" id="explainer-reader-words">${json(words)}</script><script>${js}</script></body></html>`;
 }
 
 // Prefix native SVG identifiers in the preview only. Original native HTML is frozen above.
@@ -114,11 +115,29 @@ function staticSvg(svg, id) {
 // A scope written as "a · b · c" reads as separate conditions; anything else stays a sentence.
 function scopeParts(scope) { return scope.split(/\s+·\s+/).map(part=>part.trim()).filter(Boolean); }
 
+// Split a selector list on its top-level commas; commas inside :is(), :not() or attribute values stay.
+function selectorList(selector) {
+  const parts = []; let depth = 0, quote = '', start = 0;
+  for (let i = 0; i < selector.length; i++) {
+    const c = selector[i];
+    if (quote) { if (c === quote && selector[i-1] !== '\\') quote = ''; }
+    else if (c === '"' || c === "'") quote = c;
+    else if (c === '(' || c === '[') depth++;
+    else if (c === ')' || c === ']') depth--;
+    else if (c === ',' && !depth) { parts.push(selector.slice(start,i)); start = i + 1; }
+  }
+  return [...parts, selector.slice(start)];
+}
+const nativeStyles = html => [...String(html).matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/g)].map(match => match[0]).join('\n');
 function previewPrefix(id) { return `preview-${id.replace(/[^A-Za-z0-9_-]/g,'-')}`; }
 
 // Native CSS is scoped to its static preview. No native body/chrome layout enters the reader.
-function scopeNativeCss(styles, scope, prefix) {
+// The preview sets text in page fonts and shows only the SVG, so font faces and rules that name a
+// class absent from the SVG (Viewer chrome, toolbars, cards) are dropped.
+function scopeNativeCss(styles, scope, prefix, svg = '') {
   const css = styles.replace(/<style[^>]*>/gi,'').replace(/<\/style>/gi,'').replace(/\/\*[\s\S]*?\*\//g,'');
+  const present = new Set(svg ? [...svg.matchAll(/\bclass="([^"]*)"/g)].flatMap(match => match[1].split(/\s+/)) : []);
+  const applies = value => !svg || [...value.replace(/:not\([^)]*\)/g,'').matchAll(/\.([A-Za-z_][\w-]*)/g)].every(match => present.has(match[1]));
   const defaults = []; const systemDark = []; const systemLight = [];
   function rules(input, collectThemes = true) {
     let result = ''; let cursor = 0;
@@ -128,15 +147,14 @@ function scopeNativeCss(styles, scope, prefix) {
       for(; end < input.length && depth; end++) { const c = input[end]; if(quote) {if(c === quote && input[end-1] !== '\\') quote = '';} else if(c === '\"' || c === "'") quote = c; else if(c === '{') depth++; else if(c === '}') depth--; }
       const body = input.slice(opening + 1,end-1).replace(/url\(#([^\)]+)\)/g,(_,id)=>`url(#${prefix}${id})`); cursor = end;
       if(selector.startsWith('@media') || selector.startsWith('@supports') || selector.startsWith('@layer')) { result += `${selector}{${rules(body,false)}}`; continue; }
-      if(selector.startsWith('@font-face')) { result += `${selector}{${body}}`; continue; }
       if(selector.startsWith('@')) continue;
-      const selectors = selector.split(',').filter(value=>!/(^|[\s>+~])body(?:\b|$)/.test(value)).map(value=>{
+      const selectors = selectorList(selector).filter(value=>!/(^|[\s>+~])body(?:\b|$)/.test(value) && applies(value)).map(value=>{
         let next = value.trim().replace(/#([A-Za-z][\w-]*)/g,(_,id)=>'#' + prefix + id);
         next = next.replace(/^:root|^html\b/,scope);
         if (next.startsWith('[data-theme=') || next.startsWith('[data-preset=')) next = scope + next;
         return next.startsWith(scope) ? next : `${scope} ${next}`;
       });
-      const rootSelectors = selector.split(',').map(value=>value.trim());
+      const rootSelectors = selectorList(selector).map(value=>value.trim());
       if (collectThemes && rootSelectors.includes(':root')) defaults.push(body);
       if (collectThemes && rootSelectors.some(value=>/^(?:\:root)?\[data-theme=[\"']?dark[\"']?\]$/.test(value))) systemDark.push(body);
       if (collectThemes && rootSelectors.some(value=>/^(?:\:root)?\[data-theme=[\"']?light[\"']?\]$/.test(value))) systemLight.push(body);

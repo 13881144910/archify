@@ -255,11 +255,20 @@
       const ready=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>parent.postMessage({kind:'archify-explainer-ready',token},'*')));
       if(document.readyState==='complete')ready();else addEventListener('load',ready,{once:true});
     })();<\/script>`;
-    const end = diagram.html.toLowerCase().lastIndexOf('</body>');
-    frame.srcdoc = end < 0 ? diagram.html + script : diagram.html.slice(0,end) + script + diagram.html.slice(end);
     viewer = {id,frame,token,hash,nodes:requestedNodes,edges:requestedEdges,ready:false};
     viewerDialog.querySelector('.dialog-loading').hidden = false;
     viewerDialog.append(frame);
+    nativeHtml(diagram).then(html=>{
+      if (viewer?.frame !== frame) return;
+      const end = html.toLowerCase().lastIndexOf('</body>');
+      frame.srcdoc = end < 0 ? html + script : html.slice(0,end) + script + html.slice(end);
+    },()=>notify(say('This diagram could not be opened.','无法打开此交互图。')));
+  }
+  // The page stores each native Viewer gzip-compressed; inflate it once, on first open.
+  function nativeHtml(diagram) {
+    if (typeof diagram.html === 'string') return Promise.resolve(diagram.html);
+    const bytes = Uint8Array.from(atob(diagram.htmlGzip),character=>character.charCodeAt(0));
+    return diagram.inflating ||= new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
   }
   function closeViewer() { if(viewerDialog.open) viewerDialog.close(); }
   document.querySelector('[data-close-diagram]').addEventListener('click',closeViewer);

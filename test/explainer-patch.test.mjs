@@ -5,10 +5,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { scanHtml } from '../archify/explainer/check.mjs';
+import { unpackPageBundle } from '../archify/explainer/page-bundle.mjs';
 import { compileExplainerDiagram } from '../archify/explainer/diagrams.mjs';
 const cli=path.resolve('archify/bin/archify.mjs');
 const run=args=>spawnSync(process.execPath,[cli,...args],{encoding:'utf8',maxBuffer:64*1024*1024,env:{...process.env,ARCHIFY_UPDATE_CHECK_DISABLED:'1'}});
-const read=file=>JSON.parse(scanHtml(fs.readFileSync(file,'utf8')).scripts.find(s=>s.attrs.id==='archify-explainer-prepared').text);
+const read=file=>unpackPageBundle(JSON.parse(scanHtml(fs.readFileSync(file,'utf8')).scripts.find(s=>s.attrs.id==='archify-explainer-prepared').text));
 const manifest=file=>JSON.parse(scanHtml(fs.readFileSync(file,'utf8')).scripts.find(s=>s.attrs.id==='explainer-manifest').text);
 function temp(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'archify-explainer-patch-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir;}
 function fixture(){return {schema_version:1,diagram_type:'explainer',meta:{id:'patch-document',title:'What can change?',locale:'en'},answer:{summary:'One stable panel can be replaced.'},panels:[{id:'first',title:'What changes?',blocks:[{id:'first-text',type:'prose',text:'This text may change.'}]},{id:'second',title:'What stays?',blocks:[{id:'second-text',type:'prose',text:'This text remains exactly the same.'}]}],sources:[]};}

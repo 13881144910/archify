@@ -38,11 +38,11 @@ test('explainer diagrams: compact shapes produce real native showcase HTML and s
     assert.equal(entry.checks.check.artifact.sha256, entry.sha256, 'native receipt binds original canonical bytes');
     assert.equal(fs.existsSync(path.dirname(entry.checks.check.file)), false, 'renderer-owned temporary directory is cleaned');
     assert.ok(entry.semantic.nodes.length >= 2);
-    assert.match(entry.styles, /--frontend-fill/);
-    assert.match(entry.styles, /data-theme="light"/);
+    assert.match(entry.html, /--frontend-fill/);
+    assert.match(entry.html, /data-theme="light"/);
     assert.match(entry.svg, /data-quality-profile="showcase"/);
     assert.match(entry.html, /Archify/);
-    assert.equal(entry.canonicalSvg, entry.svg);
+    assert.ok(entry.html.includes(entry.svg), "the preview SVG is the canonical native SVG");
     assert.equal(Buffer.from(entry.specification.contentBase64, 'base64').toString(), JSON.stringify(specs[type]));
   }
   assert.deepEqual(diagrams.sequence.semantic.edges.map(edge => [edge.from, edge.to]), [['client', 'api'], ['api', 'redis'], ['redis', 'api']]);
@@ -97,11 +97,11 @@ test('explainer diagrams: inline native locale inherits its parent while explici
     ]), meta: { locale: 'zh-CN' } };
     const originalDocument = JSON.stringify(document);
     const { diagrams, dependencies } = await prepareExplainerDiagrams(document, { baseDir: directory });
-    assert.match(diagrams.inherited.canonicalSvg, /lang="zh-CN"/);
-    assert.match(diagrams.inherited.canonicalSvg, />图例<\/text>/);
+    assert.match(diagrams.inherited.html, /lang="zh-CN"/);
+    assert.match(diagrams.inherited.html, />图例<\/text>/);
     for (const id of ['english', 'standalone']) {
-      assert.match(diagrams[id].canonicalSvg, /lang="en"/);
-      assert.match(diagrams[id].canonicalSvg, />Legend<\/text>/);
+      assert.match(diagrams[id].html, /lang="en"/);
+      assert.match(diagrams[id].html, />Legend<\/text>/);
     }
     assert.equal(JSON.stringify(document), originalDocument, 'locale inheritance never rewrites authored specs');
     assert.equal(diagrams.inherited.spec.meta.locale, undefined);
@@ -128,7 +128,6 @@ test('explainer diagrams: structural changes decorate only explicit preview targ
   xml.on('error', error => { throw error; });
   assert.doesNotThrow(() => xml.write(entry.svg).close(), 'preview annotations preserve valid native SVG markup');
   assert.doesNotMatch(entry.html, /data-explainer-change/);
-  assert.doesNotMatch(entry.canonicalSvg, /data-explainer-change/);
   assert.equal(hash(entry.html), entry.sha256);
   await assert.rejects(prepareExplainerDiagrams(documentOf([blockOf('sequence', spec,
     { changes: [{ target: 'nonexistent', change: 'removed' }] })])), error => error.archifyDiagnostics[0].code === 'explainer/diagram-change-target');
@@ -202,4 +201,12 @@ test('explainer diagrams: short phased workflows form one row with phase labels;
   assert.deepEqual(wider.nodes.filter(node => node.lane === 'locate').map(node => node.col), [0, 1, 2, 3, 4, 5], 'rows restart when a staircase would exceed six columns');
   assert.throws(() => compileExplainerDiagram('workflow', ['lane confirm | Confirm', 'alert | Alert | external | missing'], { id: 'phases' }),
     error => (error.archifyDiagnostics || error.diagnostics || []).some(item => /undeclared lane/.test(item.message)));
+});
+
+test('explainer diagrams: sequence phase rows become native segments over the following messages', () => {
+  const spec = compileExplainerDiagram('sequence', ['actor b | Browser | frontend', 'actor s | Server | backend', 'phase | TCP', 'b | s | SYN', 's | b | SYN-ACK | return', 'phase | TLS', 'b | s | ClientHello'], { id: 'phased' });
+  assert.deepEqual(spec.segments.map(segment => segment.label), ['TCP', 'TLS']);
+  assert.ok(spec.segments[0].from < spec.messages[0].y && spec.segments[0].to > spec.messages[1].y && spec.segments[0].to < spec.segments[1].from);
+  assert.ok(spec.segments[1].from < spec.messages[2].y && spec.segments[1].to > spec.messages[2].y);
+  assert.throws(() => compileExplainerDiagram('sequence', ['b | s | SYN', 'phase | Empty'], { id: 'empty' }), error => (error.archifyDiagnostics || error.diagnostics || []).some(item => /phase needs/.test(item.message)));
 });

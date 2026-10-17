@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseExplainer } from './parse.mjs';
 import { computeExplainerRevision } from './revision.mjs';
+import { unpackPageBundle } from './page-bundle.mjs';
 
 export const isExplainerHtml = html => /<html\b[^>]*\bdata-archify-artifact\s*=\s*["']explainer["']/i.test(html) || (html.includes('archify-explainer-prepared') && scanHtml(html).scripts.some(s=>s.attrs.id==='archify-explainer-prepared'));
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -90,7 +91,8 @@ export function checkExplainerHtml(html, { file = '<html>', checkNative = true }
     try { return JSON.parse(found[0].text); } catch { issue('payload-json',`Invalid JSON payload: ${id}.`,'Re-render the validated source instead of editing embedded payloads.',found[0]); return null; }
   }
   before=diagnostics.length;
-  const bundle=payload('archify-explainer-prepared');
+  let bundle=payload('archify-explainer-prepared');
+  try { bundle=unpackPageBundle(bundle); } catch { issue('native-hash','A compressed native diagram payload cannot be inflated.','Re-render the native diagram and freeze its original HTML bytes.'); bundle=null; }
   const document=bundle?.document;
   const source=bundle ? {text:bundle.sourceText} : null;
   const manifest=payload('explainer-manifest');

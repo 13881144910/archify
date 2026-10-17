@@ -5,6 +5,7 @@ import { parseValidatedExplainer, rebindPreparedBundle, validatePreparedTargets 
 import { resolveExplainerSources } from './sources.mjs';
 import { prepareExplainerDiagrams } from './diagrams.mjs';
 import { computeExplainerRevision } from './revision.mjs';
+import { unpackPageBundle } from './page-bundle.mjs';
 import { throwDiagnosticError } from '../renderers/shared/diagnostics.mjs';
 
 function fail(reason, message, input, panelId, example) {
@@ -21,7 +22,8 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
   const artifactBytes=fs.readFileSync(artifactPath);
   if(expectedArtifact && (artifactBytes.length!==expectedArtifact.bytes || createHash('sha256').update(artifactBytes).digest('hex')!==expectedArtifact.sha256)) fail('artifact-changed','The original artifact changed after validation.',artifactPath,panelId,'Finish other writes to the artifact and retry the panel patch.');
   const html = artifactBytes.toString('utf8');
-  const previous = embedded(html,'archify-explainer-prepared',artifactPath);
+  let previous;
+  try { previous = unpackPageBundle(embedded(html,'archify-explainer-prepared',artifactPath)); } catch (error) { if (error.diagnostics) throw error; fail('payload','Embedded native diagram payload cannot be inflated.',artifactPath,panelId,'Rebuild the original artifact before patching.'); }
   const draft = previous;
   if(typeof draft.sourceText !== 'string' || draft.sourceText !== previous.sourceText
     || createHash('sha256').update(draft.sourceText).digest('hex') !== previous.source?.sha256

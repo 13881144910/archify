@@ -394,9 +394,9 @@ test('Star History publishing advances the data branch without a force push', ()
   const firstCheckout = path.join(fixture, 'first');
   const secondCheckout = path.join(fixture, 'second');
   const publisher = path.join(repoRoot, 'scripts', 'publish-star-history.sh');
-  const shell = shellForFixture();
 
   try {
+    const shell = shellForFixture();
     git(fixture, ['init', '--bare', remote]);
     git(fixture, ['--git-dir', remote, 'config', 'receive.denyNonFastForwards', 'true']);
     git(fixture, ['--git-dir', remote, 'config', 'receive.denyDeletes', 'true']);

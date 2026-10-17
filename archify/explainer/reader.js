@@ -110,6 +110,7 @@
       if (!box.width || !box.height) return;
       const pad = 6;
       svg.setAttribute('viewBox',[box.x - pad,box.y - pad,box.width + pad * 2,box.height + pad * 2].map(n=>Math.round(n)).join(' '));
+      svg.parentElement.style.setProperty('--native-width',Math.round(box.width + pad * 2) + 'px');
       svg.dataset.cropped = 'true';
     });
   }
@@ -125,7 +126,10 @@
       const sizes = all('text',svg).filter(text=>text.textContent.trim() && text.getBoundingClientRect().width > 0).map(text=>{const matrix = text.getScreenCTM();return matrix ? parseFloat(getComputedStyle(text).fontSize) * (()=>{const trace=matrix.a**2+matrix.b**2+matrix.c**2+matrix.d**2;const determinant=matrix.a*matrix.d-matrix.b*matrix.c;return Math.sqrt(Math.max(0,(trace-Math.sqrt(Math.max(0,trace**2-4*determinant**2)))/2));})() : Infinity;});
       const smallest = Math.min(...sizes);
       const preview = svg.parentElement;
-      const insufficient = smallest > 0 && smallest < minimumText;
+      const needed = svg.getBoundingClientRect().width * minimumText / smallest;
+      const widened = smallest > 0 && smallest < minimumText && needed <= preview.clientWidth;
+      if (widened) preview.style.setProperty('--native-width',Math.ceil(needed / 1.25) + 'px');
+      const insufficient = smallest > 0 && smallest < minimumText && !widened;
       if (insufficient) {
         preview.dataset.diagramRequiredWidth = String(Math.ceil(svg.getBoundingClientRect().width * minimumText / smallest));
       } else delete preview.dataset.diagramRequiredWidth;

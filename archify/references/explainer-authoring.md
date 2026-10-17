@@ -1,90 +1,206 @@
 # Explainer authoring
 
-Use `explainer` by default for answers with a conclusion and some structure: explanations, comparisons, decisions, diagnoses, reviews and plans. The page leads with the conclusion and replaces long text with panels and optional native diagrams. Small talk, one- or two-sentence answers, pure command output and plain-text requests stay text. A request to draw a system uses a native diagram type.
+Use `explainer` for answers with a conclusion and some structure: explanations, comparisons, decisions, diagnoses, reviews and plans. The page leads with the conclusion and shows the reasoning as panels: diagrams, tables, steps and short text. Small talk, one- or two-sentence answers, pure command output and plain-text requests stay text. A request to draw a system uses a native diagram type.
 
-A small answer gets a small page: the conclusion plus one or two panels. Do not add panels to fill space.
+This guide is the complete draft language. Write the draft from it directly.
 
 ## Draft
 
-Write a restricted Markdown draft, or the equivalent JSON document. The first paragraph after the title is one direct conclusion. An optional flat list immediately after that paragraph supplies up to four reasons. Put qualifications in the optional scope line or source titles.
+Write one Markdown file, `candidate.archify.md`. The first paragraph after the title is the direct conclusion. A flat list immediately after it gives up to four reasons. Each `##` heading starts a panel.
 
 ```md
-# Should we split the service? {#service-choice}
+# Why does the first HTTPS visit take an extra round trip? {#tls-first-visit}
 
-Keep a **modular monolith** until independent scaling or releases become necessary.
+The browser and server must agree on keys before any request is sent: **one extra round trip** with TLS 1.3.
 
-- Local transactions keep the write path simple.
-- Stable module boundaries make later extraction easier.[](source:boundaries)
+- The browser proposes keys in its first message, so one round trip is enough.
+- The server proves its identity with a certificate in the same reply.
+- A returning browser can resume and send data immediately.[](source:rfc8446)
 
-@answer scope="An eight-person team with changing module boundaries and no scaling hotspot."
+@answer scope="TLS 1.3 · first visit · no proxy"
 @meta locale=en
-@source boundaries title="Monolith First" url=https://martinfowler.com/bliki/MonolithFirst.html
+@source rfc8446 title="RFC 8446: TLS 1.3" url=https://www.rfc-editor.org/rfc/rfc8446
 
-## What changes between the options? {#tradeoffs}
+## What is exchanged before the first request? {#handshake}
 
-| Criterion | Modular monolith | Services |
+@sequence id=handshake-flow title="TLS 1.3 full handshake"
+| actor browser | Browser | frontend |
+| actor server | Server | backend |
+| browser | server | ClientHello + key share |
+| server | browser | ServerHello + certificate + Finished | return |
+| browser | server | Finished + GET / | emphasis |
+| server | browser | 200 OK | return |
+
+## What does each message do? {#messages}
+
+@steps id=handshake-steps
+| hello | ClientHello | Offers cipher suites and a key share. | handshake-flow | browser |
+| reply | ServerHello | Picks a suite, sends its key share and certificate. | handshake-flow | server |
+| done | Finished | Both sides confirm the keys; the request rides along. | handshake-flow | browser |
+
+## How does TLS 1.3 compare with 1.2? {#versions}
+
+| Criterion | TLS 1.2 | TLS 1.3 |
 | --- | --- | --- |
-| Deployment | One unit {good:Simple} | Separate units {caution:More coordination} |
-
-## What should happen next? {#next}
-
-- Define module interfaces.
-- Assign one owner for each data write.
+| Round trips before data | Two {caution:Slower} | One {good:Faster} |
+| Resumed connection | One | Zero {good:0-RTT} |
 ```
 
-The canonical `answer` has `summary`, optional `reasons` and optional `scope`. A reason list is flat and unordered. Arbitrary HTML, nested lists and arbitrary Markdown extensions fail with a located diagnostic. Quotes in directive attributes use JSON escaping. Literal code is preserved.
+Deliver it with the command under [Delivery](#delivery).
 
-## Panels and layout
+### Rules that keep a draft valid
 
-Each `##` starts a panel. Prefer a specific question as its title. Stable IDs (`{#tradeoffs}`) allow links and panel replacement. Add an optional span as `{#tradeoffs span=7}` (1–12). Omit span for automatic layout.
+- IDs are unique across the whole document: panels, blocks, diagrams and steps share one namespace. Name a diagram after its content (`handshake-flow`), not after its panel (`handshake`).
+- Prose is plain text. Wrap file paths, globs, `<placeholders>`, operators and code in backticks: a bare `<`, `>` or `*` in prose fails as HTML or emphasis. Inline code is shown literally.
+- Directive rows are pipe rows, one per line, each with the documented number of cells: `| first | second |`. Write a literal pipe inside a cell as `\|`. A blank line or the next `##` or `@` line ends the rows.
+- Directive arguments are `key=value`; quote values with spaces using double quotes and JSON escaping.
+- Draw native diagrams with the compact rows below. Inline JSON specs are for exceptional cases only.
+- Nested lists, raw HTML and other Markdown extensions fail with a located diagnostic that names the line, component and a repair example.
 
-The conclusion is the first panel (`#answer`). The static board uses these preferred and minimum widths on 12 columns: conclusion 5 (min 4); comparison 7 (min 6), or 8 (min 7) with more than three total columns; diagram 8, or 12 for a viewBox wider than 1000; code and diff 8 (min 7); snippets 5, 6 or 8 by their longest line; short prose, lists and steps 4. Panels fill rows in source order, shrinking toward their minimum to finish a row. Authored spans never change.
+## Choose the form by the shape of the information
 
-In the browser on desktop widths, the page measures each panel's real height at every allowed width and re-plans the board: it keeps source order and the conclusion top-left, may stack two consecutive panels in one column beside a taller one, keeps tables and code from clipping, and gives each diagram enough width for its smallest label to stay readable. Without JavaScript, the static board applies. Omit spans unless a panel must stand out.
+A diagram replaces the paragraph that would describe it. When the answer involves relationships, a flow, an exchange over time, a hierarchy, a history or a data model, draw it. A typical page has the conclusion, one diagram and one or two tables or step lists.
 
-## Content blocks
+| Shape of the information | Form |
+| --- | --- |
+| Messages between parties in order: protocols, request paths | `@sequence` |
+| A process with steps and branches: triage, rollout, approval | `@workflow` |
+| Parts of a system and how they connect | `@architecture` |
+| A hierarchy: directories, modules, taxonomies | `@tree` |
+| Events over time: incidents, releases | `@timeline` |
+| Entities with fields and relationships | `@erd` |
+| Options compared on several criteria | Markdown table with `{good:…}`, `{caution:…}`, `{bad:…}` cells |
+| Ordered actions, checks or stages | `@steps` |
+| A warning, open question or key caveat | `@callout` |
+| A few labelled facts | `@facts` |
+| One number against a limit | `@metric` |
+| Code that exists in a repository | `@code` |
+| A change to code | `@diff` or a ```` ```diff ```` fence |
+| A command, config or code that does not exist yet | Plain fence |
 
-- Plain paragraphs, flat lists and comparison tables need no directive. Comparison cells may end with `{good:Label}`, `{caution:Label}` or `{bad:Label}`. Row labels may end with `{#row-id}`.
-- `@prose id=...` followed by pipe rows gives a paragraph a stable ID.
-- `@comparison id=... columns="A,B"`: rows contain criterion, then one cell per option.
-- `@steps id=...`: rows contain ID, title, optional detail, optional diagram ID, optional node, optional `from~to` route and optional comma-separated edge IDs. Node and route are mutually exclusive. Clicking a linked step opens the full native Viewer at that target.
-- `@callout level=note title="..."`: one text column; levels are `note`, `warning`, `open-question`.
-- `@facts`: two columns, label and value.
-- `@metric label="..." value=12 limit=20 unit=ms`: numeric content; value or limit is required. Optional `typical=true` and `note="..."` describe the value.
-- `@code source=router language=js`: obtains a real excerpt from the source's Git commit and line range. It does not accept authored code text.
-- `@diff caption="..."` followed by a fenced `diff` block, or a bare ```` ```diff ```` fence: literal before/after lines, displayed with line numbers.
-- A plain fence (```` ```bash title="Run the tests" ````) is a literal snippet with a copy button: commands, configuration, or code that does not exist yet. Use `@code` when the code exists in a repository.
-- In a Markdown table, the first header cell labels the row column.
-- `@image path=images/example.png alt="..."`: embeds a contained local PNG, JPEG, GIF or WebP. Symlinks, escaping paths, unsupported formats and oversize assets fail.
-- `@diagram sequence source=request.sequence.json` references a same-directory native spec; `@sequence id=request` supports compact actor/message rows. Native types are architecture, workflow, sequence, dataflow, lifecycle, erd, class, tree, timeline and waterfall. A document may contain zero to four native diagrams. Native validation and geometry checks still apply.
+A small answer gets a small page: the conclusion plus one or two panels.
 
-Use a diagram only if its relationships or sequence help explain the answer. Do not add one as decoration.
+## Compact native diagrams
+
+Write `@<type> id=<diagram-id> title="..."` followed by pipe rows. Each compiles to a full native Archify diagram, with native validation and layout, and opens in the full Viewer from the page. A document holds up to four native diagrams.
+
+Node and participant types: `frontend`, `backend`, `database`, `cloud`, `security`, `messagebus`, `external` (default `backend`). Edge and message variants: `default`, `emphasis`, `security`, `dashed`; sequences also accept `return`. IDs start with a letter and use letters, digits, `-` and `_`.
+
+**`@sequence`**: declare actors, then messages in order.
+
+```md
+@sequence id=cache-read title="Cache miss"
+| actor api | Order API | backend |
+| actor redis | Redis | database |
+| api | redis | GET order:42 |
+| redis | api | nil | return |
+```
+
+Actor rows: `actor <id> | label | type`. Message rows: `from | to | label | variant?`, where `from` and `to` are actor IDs or labels.
+
+**`@workflow`** and **`@architecture`**: nodes, then edges. Placement follows the edges from left to right, starting with nodes that have no incoming edge.
+
+```md
+@workflow id=triage title="Latency triage"
+| alert | Alert fires | external |
+| split | Check percentiles | backend |
+| trace | Compare slow traces | backend |
+| fix | Fix the cause | backend |
+| alert > split | |
+| split > trace | tail only |
+| trace > fix | cause found | emphasis |
+```
+
+Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Workflows allow six columns from start to end; architecture allows twelve. Use `@architecture` for components that talk to each other and `@workflow` for steps a reader follows.
+
+**`@tree`**: one row per node, `id | label | parent`; the root's parent is `-`.
+
+```md
+@tree id=package-layout title="Package layout"
+| root | archify | - |
+| bin | bin | root |
+| explainer | explainer | root |
+```
+
+**`@timeline`**: optional lane rows, then events, `id | ISO time with offset | title | lane? | kind?`. Kinds: `default`, `change`, `alert`, `action`, `recovery`.
+
+```md
+@timeline id=incident title="Checkout incident"
+| lane ops | Operations |
+| deploy | 2026-10-01T10:00:00+08:00 | Deploy v2 | ops | change |
+| alarm | 2026-10-01T10:12:00+08:00 | Error rate alarm | ops | alert |
+```
+
+Shorthand timelines are labelled illustrative and display their times in UTC.
+
+**`@erd`**: entities, fields, then relationships.
+
+```md
+@erd id=order-model title="Orders"
+| entity user | User |
+| entity order | Order |
+| user.id | bigint | pk |
+| order.id | bigint | pk |
+| order.user_id | bigint | fk | user.id |
+| order > user | many:one | placed by |
+```
+
+Field rows: `entity.field | type | keys? | references?`, keys `pk`, `fk`, `uk` comma-separated. Relationship rows: `from > to | one:one|one:many|many:one|many:many | label?`.
+
+Other native types (`dataflow`, `lifecycle`, `class`, `waterfall`) and diagrams that need explicit geometry use a same-directory spec file: `@diagram dataflow source=events.dataflow.json`, written with the Skill's native authoring workflow.
+
+## Directive reference
+
+| Directive | Header arguments | Rows |
+| --- | --- | --- |
+| `@answer` | `scope="..."` | none |
+| `@meta` | `locale`, `quality_profile`, `repo_url`, `repo_revision` | none |
+| `@source <id>` | `title`, `url`, or `path` with `lines=start:end` | none |
+| `@steps` | `id` | `id | title | detail? | diagram-id? | node? | from~to? | edge-ids?` (node and route are exclusive) |
+| `@callout` | `id`, `level=note|warning|open-question`, `title` | one cell per row; rows join into paragraphs |
+| `@facts` | `id` | `label | value` |
+| `@metric` | `id`, `label`, `value`, `limit`, `unit`, `note`, `typical=true` | none; `value` or `limit` required |
+| `@comparison` | `id`, `columns="A,B"`, `label` | `criterion | cell per option` |
+| `@prose` | `id`, `text` | one cell per row |
+| `@list` | `id`, `ordered=true` | one cell per row |
+| `@code` | `id`, `source=<source-id>`, `language` | none |
+| `@diff` | `id`, `caption` | a following ```` ```diff ```` fence |
+| `@image` | `id`, `path`, `alt`, `caption` | none |
+| `@<diagram type>` | `id`, `title`, `changes` | compact rows above |
+| `@diagram <type>` | `id`, `source`, `title` | none |
+
+Plain paragraphs, flat lists and Markdown tables need no directive. A table's first header cell labels the row column; comparison cells may end with `{good:Label}`, `{caution:Label}` or `{bad:Label}`, and row labels with `{#row-id}`.
+
+A plain fence (```` ```bash title="Run the tests" ````) is a literal snippet with a copy button. `@code` obtains a real excerpt from the source's Git commit and line range; it accepts no authored code text. `@image` embeds a contained local PNG, JPEG, GIF or WebP.
 
 ## Inline links and sources
 
-`**bold**`, inline code and safe HTTP(S) links are supported. `[Redis](node:request.redis)` and `[path](route:request.api~redis)` open the native Viewer at existing targets. `[details](block:next)` jumps within the page.
+`**bold**`, inline code and safe HTTP(S) links are supported. `[Redis](node:cache-read.redis)` and `[path](route:cache-read.api~redis)` open the native Viewer at existing targets. `[details](block:next)` jumps within the page.
 
-`[reference text](source:docs)` renders normal text followed by a numbered superscript. `[](source:docs)` renders only the superscript. Numbers follow first appearance in the conclusion, reasons, scope and then panels; repeated references share a number. Uncited sources follow in declaration order. The footer is one numbered list of titles and URLs or repository positions.
+`[reference text](source:docs)` renders the text followed by a numbered superscript; `[](source:docs)` renders only the superscript. Numbers follow first appearance; uncited sources follow in declaration order. The footer lists titles with URLs or repository positions.
 
 ```md
-@source docs title="GET command" url=https://redis.io/docs/latest/commands/get/
 @source router title="Request handler" path=src/router.js lines=10:30
 @code source=router language=js
 ```
 
-Pass `--repo-root /path/to/repository` for code excerpts. The tool resolves origin and HEAD or accepts `@meta repo_url=... repo_revision=<full-commit>`. The commit, path and line range must exist; working-tree modifications cannot replace committed excerpt bytes. The generated page shows the source location without a status badge.
+Pass `--repo-root /path/to/repository` for code excerpts. The tool resolves origin and HEAD, or accepts `@meta repo_url=... repo_revision=<full-commit>`. The commit, path and line range must exist; working-tree edits cannot replace committed bytes.
 
-Typical-value annotations (`[5 ms](typical:Description of the value)`) become static footnotes, including in print.
+`[5 ms](typical:Description of the value)` becomes a static footnote, including in print.
+
+## Panels and layout
+
+Prefer a specific question as each panel title. `{#id}` gives a stable ID for links and panel replacement; `{#id span=7}` fixes a width of 1–12 columns. Omit spans: the page measures each panel and plans the board, keeping source order with the conclusion top-left, giving each diagram enough width for readable labels, and keeping tables and code from clipping. Without JavaScript, below 1100 px and in print, static widths apply.
 
 ## Delivery
 
 ```sh
-node archify/bin/archify.mjs finalize explainer answer.md answer.html --json
+node archify/bin/archify.mjs finalize explainer candidate.archify.md answer.html --json
 ```
 
-Explainer delivery validates, atomically delivers and checks the HTML. It does not launch a browser. Its receipt includes `browserCheck.requested: false`, `browserCheck.ran: false` and a `browser-check: not-run` gate. These three static gates complete the explainer delivery workflow. Other diagram types keep their existing finalize gates.
+Add `--repo-root <path>` when the draft uses `@code`. Finalize validates, atomically delivers and checks the HTML; it does not launch a browser, and its receipt records the browser gate as not run. A failure names the line, component, reason and a repair example; fix the draft and rerun to the same output path.
 
-Writing warnings flag qualifiers such as “示例”, “本例”, “不代表”, “未实测”, “仅供参考”, “illustrative” and “not measured” in conclusions, reasons and body text. Move these conditions into scope or sources. They also flag a paragraph longer than four sentences or 120 reading units (turn it into a list, steps or a comparison), a conclusion that is mostly bold (bold only the words that carry the decision), and a scope longer than 50 reading units (write short labels separated by “·”, such as `8 人团队 · 上线半年 · 峰值约 300 QPS`). `--writing warn|strict|off` controls warnings; source titles are excluded.
+Writing warnings flag qualifiers such as “示例”, “本例”, “不代表”, “未实测”, “仅供参考”, “illustrative” and “not measured” in the conclusion, reasons and body; move them into scope or sources. They also flag a paragraph longer than four sentences or 120 reading units (turn it into a list, steps or a table), a conclusion that is mostly bold (bold only the decisive words) and a scope longer than 50 reading units (short labels separated by “·”). `--writing warn|strict|off` sets the severity.
 
 ## Panel replacement
 
@@ -92,6 +208,4 @@ Writing warnings flag qualifiers such as “示例”, “本例”, “不代�
 node archify/bin/archify.mjs patch explainer answer.html next replacement.md revised.html --json
 ```
 
-The replacement contains one `##` panel with the same stable ID. The tool preserves untouched content and frozen assets. Revision and byte receipts are internal delivery metadata; they are not page furniture. Rerun finalize on a complete edited draft when changing shared sources, the conclusion or document-wide structure.
-
-The page supports theme switching, printing, source navigation and native diagram exploration. It stores no reader data. Without JavaScript, it follows the system theme and remains readable; inactive controls are hidden. Printing preserves explanatory content and footnotes.
+The replacement holds one `##` panel with the same stable ID; untouched content and frozen assets are preserved. Rerun finalize on the full draft when changing shared sources, the conclusion or document-wide structure.

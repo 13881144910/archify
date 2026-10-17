@@ -148,17 +148,25 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
     duplicateCheck(spec.participants, context, 'actor');
     if (!spec.messages.length) fail(context, 'diagram-rows', 'Sequence shorthand needs a message.', 'client | api | 请求记录');
   } else if (diagramType === 'architecture' || diagramType === 'workflow') {
-    const nodes = [], edges = [];
+    const nodes = [], edges = [], lanes = new Map(), nodeLanes = new Map();
     for (const entry of entries) {
       const route = entry.parts[0].match(/^([a-zA-Z][a-zA-Z0-9_-]*)\s*>\s*([a-zA-Z][a-zA-Z0-9_-]*)$/);
-      if (route) {
+      if (diagramType === 'workflow' && entry.parts[0].startsWith('lane ')) {
+        expect(entry, 2, 2, 'lane locate | Locate the cause');
+        const laneId = safeId(entry.parts[0].slice(5).trim(), entry.context);
+        if (lanes.has(laneId)) fail(entry.context, 'diagram-id-duplicate', 'Workflow lane ids must be unique.', 'lane locate | Locate the cause');
+        lanes.set(laneId, { id: laneId, label: entry.parts[1] });
+      } else if (route) {
         if (entry.parts.length > 3) fail(entry.context, 'diagram-row', 'An edge supports a label and optional native variant.', 'api > redis | 查询 | dashed');
         context.rowMap[`/${diagramType === 'architecture' ? 'connections' : 'edges'}/${edges.length}`] = entry.context.line;
         edges.push({ id: edgeId(route[1], route[2]), from: route[1], to: route[2], ...(entry.parts[1] ? { label: entry.parts[1] } : {}), ...(entry.parts[2] ? { variant: entry.parts[2] } : {}) });
       } else {
-        expect(entry, 2, 3, 'api | API | backend');
+        if (diagramType === 'workflow') expect(entry, 2, 4, 'trace | Compare slow traces | backend | locate');
+        else expect(entry, 2, 3, 'api | API | backend');
         context.rowMap[`/${diagramType === 'architecture' ? 'components' : 'nodes'}/${nodes.length}`] = entry.context.line;
-        nodes.push({ id: safeId(entry.parts[0], entry.context), label: entry.parts[1], type: entry.parts[2] || 'backend' });
+        const node = { id: safeId(entry.parts[0], entry.context), label: entry.parts[1], type: entry.parts[2] || 'backend' };
+        if (entry.parts[3]) nodeLanes.set(node.id, { lane: safeId(entry.parts[3], entry.context), context: entry.context });
+        nodes.push(node);
       }
     }
     duplicateCheck(nodes, context, 'node');
@@ -169,8 +177,21 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
       spec.layout = { mode: 'grid', cols, cellW: 176, cellH: 76, gapX: 100, gapY: 110 };
       spec.components = placed;
       spec.connections = edges;
+    } else if (lanes.size) {
+      for (const [id, { lane, context: ctx }] of nodeLanes) if (!lanes.has(lane)) fail(ctx, 'diagram-lane', `Node ${id} names an undeclared lane.`, 'lane locate | Locate the cause');
+      const first = lanes.keys().next().value;
+      const nextCol = new Map();
+      spec.lanes = [...lanes.values()];
+      spec.nodes = [...placed].sort((a, b) => a.col - b.col || a.row - b.row).map(({ row, col, ...node }) => {
+        const lane = nodeLanes.get(node.id)?.lane || first;
+        const laneCol = nextCol.get(lane) || 0;
+        nextCol.set(lane, laneCol + 1);
+        return { ...node, lane, col: laneCol };
+      });
+      if (spec.nodes.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'A workflow lane holds at most six nodes.', 'Split the process into another lane.');
+      spec.edges = edges;
     } else {
-      if (placed.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'Native workflow columns are limited to 0–5.', 'Use native workflow JSON with branches distributed across lanes.');
+      if (placed.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'Native workflow columns are limited to 0–5.', 'Declare phase lanes with "lane <id> | label" rows and assign nodes to them.');
       spec.lanes = Array.from({ length: Math.max(1, ...placed.map(node => node.row + 1)) }, (_, row) => ({ id: `lane-${row}`, label: row ? `分支 ${row}` : spec.meta.title }));
       spec.nodes = placed.map(({ row, ...node }) => ({ ...node, lane: `lane-${row}` }));
       spec.edges = edges;

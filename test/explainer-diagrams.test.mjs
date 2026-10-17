@@ -185,3 +185,14 @@ test('explainer diagrams: source containment rejects traversal, symlinks, mismat
     await assert.rejects(read('mismatch.json'), error => error.archifyDiagnostics[0].code === 'explainer/diagram-type-mismatch');
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
+
+test('explainer diagrams: workflow phase lanes restart columns per lane and reject undeclared lanes', () => {
+  const spec = compileExplainerDiagram('workflow', ['lane confirm | Confirm', 'lane locate | Locate',
+    'alert | Alert | external | confirm', 'window | Window | backend | confirm', 'sample | Sample | backend | locate', 'fix | Fix | backend | locate',
+    'alert > window', 'window > sample | tail', 'sample > fix'], { id: 'phases' });
+  assert.deepEqual(spec.lanes, [{ id: 'confirm', label: 'Confirm' }, { id: 'locate', label: 'Locate' }]);
+  assert.deepEqual(spec.nodes.map(node => [node.id, node.lane, node.col]), [['alert', 'confirm', 0], ['window', 'confirm', 1], ['sample', 'locate', 0], ['fix', 'locate', 1]]);
+  assert.ok(spec.nodes.every(node => node.width === undefined));
+  assert.throws(() => compileExplainerDiagram('workflow', ['lane confirm | Confirm', 'alert | Alert | external | missing'], { id: 'phases' }),
+    error => (error.archifyDiagnostics || error.diagnostics || []).some(item => /undeclared lane/.test(item.message)));
+});

@@ -111,7 +111,24 @@ Actor rows: `actor <id> | label | type`. Message rows: `from | to | label | vari
 | trace > fix | cause found | emphasis |
 ```
 
-Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Nodes widen to fit their labels. Keep a workflow to five nodes along its longest path and edge labels to one or two words: a longer chain shrinks its text below the readable size; use `@steps` for long sequences. Architecture allows twelve columns. Use `@architecture` for components that talk to each other and `@workflow` for steps a reader follows.
+Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Nodes widen to fit their labels. Keep edge labels to one or two words.
+
+A workflow row reads well with up to three or four nodes. Split a longer process into phase lanes: declare `lane <id> | label` rows, then give each workflow node its lane as a fourth cell. Each lane becomes one row in reading order; edges between lanes connect the rows.
+
+```md
+@workflow id=p99-flow title="P99 triage"
+| lane confirm | Confirm the symptom |
+| lane locate | Locate the cause |
+| alert | P99 up, mean flat | external | confirm |
+| window | Align window and percentiles | backend | confirm |
+| sample | Sample slow requests | backend | locate |
+| fix | Fix and verify | backend | locate |
+| alert > window | |
+| window > sample | tail grew |
+| sample > fix | cause | emphasis |
+```
+
+Architecture allows twelve columns. Use `@architecture` for components that talk to each other and `@workflow` for steps a reader follows.
 
 **`@tree`**: one row per node, `id | label | parent`; the root's parent is `-`.
 

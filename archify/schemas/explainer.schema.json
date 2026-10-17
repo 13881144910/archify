@@ -180,6 +180,9 @@
         },
         "ordered": {
           "type": "boolean"
+        },
+        "checklist": {
+          "type": "boolean"
         }
       }
     },

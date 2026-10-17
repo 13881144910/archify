@@ -160,7 +160,8 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
         const end=starts[cursor] ?? sourceText.length;
         literal=sourceText.slice(starts[begin] ?? sourceText.length,end).replace(/\r?\n$/u,''); if (cursor<lines.length) cursor++;
       } else {
-        while (cursor<lines.length && lines[cursor].trim() && !/^(?:#{1,2}\s|@)/u.test(lines[cursor].trim())) { rows.push({cells:cells(lines[cursor],cursor),line:cursor}); cursor++; }
+        // A directive row never starts with an empty cell; "|| id |" is a line-number prefix copied from a file viewer.
+        while (cursor<lines.length && lines[cursor].trim() && !/^(?:#{1,2}\s|@)/u.test(lines[cursor].trim())) { rows.push({cells:cells(lines[cursor].replace(/^(\s*)\|\|(?=\s)/u,'$1|'),cursor),line:cursor}); cursor++; }
       }
       const allowed = {
         source:['title','url','path','lines','revision'],meta:['locale','quality_profile','repo_url','repo_revision','repo_provider','repo_link_mode'],answer:['scope'],
@@ -248,7 +249,7 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
       const list=trimmed.match(/^(?:([-*+])|(\d+)\.)\s+(.+)$/u);
       if(list) {
         const rows=[];const ordered=Boolean(list[2]);while(cursor<lines.length){const found=lines[cursor].trim().match(/^(?:([-*+])|(\d+)\.)\s+(.+)$/u);if(!found||Boolean(found[2])!==ordered)break;if(/^\s{2,}/u.test(lines[cursor]))fail(cursor+1,'list','Nested lists are unsupported.','- One flat item');unsupported(found[3],cursor+1,'list');rows.push({cells:[found[3]],line:cursor});cursor++;}
-        if(!panel){if(!reasonsAllowed||ordered||document.answer.reasons)fail(at+1,'answer','Use one flat unordered reason list after the conclusion.','A conclusion.\n\n- First reason\n- Second reason');document.answer.reasons=rows.map(r=>r.cells[0]);map('/answer/reasons',document.answer.reasons,descriptor(at,cursor));rows.forEach((r,i)=>map(`/answer/reasons/${i}`,r.cells[0],descriptor(r.line)));}else addBlock({type:'list',ordered,items:rows.map(r=>r.cells[0])},at,cursor,rows);continue;
+        if(!panel){if(!reasonsAllowed||ordered||document.answer.reasons)fail(at+1,'answer','Use one flat unordered reason list after the conclusion.','A conclusion.\n\n- First reason\n- Second reason');document.answer.reasons=rows.map(r=>r.cells[0]);map('/answer/reasons',document.answer.reasons,descriptor(at,cursor));rows.forEach((r,i)=>map(`/answer/reasons/${i}`,r.cells[0],descriptor(r.line)));}else{const task=/^\[[ xX]\]\s+/u,tasks=rows.filter(r=>task.test(r.cells[0])).length;if(tasks&&(ordered||tasks<rows.length))fail(at+1,'list','Write every checklist item as "- [ ] item" in one unordered list.','- [ ] Check the deposit terms\n- [ ] Photograph the meter readings');addBlock({type:'list',ordered,...(tasks?{checklist:true}:{}),items:rows.map(r=>tasks?r.cells[0].replace(task,''):r.cells[0])},at,cursor,rows);}continue;
       }
       const chunks=[];while(cursor<lines.length&&lines[cursor].trim()&&!/^(?:#{1,2}\s|@|\||[-*+]\s|\d+\.\s|```|~~~)/u.test(lines[cursor].trim())){unsupported(lines[cursor],cursor+1,'prose');chunks.push(lines[cursor].trim());cursor++;}
       if(cursor===at){unsupported(trimmed,at+1,'prose');cursor++;continue;}

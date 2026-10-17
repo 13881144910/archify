@@ -5,7 +5,8 @@ import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validateSchema } from '../renderers/shared/validator.mjs';
-import { textUnits } from '../renderers/shared/utils.mjs';
+import { textUnits, SEMANTIC_SIGIL_FOOTPRINT } from '../renderers/shared/utils.mjs';
+import { minimumNodeTextWidth } from '../renderers/shared/text-fit.mjs';
 import { throwDiagnosticError } from '../renderers/shared/diagnostics.mjs';
 import { createOwnedTempDirectory } from '../renderers/shared/owned-temp-directory.mjs';
 
@@ -166,8 +167,10 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
         else expect(entry, 2, 3, 'api | API | backend');
         context.rowMap[`/${diagramType === 'architecture' ? 'components' : 'nodes'}/${nodes.length}`] = entry.context.line;
         const node = { id: safeId(entry.parts[0], entry.context), label: entry.parts[1], type: entry.parts[2] || 'backend' };
-        const labelWidth = Math.ceil(textUnits(node.label) * 6.8 + 12);
-        if (diagramType === 'workflow' && labelWidth > 200) node.width = labelWidth;
+        // Wide enough that the label stays centred between the corner icon and the opposite edge;
+        // a narrower node drops the label below the icon, out of line with its neighbours.
+        const labelWidth = Math.ceil(Math.max(textUnits(node.label) * 6.8 + 12, minimumNodeTextWidth(node.label, 11) + 2 * (SEMANTIC_SIGIL_FOOTPRINT + 2)));
+        if (diagramType === 'workflow' && labelWidth > 92) node.width = labelWidth;
         if (entry.parts[3]) nodeLanes.set(node.id, { lane: safeId(entry.parts[3], entry.context), context: entry.context });
         nodes.push(node);
       }
@@ -184,14 +187,28 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
     } else if (lanes.size) {
       for (const [id, { lane, context: ctx }] of nodeLanes) if (!lanes.has(lane)) fail(ctx, 'diagram-lane', `Node ${id} names an undeclared lane.`, 'lane locate | Locate the cause');
       const first = lanes.keys().next().value;
-      const nextCol = new Map();
-      spec.lanes = [...lanes.values()];
-      spec.nodes = [...placed].sort((a, b) => a.col - b.col || a.row - b.row).map(({ row, col, ...node }) => {
-        const lane = nodeLanes.get(node.id)?.lane || first;
-        const laneCol = nextCol.get(lane) || 0;
-        nextCol.set(lane, laneCol + 1);
-        return { ...node, lane, col: laneCol };
-      });
+      const order = [...lanes.keys()];
+      const ranked = [...placed].sort((a, b) => a.col - b.col || a.row - b.row).map(({ row, col, ...node }) => ({ ...node, lane: nodeLanes.get(node.id)?.lane || first }));
+      // Up to six nodes read best as one row with phase labels above it; longer processes wrap into lane rows.
+      if (ranked.length <= 6 && placed.every(node => node.row === 0)) {
+        const row = ranked.sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane));
+        spec.lanes = [{ id: 'flow', label: spec.meta.title }];
+        spec.nodes = row.map(({ lane, ...node }, col) => ({ ...node, lane: 'flow', col }));
+        spec.phases = order.map(id => ({ id, label: lanes.get(id).label, cols: row.flatMap((node, col) => node.lane === id ? [col] : []) })).filter(phase => phase.cols.length).map(({ cols, ...phase }) => ({ ...phase, fromCol: cols[0], toCol: cols.at(-1) }));
+      } else {
+        // Each phase row starts under the end of the previous one when the staircase fits six columns,
+        // so the hand-off edge drops straight down instead of crossing back over the rows.
+        spec.lanes = [...lanes.values()].filter(lane => ranked.some(node => node.lane === lane.id));
+        const sizes = spec.lanes.map(lane => ranked.filter(node => node.lane === lane.id).length);
+        const stair = sizes.reduce((sum, size) => sum + size, 0) - (sizes.length - 1) <= 6;
+        const starts = sizes.map((_, i) => stair ? sizes.slice(0, i).reduce((sum, size) => sum + size - 1, 0) : 0);
+        const nextCol = new Map(spec.lanes.map((lane, i) => [lane.id, starts[i]]));
+        spec.nodes = ranked.map(node => {
+          const laneCol = nextCol.get(node.lane);
+          nextCol.set(node.lane, laneCol + 1);
+          return { ...node, col: laneCol };
+        });
+      }
       if (spec.nodes.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'A workflow lane holds at most six nodes.', 'Split the process into another lane.');
       spec.edges = edges;
     } else {
@@ -265,7 +282,9 @@ function rethrowNative(error, context, reason) {
     details = error.checks.filter(check => !check.ok).flatMap(check => (check.details?.length ? check.details : [`Native check ${check.name} failed.`])
       .map(message => ({ code: `check/${check.name}`, severity: 'error', message, evidence: check })));
     if (!details.length) details = (error.composition?.issues || []).filter(issue => issue.severity === 'error')
-      .map(issue => ({ ...issue, message: issue.detail || `Native quality check ${issue.code} failed.` }));
+      .map(issue => ({ ...issue, message: issue.code === 'composition/desktop-readability' && issue.projectedFontPx
+        ? `Text "${issue.text}" on ${issue.owner?.kind || 'element'} ${issue.owner?.id || ''} would show at ${issue.projectedFontPx.toFixed(1)}px, below ${issue.minimumProjectedFontPx}px: the diagram is ${Math.round(issue.viewBoxWidth)}px wide and shrinks to ${Math.round(issue.scale * 100)}% on the page. Make it narrower: at most four or five nodes per row, shorter node labels, or phases.`
+        : issue.detail || `Native quality check ${issue.code} failed.` }));
   }
   if (details.length) throwDiagnosticError('Native diagram validation failed.', details.map(entry => ({
     code: `explainer/${reason}`, severity: entry.severity || 'error', message: entry.message,

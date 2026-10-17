@@ -186,13 +186,20 @@ test('explainer diagrams: source containment rejects traversal, symlinks, mismat
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 
-test('explainer diagrams: workflow phase lanes restart columns per lane and reject undeclared lanes', () => {
-  const spec = compileExplainerDiagram('workflow', ['lane confirm | Confirm', 'lane locate | Locate',
+test('explainer diagrams: short phased workflows form one row with phase labels; long ones wrap into lanes', () => {
+  const phased = ['lane confirm | Confirm', 'lane locate | Locate',
     'alert | Alert | external | confirm', 'window | Window | backend | confirm', 'sample | Sample | backend | locate', 'fix | Fix | backend | locate',
-    'alert > window', 'window > sample | tail', 'sample > fix'], { id: 'phases' });
-  assert.deepEqual(spec.lanes, [{ id: 'confirm', label: 'Confirm' }, { id: 'locate', label: 'Locate' }]);
-  assert.deepEqual(spec.nodes.map(node => [node.id, node.lane, node.col]), [['alert', 'confirm', 0], ['window', 'confirm', 1], ['sample', 'locate', 0], ['fix', 'locate', 1]]);
+    'alert > window', 'window > sample | tail', 'sample > fix'];
+  const spec = compileExplainerDiagram('workflow', phased, { id: 'phases' });
+  assert.equal(spec.lanes.length, 1);
+  assert.deepEqual(spec.nodes.map(node => [node.id, node.col]), [['alert', 0], ['window', 1], ['sample', 2], ['fix', 3]]);
+  assert.deepEqual(spec.phases, [{ id: 'confirm', label: 'Confirm', fromCol: 0, toCol: 1 }, { id: 'locate', label: 'Locate', fromCol: 2, toCol: 3 }]);
   assert.ok(spec.nodes.every(node => node.width === undefined));
+  const long = compileExplainerDiagram('workflow', [...phased, 'a | A | backend | locate', 'b | B | backend | locate', 'c | C | backend | locate', 'fix > a', 'a > b', 'b > c'], { id: 'long' });
+  assert.deepEqual(long.lanes, [{ id: 'confirm', label: 'Confirm' }, { id: 'locate', label: 'Locate' }]);
+  assert.deepEqual(long.nodes.map(node => [node.id, node.lane, node.col]), [['alert', 'confirm', 0], ['window', 'confirm', 1], ['sample', 'locate', 1], ['fix', 'locate', 2], ['a', 'locate', 3], ['b', 'locate', 4], ['c', 'locate', 5]], 'the second row starts under the end of the first');
+  const wider = compileExplainerDiagram('workflow', [...phased, 'a | A | backend | locate', 'b | B | backend | locate', 'c | C | backend | locate', 'd | D | backend | locate', 'fix > a', 'a > b', 'b > c', 'c > d'], { id: 'wider' });
+  assert.deepEqual(wider.nodes.filter(node => node.lane === 'locate').map(node => node.col), [0, 1, 2, 3, 4, 5], 'rows restart when a staircase would exceed six columns');
   assert.throws(() => compileExplainerDiagram('workflow', ['lane confirm | Confirm', 'alert | Alert | external | missing'], { id: 'phases' }),
     error => (error.archifyDiagnostics || error.diagnostics || []).some(item => /undeclared lane/.test(item.message)));
 });

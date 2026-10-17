@@ -13,9 +13,9 @@ Write one Markdown file, `candidate.archify.md`. The first paragraph after the t
 
 The browser and server must agree on keys before any request is sent: **one extra round trip** with TLS 1.3.
 
-- The browser proposes keys in its first message, so one round trip is enough.
-- The server proves its identity with a certificate in the same reply.
-- A returning browser can resume and send data immediately.[](source:rfc8446)
+- The browser sends its key share in the first message, so one round trip is enough.[](source:rfc8446)
+- The server replies with its key share, then its certificate, already encrypted.
+- A returning browser can resume and send data immediately.
 
 @answer scope="TLS 1.3 · first visit · no proxy"
 @meta locale=en
@@ -27,7 +27,8 @@ The browser and server must agree on keys before any request is sent: **one extr
 | actor browser | Browser | frontend |
 | actor server | Server | backend |
 | browser | server | ClientHello + key share |
-| server | browser | ServerHello + certificate + Finished | return |
+| server | browser | ServerHello + key share | return |
+| server | browser | Certificate + Finished (encrypted) | return |
 | browser | server | Finished + GET / | emphasis |
 | server | browser | 200 OK | return |
 
@@ -35,7 +36,7 @@ The browser and server must agree on keys before any request is sent: **one extr
 
 @steps id=handshake-steps
 | hello | ClientHello | Offers cipher suites and a key share. | handshake-flow | browser |
-| reply | ServerHello | Picks a suite, sends its key share and certificate. | handshake-flow | server |
+| reply | ServerHello | Picks a suite and sends its key share; the certificate follows encrypted. | handshake-flow | server |
 | done | Finished | Both sides confirm the keys; the request rides along. | handshake-flow | browser |
 
 ## How does TLS 1.3 compare with 1.2? {#versions}
@@ -71,6 +72,7 @@ A diagram replaces the paragraph that would describe it. When the answer involve
 | Entities with fields and relationships | `@erd` |
 | Options compared on several criteria | Markdown table with `{good:…}`, `{caution:…}`, `{bad:…}` cells |
 | Ordered actions, checks or stages | `@steps` |
+| Things the reader must do or verify | Task list, `- [ ] item` |
 | A warning, open question or key caveat | `@callout` |
 | A few labelled facts | `@facts` |
 | Numbers compared across items or over time, shares of a whole, a 2×2 priority, flows of quantity | ```` ```mermaid ```` chart fence |
@@ -89,7 +91,10 @@ Every sentence gives the reader one fact they need. Write in the user's language
 - One sentence carries one fact; one panel answers one question. Say each fact once: when a table or diagram shows it, the text adds only what the figure cannot.
 - Call each thing by one name throughout the page, and use the name the reader already knows.
 - Give results with their evidence: a number with its unit, a file position, a source. When a value is unknown or estimated, say so in scope.
+- Cite a `@source` for each claim the reader cannot check alone: protocol details, thresholds, benchmark figures, API behaviour. A rule of thumb without a source is labelled as one, or left out.
+- Recompute every derived number before delivery and show the arithmetic once: “990 of 1000 requests at 80 ms → P99 = 80 ms; 11 slow → P99 = 600 ms.” Totals in tables add up.
 - Write steps as commands with the condition first: “If the build fails, read the log.”
+- When the reader must act or verify, end with a checklist panel: `- [ ] item`, one concrete check per item. Readers tick items on the page.
 
 English: short sentences (under about 25 words), common words (use, before, to, because), active voice with a named actor.
 
@@ -128,7 +133,7 @@ Actor rows: `actor <id> | label | type`. Message rows: `from | to | label | vari
 
 Node rows: `id | label | type?`. Edge rows: `from > to | label? | variant?`. Nodes widen to fit their labels. Keep edge labels to one or two words.
 
-A workflow row reads well with up to three or four nodes. Split a longer process into phase lanes: declare `lane <id> | label` rows, then give each workflow node its lane as a fourth cell. Each lane becomes one row in reading order; edges between lanes connect the rows.
+Group the steps of a process into phases: declare `lane <id> | label` rows, then give each workflow node its phase as a fourth cell. Up to six nodes draw as one row with the phase labels above it; a longer process wraps into one row per phase.
 
 ```md
 @workflow id=p99-flow title="P99 triage"

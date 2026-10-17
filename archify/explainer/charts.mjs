@@ -15,8 +15,10 @@ export function compileExplainerChart(text) {
   const type = detectType(text);
   if (type && NATIVE[type]) return { error: `Mermaid ${type} is drawn with the native ${NATIVE[type]} shorthand, which Archify validates and lets readers explore.`, example: `@${NATIVE[type].split(' ')[0]} id=...` };
   try {
-    const result = render(text, { padding: 8, fontSize: 14, links: false, images: false, config: { xyChart: { width: 520, height: 320 }, quadrantChart: { chartWidth: 420, chartHeight: 420 } } });
-    return { svg: result.svg, width: result.width, height: result.height, type: result.type };
+    const result = render(text, { padding: 8, fontSize: 14, links: false, images: false, config: { xyChart: { width: 520, height: 280 }, quadrantChart: { chartWidth: 420, chartHeight: 420 } } });
+    // A rotated CJK axis title lies on its side; vertical writing keeps the characters upright.
+    const svg = result.svg.replace(/<g transform="translate\(([\d.-]+),([\d.-]+)\) rotate\(-90\)"><text x="0" y="[\d.-]+" text-anchor="middle">([^<]*\p{Script=Han}[^<]*)<\/text><\/g>/gu, (_, x, y, label) => `<text x="${x}" y="${y}" text-anchor="middle" writing-mode="vertical-rl">${label}</text>`);
+    return { svg, width: result.width, height: result.height, type: result.type };
   } catch (error) {
     if (!(error instanceof PeleError)) throw error;
     const supported = 'pie, xychart-beta (bar and line), quadrantChart, sankey-beta, radar-beta or venn-beta';

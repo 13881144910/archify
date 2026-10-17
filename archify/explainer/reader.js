@@ -31,7 +31,7 @@
       const inset = panel.offsetWidth - panel.querySelector('.diagram-preview').clientWidth;
       const need = Math.max(...svgs.map(svg=>{
         const viewWidth = svg.viewBox.baseVal?.width || svg.getBoundingClientRect().width;
-        const smallest = Math.min(...all('text',svg).filter(text=>text.textContent.trim() && !text.closest('[data-legend]')).map(text=>parseFloat(text.getAttribute('font-size')) || parseFloat(getComputedStyle(text).fontSize)));
+        const smallest = Math.min(...all('text',svg).filter(text=>text.textContent.trim() && !text.closest('[data-legend]')).map(text=>(parseFloat(text.getAttribute('font-size')) || parseFloat(getComputedStyle(text).fontSize)) / secondary(text)));
         return Number.isFinite(smallest) && smallest > 0 ? viewWidth * floor / smallest + inset : 0;
       }));
       return [3,4,5,6,7,8,9,12].find(span=>px(span) >= need) || 12;
@@ -54,16 +54,24 @@
     board.classList.remove('measuring');
     const width = board.clientWidth;
     const excess = (item,span) => item.text ? Math.max(0,px(span) - 720) / 720 * px(span) * item.height[span] * .6 : 0;
-    // One set of column lines for the whole page. Panels fill the shortest fitting column in source
+    // One set of column lines per section. Panels fill the shortest fitting column in source
     // order; a panel that fits no column takes the full width and closes the section above it. The
     // last panel of every column stretches to the section bottom, so column edges and bottoms align.
-    function simulate(template) {
+    function simulate(template, section, forced = []) {
       const lines = template.reduce((acc,span)=>[...acc,acc[acc.length - 1] + span],[1]);
-      const placed = [];
-      let cursor = 0, waste = 0, wide = 0, heights, last;
-      const open = () => { heights = template.map(()=>0); last = template.map(()=>null); };
+      const placed = [], options = [], chosen = [];
+      let cursor = 0, waste = 0, wide = 0, heights, last, previous;
+      const open = () => { heights = template.map(()=>0); last = template.map(()=>null); previous = {top:0,c:-1,height:0}; };
       // heights[c] is the offset of the next panel in column c, so it includes one trailing gap.
       const close = () => {
+        // A conclusion alone in its section takes the full width rather than leaving blank columns beside it.
+        const alone = last.filter(Boolean);
+        if (alone.length === 1 && alone[0] === placed[0] && placed.length === 1 && template.length > 1) {
+          Object.assign(alone[0],{line:1,span:12,height:alone[0].item.height[12]});
+          cursor += alone[0].height + gap;
+          open();
+          return;
+        }
         const bottom = Math.max(...heights) - gap;
         if (bottom <= 0) return;
         template.forEach((span,c)=>{
@@ -74,32 +82,62 @@
         open();
       };
       open();
-      for (const item of items) {
+      for (const [index,item] of section.entries()) {
         const answer = item.panel.id === 'answer' && item === items[0];
         const choices = template.map((span,c)=>({c,span})).filter(({c,span})=>template.length > 1 && !item.wide && item.fits[span] && (!answer || c === 0));
+        options.push(choices.length);
         if (!choices.length) {
+          chosen.push(0);
           close();
           placed.push({item,line:1,span:12,top:cursor,height:item.height[12]});
           wide += excess(item,12);
           cursor += item.height[12] + gap;
           continue;
         }
-        const {c,span} = choices.reduce((a,b)=>heights[b.c] + item.height[b.span] < heights[a.c] + item.height[a.span] - 1 ? b : a);
-        const entry = {item,line:lines[c],span,top:cursor + heights[c],height:item.height[span]};
+        // Reading order is top to bottom, then left to right: a panel never starts above the previous
+        // one, and starts clearly lower when placed to its left. The panel above it stretches to close the gap.
+        const start = c => Math.max(heights[c], c < previous.c ? previous.top + Math.min(160, previous.height / 2) : previous.top);
+        const bottom = ({c,span}) => start(c) + item.height[span];
+        const selected = choices[forced[index]] || choices.reduce((a,b)=>bottom(b) < bottom(a) - 1 ? b : a), {c,span} = selected;
+        chosen.push(choices.indexOf(selected));
+        const top = start(c);
+        // A gap with no panel above it to stretch is a visible hole, which reads worse than room inside a card.
+        if (top > heights[c]) { waste += px(span) * (top - heights[c]) * (last[c] ? 1 : 1.6); if (last[c]) last[c].height += top - heights[c]; }
+        const entry = {item,line:lines[c],span,top:cursor + top,height:item.height[span]};
         placed.push(entry);
-        heights[c] += item.height[span] + gap;
+        previous = {top,c,height:item.height[span]};
+        heights[c] = top + item.height[span] + gap;
         last[c] = entry;
         wide += excess(item,span);
       }
       close();
-      return {placed,cost:cursor * width + waste + wide};
+      return {placed,options,chosen,height:cursor,cost:cursor * width + waste + wide};
     }
+    // Greedy placement cannot see that a short fit now forces a hole later, so each panel's column is
+    // chosen by completing the rest of the section greedily for every option and keeping the cheapest.
+    function plan(template, section) {
+      let best = simulate(template,section);
+      for (let index = 0; index < section.length; index++) {
+        const prefix = best.chosen.slice(0,index);
+        for (let option = 0; option < best.options[index]; option++) {
+          const trial = simulate(template,section,[...prefix,option]);
+          if (trial.cost < best.cost - 1) best = trial;
+        }
+      }
+      return best;
+    }
+    // Full-width panels split the page into sections; each section picks its own column lines.
     const templates = [[6,6],[5,7],[7,5],[4,8],[8,4],[4,4,4],[12]];
-    const plan = templates.map(simulate).reduce((a,b)=>b.cost < a.cost ? b : a);
-    plan.placed.forEach(({item,line,span,top,height})=>{
-      item.panel.style.gridColumn = `${line} / span ${span}`;
-      item.panel.style.gridRow = `${Math.round(top) + 1} / span ${Math.max(1,Math.round(height))}`;
-    });
+    const sections = items.reduce((list,item)=>{ if (item.wide || list.at(-1)?.[0]?.wide) list.push([item]); else list.at(-1).push(item); return list; },[[]]).filter(section=>section.length);
+    let offset = 0;
+    for (const section of sections) {
+      const layout = templates.map(template=>plan(template,section)).reduce((a,b)=>b.cost < a.cost ? b : a);
+      layout.placed.forEach(({item,line,span,top,height})=>{
+        item.panel.style.gridColumn = `${line} / span ${span}`;
+        item.panel.style.gridRow = `${Math.round(offset + top) + 1} / span ${Math.max(1,Math.round(height))}`;
+      });
+      offset += layout.height;
+    }
     board.classList.add('measured');
   }
   // The legend and grid are hidden in the preview, so fit the viewBox to the drawing itself.
@@ -114,6 +152,8 @@
       svg.dataset.cropped = 'true';
     });
   }
+  // Edge labels are secondary to node text and may sit a little below the reading floor.
+  const secondary = text => text.closest('[data-edge-id]') ? .8 : 1;
   function textFloor() {
     const bodySize = parseFloat(getComputedStyle(document.querySelector('.block-prose>p') || document.body).fontSize);
     return window.innerWidth >= 1440 ? Math.max(10,bodySize * .75) : 10;
@@ -123,7 +163,7 @@
     all('.diagram-preview>svg').forEach(svg=>{
       // Measure the current available width, rather than retaining a wider viewport's floor.
       svg.style.minWidth = '0px';
-      const sizes = all('text',svg).filter(text=>text.textContent.trim() && text.getBoundingClientRect().width > 0).map(text=>{const matrix = text.getScreenCTM();return matrix ? parseFloat(getComputedStyle(text).fontSize) * (()=>{const trace=matrix.a**2+matrix.b**2+matrix.c**2+matrix.d**2;const determinant=matrix.a*matrix.d-matrix.b*matrix.c;return Math.sqrt(Math.max(0,(trace-Math.sqrt(Math.max(0,trace**2-4*determinant**2)))/2));})() : Infinity;});
+      const sizes = all('text',svg).filter(text=>text.textContent.trim() && text.getBoundingClientRect().width > 0).map(text=>{const matrix = text.getScreenCTM();return matrix ? parseFloat(getComputedStyle(text).fontSize) / secondary(text) * (()=>{const trace=matrix.a**2+matrix.b**2+matrix.c**2+matrix.d**2;const determinant=matrix.a*matrix.d-matrix.b*matrix.c;return Math.sqrt(Math.max(0,(trace-Math.sqrt(Math.max(0,trace**2-4*determinant**2)))/2));})() : Infinity;});
       const smallest = Math.min(...sizes);
       const preview = svg.parentElement;
       const needed = svg.getBoundingClientRect().width * minimumText / smallest;
@@ -243,6 +283,12 @@
     const text = button.closest('figure').querySelector('pre code').textContent;
     Promise.resolve(navigator.clipboard?.writeText(text)).then(()=>{button.textContent = words.copied;setTimeout(()=>{button.textContent = words.copy;},1600);},()=>notify(say('Copy failed.','复制失败。')));
   }));
+  // Checklist ticks are the reader's own progress; keep them per page and block across reloads.
+  all('.checklist').forEach(list=>{
+    const key = `archify-checklist:${root.dataset.artifact}:${list.closest('.block').id}`, boxes = all('input',list);
+    let saved = []; try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+    boxes.forEach((box,index)=>{ box.checked = saved[index] === 1; box.addEventListener('change',()=>{ try { localStorage.setItem(key,JSON.stringify(boxes.map(b=>b.checked ? 1 : 0))); } catch {} }); });
+  });
   // Native dialogs supply Escape, focus trapping and the accessible modal semantics.
   const printDetails = new Map();
   all('.diagram-semantics').forEach(details=>details.open = false);

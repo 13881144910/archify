@@ -16,7 +16,7 @@ function measureNativePreviews() {
   return Array.from(document.querySelectorAll('.diagram-preview svg')).map(svg=>{
     const block=svg.closest('[data-block-type]'),panel=block.closest('.panel'),preview=svg.closest('.diagram-preview');
     const prose=panel.querySelector('.block-prose > p')||document.querySelector('.block-prose > p'),body=parseFloat(getComputedStyle(prose||panel.querySelector('.panel-body')||block).fontSize);
-    const texts=Array.from(svg.querySelectorAll('text')).filter(e=>e.textContent.trim()&&visible(e)).map(e=>{const m=e.getScreenCTM(),sum=m.a*m.a+m.b*m.b+m.c*m.c+m.d*m.d,det=m.a*m.d-m.b*m.c,scale=Math.sqrt(Math.max(0,(sum-Math.sqrt(Math.max(0,sum*sum-4*det*det)))/2));return {text:e.textContent.trim(),size:parseFloat(getComputedStyle(e).fontSize)*scale};});
+    const texts=Array.from(svg.querySelectorAll('text')).filter(e=>e.textContent.trim()&&visible(e)).map(e=>{const m=e.getScreenCTM(),sum=m.a*m.a+m.b*m.b+m.c*m.c+m.d*m.d,det=m.a*m.d-m.b*m.c,scale=Math.sqrt(Math.max(0,(sum-Math.sqrt(Math.max(0,sum*sum-4*det*det)))/2));return {text:e.textContent.trim(),size:parseFloat(getComputedStyle(e).fontSize)*scale/(e.closest('[data-edge-id]')?.8:1)};});
     const minimum=texts.length?Math.min(...texts.map(t=>t.size)):null,bounds=rect(preview),svgBounds=rect(svg);
     const nodes=Array.from(svg.querySelectorAll('[data-node-id]')).filter(visible).map(e=>({id:e.dataset.nodeId,...rect(e)}));
     const outside=nodes.filter(n=>n.left<bounds.left-1||n.right>bounds.right+1||n.top<bounds.top-1||n.bottom>bounds.bottom+1);

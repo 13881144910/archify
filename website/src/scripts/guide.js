@@ -77,7 +77,7 @@
         var alt = alternatives || [];
         var html = '<div class="result-main"><div><span class="result-kicker">'+escapeHtml(t('recommended'))+' · '+escapeHtml(confidence)+' '+escapeHtml(t('confidence'))+'</span><h3>'+escapeHtml(recipe.title)+'</h3><p class="result-question">'+escapeHtml(recipe.question)+'</p><p class="result-summary">'+escapeHtml(recipe.summary)+'</p>'+(recipe.proof ? '<a class="proof-link" href="'+ArchifySiteLanguage.page('gallery', '#proof-'+encodeURIComponent(recipe.proof))+'">'+escapeHtml(t('proofLink'))+'</a>' : '')+'</div><div class="boundary"><div class="boundary-item"><small>'+escapeHtml(t('use'))+'</small><p>'+escapeHtml(recipe.useWhen)+'</p></div><div class="boundary-item avoid"><small>'+escapeHtml(t('avoid'))+'</small><p>'+escapeHtml(recipe.avoidWhen)+'</p></div></div></div>';
         html += '<div class="result-grid"><div class="checklist"><div class="mini-heading">'+escapeHtml(t('must'))+'</div><ul>'+recipe.include.map(function (item) { return '<li>'+escapeHtml(item)+'</li>'; }).join('')+'</ul><div class="presentation"><span class="tag">'+escapeHtml(recipe.type)+'</span><span class="tag">'+escapeHtml(recipe.presentation.preset)+'</span><span class="tag">'+escapeHtml(recipe.presentation.motion)+'</span></div></div>';
-        html += '<div class="prompt-box"><div class="prompt-bar"><div class="mini-heading" style="margin:0">'+escapeHtml(t('prompt'))+'</div><button class="copy" id="copy-prompt" type="button">'+escapeHtml(t('copyPrompt'))+'</button></div><p class="prompt-text">'+escapeHtml(recipe.prompt)+'</p></div></div>';
+        html += '<div class="prompt-box"><div class="prompt-bar"><div class="mini-heading" style="margin:0">'+escapeHtml(t('prompt'))+'</div><button class="copy" id="copy-prompt" aria-describedby="prompt-copy-status" type="button">'+escapeHtml(t('copyPrompt'))+'</button></div><p id="prompt-copy-status" class="copy-status" role="status" aria-live="polite"></p><p class="prompt-text">'+escapeHtml(recipe.prompt)+'</p></div></div>';
         if (alt.length) html += '<div class="alternatives">'+escapeHtml(t('alternatives'))+alt.map(function (entry) { var item=local(entry.recipe); return '<button type="button" data-alt="'+item.id+'">'+escapeHtml(item.title)+' ['+item.type+']</button>'; }).join('')+'</div>';
         var result = document.getElementById('result');
         result.innerHTML = html;
@@ -101,13 +101,17 @@
         renderSamples(); renderFilters(); renderCards();
         if (lastRecipe) renderResult(lastRecipe,'selected',[]);
       }
+      var copyAttempt = 0;
       async function copyPrompt() {
         if (!lastRecipe) return;
-        var text = local(lastRecipe).prompt, button = document.getElementById('copy-prompt');
-        try { await navigator.clipboard.writeText(text); } catch (_) {
-          var area=document.createElement('textarea'); area.value=text; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
-        }
-        button.textContent=t('copied'); setTimeout(function () { if (button.isConnected) button.textContent=t('copyPrompt'); },1200);
+        var text = local(lastRecipe).prompt, recipe = lastRecipe;
+        var button = document.getElementById('copy-prompt');
+        var status = document.getElementById('prompt-copy-status');
+        var attempt = ++copyAttempt;
+        status.textContent = '';
+        var isCurrent = function () { return attempt === copyAttempt && button.isConnected && recipe === lastRecipe; };
+        var ok = await ArchifyClipboard.copy(text, isCurrent);
+        if (isCurrent()) status.textContent = t(ok ? 'copySuccess' : 'copyFailure');
       }
       document.getElementById('recommend').addEventListener('click',runRecommendation);
       document.getElementById('clear').addEventListener('click',function () { document.getElementById('scenario').value=''; document.getElementById('result').classList.remove('visible'); lastRecipe=null; });

@@ -247,17 +247,19 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
       if (spec.nodes.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'A workflow lane holds at most six nodes.', 'Split the process into another lane.');
       spec.edges = edges;
     } else {
-      // A linear process too wide for one readable row wraps into rows of equal size, stepping down
-      // where six columns allow, the same way declared phases do.
+      // A process too wide for one readable row wraps by columns into stacked bands, keeping each
+      // band's branch rows, and steps each band down under the end of the previous one where six
+      // columns allow, the same way declared phases do.
       const fits = laid => laid.every(node => node.col <= 5) && workflowWidth(laid, edges) <= READABLE_WORKFLOW_WIDTH;
       let wrapped;
-      if (placed.every(node => node.row === 0) && !fits(placed)) {
-        const ordered = [...placed].sort((a, b) => a.col - b.col);
+      if (!fits(placed)) {
+        const branchRows = Math.max(...placed.map(node => node.row)) + 1;
         for (let size = 5; size >= 2 && !wrapped; size--) {
-          const groups = Array.from({ length: Math.ceil(ordered.length / size) }, (_, i) => ordered.slice(i * size, i * size + size));
           for (const stair of [true, false]) {
-            const laid = groups.flatMap((group, row) => group.map((node, i) => ({ ...node, row, col: (stair ? groups.slice(0, row).reduce((sum, g) => sum + g.length - 1, 0) : 0) + i })));
-            if (fits(laid)) { wrapped = laid; break; }
+            const laid = placed.map(node => { const band = Math.floor(node.col / size); return { ...node, row: band * branchRows + node.row, col: (stair ? band * (size - 1) : 0) + node.col - band * size }; });
+            const used = [...new Set(laid.map(node => node.row))].sort((a, b) => a - b);
+            const compact = laid.map(node => ({ ...node, row: used.indexOf(node.row) }));
+            if (fits(compact)) { wrapped = compact; break; }
           }
         }
       }

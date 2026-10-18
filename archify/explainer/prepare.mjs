@@ -39,7 +39,7 @@ export async function prepareExplainer(sourceText, options = {}) {
     ...(entry.kind === 'repository' || entry.inline ? {} : { path: path.resolve(baseDir, entry.path) }) }));
   const bundle = { schemaVersion: 1, kind: 'archify-explainer-prepared', ...parsed, sourcePath: inputPath, baseDir,
     quality, writingMode: options.writingMode || 'warn', source: identity(Buffer.from(sourceText)),
-    preparedSources: { sources: preparedSources.sources, assets: preparedSources.assets, ...(preparedSources.repository ? { repository: preparedSources.repository } : {}) },
+    preparedSources: { sources: preparedSources.sources, assets: preparedSources.assets, ...(Object.keys(preparedSources.charts || {}).length ? { charts: preparedSources.charts } : {}), ...(preparedSources.repository ? { repository: preparedSources.repository } : {}) },
     preparedDiagrams: { diagrams: preparedDiagrams.diagrams }, dependencies };
   bundle.digest = digest(bundle);
   assertPreparedDependencies(bundle);

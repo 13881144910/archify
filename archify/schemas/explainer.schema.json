@@ -870,8 +870,7 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "type",
-        "text"
+        "type"
       ],
       "properties": {
         "id": {
@@ -885,6 +884,42 @@
         },
         "text": {
           "$ref": "#/$defs/text"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind",
+            "x",
+            "y"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/short"
+            },
+            "kind": {
+              "enum": [
+                "bar",
+                "line",
+                "pie"
+              ]
+            },
+            "x": {
+              "$ref": "#/$defs/short"
+            },
+            "y": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/short"
+              },
+              "minItems": 1,
+              "maxItems": 6
+            },
+            "unit": {
+              "$ref": "#/$defs/short"
+            }
+          }
         }
       }
     }

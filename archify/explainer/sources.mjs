@@ -5,9 +5,11 @@ import { createHash } from 'node:crypto';
 import { throwDiagnosticError } from '../renderers/shared/diagnostics.mjs';
 import { verifyRepositoryEvidence } from '../renderers/shared/repository-evidence.mjs';
 import { parseRepositoryRemote } from '../renderers/shared/repository-location.mjs';
+import { chartFromData, compileExplainerChart } from './charts.mjs';
 
 const MAX_CODE_BYTES = 16 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_DATA_BYTES = 2 * 1024 * 1024;
 const MAX_ASSET_BYTES = 32 * 1024 * 1024;
 const SECRET_NAME = /^(?:\.env(?:\..*)?|\.npmrc|\.netrc|\.pypirc|\.(?:ssh|aws|gnupg|kube)|(?:id_(?:rsa|dsa|ecdsa|ed25519))(?:\..*)?|(?:credentials?|secrets?)(?:[._-].*)?|.*\.(?:pem|key|p12|pfx|keystore))$/i;
 const SECRET_CONTENT = /-----BEGIN (?:[A-Z ]*PRIVATE KEY|PGP PRIVATE KEY BLOCK)-----|\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-(?:proj-)?[A-Za-z0-9_-]{20,})\b/i;
@@ -297,5 +299,20 @@ export async function resolveExplainerSources(document, { repoRoot, baseDir, sou
     assets[block.id] = Object.freeze({ id: block.id, alt: block.alt, ...asset });
     dependencies.push(Object.freeze({ kind: 'image', id: block.id, path: asset.path, sha256: asset.sha256, bytes: asset.bytes, contentBase64: asset.contentBase64 }));
   }
-  return { sources: Object.freeze(sources), assets: Object.freeze(assets), dependencies: Object.freeze(dependencies), repository };
+  // A data chart reads its CSV or JSON once, freezes the bytes and keeps the chart text built from them.
+  const charts = Object.create(null);
+  for (const { block, pointer } of blocks) {
+    if (block.type !== 'chart' || !block.data) continue;
+    if (!baseDir) fail(context, pointer, 'chart', 'asset-root', 'A data chart requires an input directory.', 'Run finalize on the draft file next to its data.');
+    const relative = safePath(context, block.data.path, `${pointer}/data/path`, 'chart');
+    if (!/\.(?:csv|json)$/iu.test(relative)) fail(context, `${pointer}/data/path`, 'chart', 'chart-data-format', 'Chart data is a .csv or .json file.', 'data=latency.csv');
+    const bytes = readContained(context, baseDir, relative, pointer, 'chart', MAX_DATA_BYTES, '2 MiB');
+    let built;
+    try { built = chartFromData(bytes, relative, block.data); } catch { built = { error: 'The data file is not UTF-8 text.' }; }
+    const chart = built.error ? built : compileExplainerChart(built.text);
+    if (chart.error) fail(context, pointer, 'chart', 'chart-data', chart.error, '@chart type=bar data=latency.csv x=day y=p50,p99');
+    charts[block.id] = built.text;
+    dependencies.push(Object.freeze({ kind: 'data', id: block.id, path: relative, ...digest(bytes) }));
+  }
+  return { sources: Object.freeze(sources), assets: Object.freeze(assets), charts: Object.freeze(charts), dependencies: Object.freeze(dependencies), repository };
 }

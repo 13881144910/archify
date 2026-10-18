@@ -174,7 +174,7 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
       }
       const allowed = {
         source:['title','url','path','lines','revision'],meta:['locale','quality_profile','style','repo_url','repo_revision','repo_provider','repo_link_mode'],answer:['scope'],
-        prose:['id','text'],list:['id','ordered'],callout:['id','level','title','text'],facts:['id'],metric:['id','label','value','limit','unit','note','typical'],steps:['id'],diagram:['id','source','spec','title','changes'],code:['id','source','language'],diff:['id','caption'],image:['id','path','alt','caption'],comparison:['id','columns','label']
+        prose:['id','text'],list:['id','ordered'],callout:['id','level','title','text'],facts:['id'],metric:['id','label','value','limit','unit','note','typical'],steps:['id'],diagram:['id','source','spec','title','changes'],code:['id','source','language'],diff:['id','caption'],image:['id','path','alt','caption'],comparison:['id','columns','label'],chart:['id','title','type','data','x','y','unit']
       }[type];
       if (!allowed) { fail(at+1,'directive',`Unsupported component @${type}.`,'@facts\n| key | value |'); return; }
       for (const key of Object.keys(a)) if (!allowed.includes(key)) fail(at+1,type,`Unsupported argument ${key}.`,`@${type} ${allowed.map(key=>`${key}=...`).join(' ')}`);
@@ -211,9 +211,10 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
         case 'code':Object.assign(block,select(a,['source','language']));break;
         case 'diff':block.text=literal??rows.map(r=>r.cells.join(' | ')).join('\n');Object.assign(block,select(a,['caption']));break;
         case 'image':Object.assign(block,select(a,['path','alt','caption']));break;
+        case 'chart':{if(!a.data||!a.x||!a.y)fail(at+1,type,'A data chart names its file, label column and value columns.','@chart type=bar data=latency.csv x=day y=p50,p99');if(a.type!==undefined&&!['bar','line','pie'].includes(a.type))fail(at+1,type,'A data chart is a bar, line or pie chart.','@chart type=line data=latency.csv x=day y=p99');Object.assign(block,select(a,['title']),{data:{path:a.data,kind:a.type||'bar',x:a.x,y:csv(a.y),...(a.unit?{unit:a.unit}:{})}});break;}
         case 'comparison':rowWidth(rows,2,500,type);if(a.label)block.labelColumn=a.label;block.columns=csv(a.columns);block.rows=rows.map(r=>({...rowLabel(r.cells[0]),cells:r.cells.slice(1).map(assessment)}));break;
       }
-      if (['metric','code','image'].includes(type)&&rows.length)fail(at+1,type,'This component accepts header arguments only.',`@${type} ${allowed.filter(k=>k!=='id').map(k=>`${k}=...`).join(' ')}`);
+      if (['metric','code','image','chart'].includes(type)&&rows.length)fail(at+1,type,'This component accepts header arguments only.',`@${type} ${allowed.filter(k=>k!=='id').map(k=>`${k}=...`).join(' ')}`);
       if(type!=='diff')for(const row of rows)for(const text of row.cells)unsupported(text,row.line+1,type);
       addBlock(block,at,cursor,rows);
       if(type==='diff'&&panel) {

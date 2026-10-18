@@ -115,7 +115,8 @@ export function validateExplainer(document, {sourceMap = {}, inputPath, writingM
     for(const [bi,block]of panel.blocks.entries()) {
       const bp=`${pp}/blocks/${bi}`, component=block.type;
       if(component==='diff')diagnostics.push(...parseExplainerDiff(block.text,{...location(`${bp}/text`,component,panel.id),input:inputPath}).diagnostics);
-      if(component==='chart'){const chart=compileExplainerChart(block.text);if(chart.error){const before=diagnostics.length;fail('chart',`${bp}/text`,component,chart.error,chart.example,panel.id);if(chart.line>0)diagnostics[before].subject.line+=chart.line-1;}}
+      if(component==='chart'&&(block.text===undefined)===(block.data===undefined))fail('chart',`${bp}`,component,'A chart has either fence text or a data file, not both or neither.','@chart type=bar data=latency.csv x=day y=p99',panel.id);
+      if(component==='chart'&&block.text!==undefined){const chart=compileExplainerChart(block.text);if(chart.error){const before=diagnostics.length;fail('chart',`${bp}/text`,component,chart.error,chart.example,panel.id);if(chart.line>0)diagnostics[before].subject.line+=chart.line-1;}}
       for(const key of ['text','title','label','note','caption','alt'])if(!['diff','snippet','chart'].includes(component)||key!=='text')text(block[key],`${bp}/${key}`,component,panel.id);
       if(component==='list')block.items.forEach((item,i)=>text(item,`${bp}/items/${i}`,component,panel.id));
       if(component==='facts')block.entries.forEach((item,i)=>{text(item.key,`${bp}/entries/${i}/key`,component,panel.id);text(item.value,`${bp}/entries/${i}/value`,component,panel.id);});

@@ -64,7 +64,8 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
   };
   const partial={...parsed.document,panels:[{...parsed.document.panels[index],blocks:changed.filter(block=>
     (block.type!=='code'||changedCodeIds.has(block.source))
-    && !(block.type==='image' && oldBlocks.get(block.id)?.path===block.path && previous.preparedSources?.assets?.[block.id]))
+    && !(block.type==='image' && oldBlocks.get(block.id)?.path===block.path && previous.preparedSources?.assets?.[block.id])
+    && !(block.type==='chart' && block.data && JSON.stringify(oldBlocks.get(block.id)?.data)===JSON.stringify(block.data) && previous.preparedSources?.charts?.[block.id]))
     .map(frozenDiagramInput)}],sources:parsed.document.sources.filter(source=>changedCodeIds.has(source.id))};
   const common={repoRoot,baseDir:previous.baseDir || path.dirname(draft.sourcePath || artifactPath),sourceMap:parsed.sourceMap,sourcePath:draft.sourcePath || artifactPath,quality:selectedQuality};
   const partialMap={...parsed.sourceMap};
@@ -90,18 +91,21 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
     newDiagrams.diagrams[entry.id].specification=previous.preparedDiagrams.diagrams[entry.id].specification;
     return {...original,retained:true};
   });
-  const preparedSources={...previous.preparedSources,sources:{...previous.preparedSources.sources,...newSources.sources},assets:{...previous.preparedSources.assets,...newSources.assets}};
+  const preparedSources={...previous.preparedSources,sources:{...previous.preparedSources.sources,...newSources.sources},assets:{...previous.preparedSources.assets,...newSources.assets},charts:{...previous.preparedSources.charts,...newSources.charts}};
   const preparedDiagrams={...previous.preparedDiagrams,diagrams:{...previous.preparedDiagrams.diagrams,...newDiagrams.diagrams}};
   const activeBlocks=parsed.document.panels.flatMap(panel=>panel.blocks);
   const imageIds=new Set(activeBlocks.filter(block=>block.type==='image').map(block=>block.id));
   const diagramIds=new Set(activeBlocks.filter(block=>block.type==='diagram').map(block=>block.id));
+  const dataChartIds=new Set(activeBlocks.filter(block=>block.type==='chart'&&block.data).map(block=>block.id));
   preparedSources.assets=Object.fromEntries(Object.entries(preparedSources.assets).filter(([id])=>imageIds.has(id)));
+  preparedSources.charts=Object.fromEntries(Object.entries(preparedSources.charts).filter(([id])=>dataChartIds.has(id)));
+  if(!Object.keys(preparedSources.charts).length)delete preparedSources.charts;
   preparedDiagrams.diagrams=Object.fromEntries(Object.entries(preparedDiagrams.diagrams).filter(([id])=>diagramIds.has(id)));
   validatePreparedTargets(parsed.document,preparedDiagrams.diagrams,common);
   const dependencyKey=entry=>`${entry.kind}:${entry.id}`;
   const newDependencies=[...(newSources.dependencies||[]),...(newDiagrams.dependencies||[])];
   const preparedIds=new Set(newDependencies.map(dependencyKey));
-  const dependencies=[...(previous.dependencies||[]).filter(entry=>!preparedIds.has(dependencyKey(entry)) && (entry.kind!=='image'||imageIds.has(entry.id)) && (entry.kind!=='diagram-spec'||diagramIds.has(entry.id))),...newDependencies].map(entry=>({ ...entry,
+  const dependencies=[...(previous.dependencies||[]).filter(entry=>!preparedIds.has(dependencyKey(entry)) && (entry.kind!=='image'||imageIds.has(entry.id)) && (entry.kind!=='data'||dataChartIds.has(entry.id)) && (entry.kind!=='diagram-spec'||diagramIds.has(entry.id))),...newDependencies].map(entry=>({ ...entry,
     ...(entry.kind==='repository'||entry.inline?{}:{path:path.resolve(common.baseDir,entry.path)}) }));
   // Old dependencies are embedded immutable bytes. Only newly prepared resources are reread/verified.
   const bundle=rebindPreparedBundle({...previous,preparedSources,preparedDiagrams,dependencies,quality:selectedQuality,writingMode:writingMode || previous.writingMode || 'warn'},parsed);

@@ -81,13 +81,14 @@ A diagram replaces the paragraph that would describe it. When the answer involve
 | A change to code | `@diff` or a ```` ```diff ```` fence |
 | A command, config or code that does not exist yet | Plain fence |
 
-A small answer gets a small page: the conclusion plus one or two panels.
+A small answer gets a small page: the conclusion plus one or two panels. A how-it-works, diagnosis or checklist question usually needs three to five.
 
 ## Writing
 
 Every sentence gives the reader one fact they need. Write in the user's language.
 
 - Start with the fact. The title asks the question, the conclusion answers it, and the page ends when the facts end.
+- Cover what the reader needs to act on the answer: the mechanism behind the conclusion, how to check it, and the cases where it does not hold. The next question a careful reader would ask gets a panel, a table row or a line in scope; a fact the reader could get wrong without it is not optional.
 - One sentence carries one fact; one panel answers one question. Say each fact once: when a table or diagram shows it, the text adds only what the figure cannot.
 - Call each thing by one name throughout the page, and use the name the reader already knows.
 - Give results with their evidence: a number with its unit, a file position, a source. When a value is unknown or estimated, say so in scope.

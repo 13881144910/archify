@@ -153,3 +153,5 @@
 
     .copy-status { color:var(--text-2); font-size:.85rem; overflow-wrap:anywhere; }
     .copy-status:empty { margin:0; }
+
+    .filter:focus-visible, .alternatives button:focus-visible, #result-title:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }

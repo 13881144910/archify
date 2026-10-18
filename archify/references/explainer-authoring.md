@@ -1,6 +1,6 @@
 # Explainer authoring
 
-Use `explainer` for answers with a conclusion and some structure: explanations, comparisons, decisions, diagnoses, reviews and plans. The page leads with the conclusion and shows the reasoning as panels: diagrams, tables, steps and short text. Small talk, one- or two-sentence answers, pure command output and plain-text requests stay text. A request to draw a system uses a native diagram type.
+An explainer turns an answer with a conclusion and some structure (an explanation, comparison, decision, diagnosis, review or plan) into one page. The page leads with the conclusion and shows the reasoning as panels: diagrams, tables, steps and short text. When to make one, and the opt-in modes, are in the Skill under “Choose the artifact”. A request to draw a system uses a native diagram type.
 
 This guide is the complete draft language. Write the draft from it directly.
 
@@ -250,6 +250,8 @@ Prefer a specific question as each panel title. `{#id}` gives a stable ID for li
 ```sh
 node archify/bin/archify.mjs finalize explainer candidate.archify.md answer.html --json
 ```
+
+After a pass, reply in two or three lines: the conclusion, then a Markdown link to the page with a descriptive title. Do not list gates. When the user asked for this page and no `[archify explainer: ...]` rules line is in context, end with the one-line mode offer from the Skill's Output section.
 
 Add `--repo-root <path>` when the draft uses `@code`. Finalize validates, atomically delivers and checks the HTML; it does not launch a browser, and its receipt records the browser gate as not run. A failure names the line, component, reason and a repair example; fix the draft and rerun to the same output path.
 

@@ -1,6 +1,6 @@
 ---
 name: archify
-description: "Create validated architecture, workflow, sequence, data-flow, lifecycle/state, ERD, class, tree, timeline, and waterfall diagrams as explorable standalone HTML with dark/light themes, motion and image/SVG/WebM export. Accept requirements or Mermaid; inspect repository evidence for code-backed diagrams. Use when visualizing systems, API calls, pipelines, schemas, histories, timings, or everyday steps, parts, relationships and states. Also use proactively, without being asked, to answer an explanation, comparison, trade-off, decision, diagnosis, review or plan as a one-page explainer with the conclusion first, structured panels and optional diagrams; when in doubt, make the page. Skip small talk, one-line answers, pure command output and plain-text requests. Not for numeric charts or dashboards."
+description: "Create validated architecture, workflow, sequence, data-flow, lifecycle/state, ERD, class, tree, timeline, and waterfall diagrams as explorable standalone HTML with dark/light themes, motion and image/SVG/WebM export. Accept requirements or Mermaid; inspect repository evidence for code-backed diagrams. Use when visualizing systems, API calls, pipelines, schemas, histories, timings, or everyday steps, parts, relationships and states. Also turn an answer into a one-page explainer, with the conclusion first, structured panels, native diagrams and charts, when the user asks for a page, an explainer or an answer to share (做成一页, 用页面讲), or proactively when the user's rules opt in with an [archify explainer: ...] line. Not for dashboards."
 license: MIT
 metadata:
   version: "3.1"
@@ -18,8 +18,9 @@ For a native diagram of a real codebase, read [Repository authoring](references/
 ## Choose the artifact
 
 - When the user asks to draw or visualize a system, flow, schema or history, use a native diagram and the Type router.
-- When the answer has a conclusion and some structure, use `explainer` without being asked: how something works, a comparison or trade-off, a decision, a diagnosis or review with several findings, a plan, or anything that would need a table, ranked list, steps or several sections. When unsure, make the page.
-- Answer in text only for small talk, a one- or two-sentence answer, pure command output, or when the user asks for text.
+- Use `explainer` when the user asks for the answer as a page: a page, one page, an explainer, something to share (“做成一页”, “用页面讲”, “answer with a page”). Without such a request, answer in text or draw the requested diagram. A page made on request ends its reply with the one-line mode offer under Output.
+- A rules line in context changes this. `[archify explainer: proactive]`: also make a page, unasked, for an explanation, comparison, trade-off, decision, diagnosis, review or plan that needs a table, steps or several sections. `[archify explainer: always-on]`: attach a small page (2–4 panels) to every reply that gives a conclusion, rendered without opening, with the link last. `[archify explainer: on-demand]`: only when asked, and never offer a mode.
+- In every mode, small talk, a one- or two-sentence answer, pure command output and requests for plain text stay text.
 - For `explainer`, read [Explainer authoring](references/explainer-authoring.md) for its conclusion, reasons, scope, board layout and optional native diagrams. Write the complete draft, then run `finalize explainer` for validation, atomic delivery and artifact checks. Use panel patch for local content revisions.
 
 ## Existing candidate handoff
@@ -132,3 +133,5 @@ Do not recap commands, repair rounds, hashes, quality profiles, or check lists; 
 Example: `Created [Checkout request timing](/abs/path/checkout-timing.html). Durations are illustrative, not measured.`
 
 For an explainer, reply in two or three lines: the conclusion and the page link. Mention gates only when one failed or writing warnings remain; do not paste the draft.
+
+After an explainer made on request, when no `[archify explainer: ...]` line is in context, end the reply with one optional line offering the proactive mode, once per conversation, for example: “需要的话，以后遇到解释、对比、排查这类问题，我可以主动做成这样的页面，要开启吗？” If the user accepts, add `[archify explainer: proactive] Make an Archify explainer page, unasked, for explanations, comparisons, decisions, diagnoses, reviews and plans that need a table, steps or several sections.` to the global rules file of the current agent (such as `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md` or `~/.config/devin/AGENTS.md`) and name the file; deleting the line turns it off. If the user declines, offer to add `[archify explainer: on-demand]` so the question does not return.

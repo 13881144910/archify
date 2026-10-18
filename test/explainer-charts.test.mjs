@@ -67,3 +67,13 @@ test('a data chart reads its CSV next to the draft, freezes it, and names a miss
   assert.notEqual(missing.status, 0);
   assert.ok(missing.receipt.diagnostics.some(d => /no column "p95"/.test(d.message)));
 });
+
+test('a blank data cell is missing data, never drawn as zero', async () => {
+  const { chartFromData } = await import('../archify/explainer/charts.mjs');
+  for (const [file, bytes] of [['a.csv', 'day,p99\nMon,80\nTue,\n'], ['a.json', '[{"day":"Mon","p99":80},{"day":"Tue","p99":null}]'], ['b.json', '[{"day":"Mon","p99":80},{"day":"Tue"}]']]) {
+    const result = chartFromData(Buffer.from(bytes), file, { kind: 'bar', x: 'day', y: ['p99'] });
+    assert.equal(result.text, undefined, file);
+    assert.match(result.error, /empty in data row 2/, file);
+  }
+  assert.match(chartFromData(Buffer.from('k,v\nA,60\nB,40\n'), 'a.csv', { kind: 'pie', x: 'k', y: ['v'] }).text, /"A" : 60\n {2}"B" : 40/);
+});

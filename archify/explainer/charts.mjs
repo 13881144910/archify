@@ -56,8 +56,15 @@ export function chartFromData(bytes, filePath, { kind, x, y, unit }) {
   if (missing) return { error: `The data file has no column "${missing}". Columns: ${[...columns].join(', ')}.` };
   if (rows.length > (kind === 'pie' ? 12 : 60)) return { error: `A ${kind} chart takes at most ${kind === 'pie' ? 12 : 60} rows; this file has ${rows.length}.` };
   const quote = value => `"${String(value).replace(/["\\]/gu, '')}"`;
-  const numbers = column => rows.map(row => Number(String(row[column]).replace(/,/gu, '')));
-  for (const column of y) { const bad = numbers(column).findIndex(value => !Number.isFinite(value)); if (bad >= 0) return { error: `Column "${column}" has a non-numeric value in data row ${bad + 1}: ${rows[bad][column]}.` }; }
-  if (kind === 'pie') return { text: `pie\n${rows.map(row => `  ${quote(row[x])} : ${Number(String(row[y[0]]).replace(/,/gu, ''))}`).join('\n')}` };
+  // A blank cell is missing data, not zero: Number('') is 0, so blanks are rejected before conversion.
+  const blank = value => value === undefined || value === null || String(value).trim() === '';
+  const numbers = column => rows.map(row => blank(row[column]) ? NaN : Number(String(row[column]).replace(/,/gu, '')));
+  for (const column of y) {
+    const bad = numbers(column).findIndex(value => !Number.isFinite(value));
+    if (bad < 0) continue;
+    if (blank(rows[bad][column])) return { error: `Column "${column}" is empty in data row ${bad + 1}. A blank is missing data, not zero: fill in the value, or leave the row out and say so in the caption.` };
+    return { error: `Column "${column}" has a non-numeric value in data row ${bad + 1}: ${rows[bad][column]}.` };
+  }
+  if (kind === 'pie') { const values = numbers(y[0]); return { text: `pie\n${rows.map((row, i) => `  ${quote(row[x])} : ${values[i]}`).join('\n')}` }; }
   return { text: `xychart-beta\n  x-axis [${rows.map(row => quote(row[x])).join(', ')}]\n${unit ? `  y-axis ${quote(unit)}\n` : ''}${y.map(column => `  ${kind} ${quote(column)} [${numbers(column).join(', ')}]`).join('\n')}` };
 }

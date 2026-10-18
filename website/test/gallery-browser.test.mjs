@@ -75,7 +75,7 @@ test('real Chrome: gallery evidence limits and life-card entry points stay reada
           await Promise.all(document.getAnimations().filter(a => Number.isFinite(a.effect.getComputedTiming().endTime)).map(a => a.finished.catch(() => {})));
         })()`);
         for (const region of ['limit', 'life-0', 'life-1', 'life-2', 'life-3']) {
-          const selector = region === 'limit' ? '#gallery-evidence-limit' : `.life-card:nth-child(${Number(region.slice(-1)) + 1})`;
+          const selector = region === 'limit' ? '#gallery-evidence-limit' : `.life-section:not(#pages) .life-card:nth-child(${Number(region.slice(-1)) + 1})`;
           await evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center',behavior:'instant'})`);
           await settled();
           const receipt = await evaluate(`(() => {

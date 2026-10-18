@@ -111,6 +111,51 @@ test('real Chrome: website copy controls report real outcomes and preserve selec
         assert.equal(receipt.role, 'status'); assert.equal(receipt.live, 'polite');
         if (page === 'start') assert.equal(receipt.events, ok ? 1 : 0, 'only successful copies emit conversion events');
       }
+      if (page === 'start') {
+        const lifecycle = await evaluate(`(async () => {
+          Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => {} } });
+          const get = id => document.getElementById(id);
+          const statuses = () => ['install-copy-status', 'project-copy-status', 'copy-status'].map(id => get(id).textContent);
+          const copy = async selector => {
+            const button = document.querySelector(selector); button.click();
+            const status = get(button.getAttribute('aria-describedby'));
+            for (let i = 0; !status.textContent && i < 30; i++) await new Promise(resolve => setTimeout(resolve, 10));
+          };
+          await copy('[data-copy-source="install-command"]');
+          await copy('[data-copy-source="project-command"]');
+          await copy('#copy-prompt');
+          const before = statuses();
+          for (const key of ['agent', 'type', 'input']) document.querySelector('[data-' + key + '][aria-selected="true"]').click();
+          const unchanged = statuses();
+          document.querySelector('[data-input="description"]').click();
+          const inputChanged = statuses();
+          await copy('#copy-prompt');
+          document.querySelector('[data-type="architecture"]').click();
+          const typeChanged = statuses();
+          await copy('#copy-prompt');
+          document.querySelector('[data-agent="codex"]').click();
+          const agentChanged = statuses();
+          await copy('#copy-starter');
+          document.querySelector('[data-agent="cursor"]').click();
+          const starterAgentChanged = statuses();
+          await copy('#copy-starter');
+          document.querySelector('[data-input="repository"]').click();
+          const starterInputChanged = statuses();
+          await copy('#copy-starter');
+          document.querySelector('[data-type="workflow"]').click();
+          const starterTypeChanged = statuses();
+          return { before, unchanged, inputChanged, typeChanged, agentChanged, starterAgentChanged, starterInputChanged, starterTypeChanged };
+        })()`);
+        const success = lang === 'zh' ? '已复制到剪贴板。' : 'Copied to clipboard.';
+        assert.deepEqual(lifecycle.before, [success, success, success]);
+        assert.deepEqual(lifecycle.unchanged, lifecycle.before, 'active selections preserve completed receipts');
+        assert.deepEqual(lifecycle.inputChanged, [success, success, ''], 'input changes only invalidate prompt content');
+        assert.deepEqual(lifecycle.typeChanged, [success, success, ''], 'type changes preserve unchanged installation commands');
+        assert.deepEqual(lifecycle.agentChanged, ['', '', success], 'agent change invalidates installation but not prompt-only content');
+        for (const key of ['starterAgentChanged', 'starterInputChanged', 'starterTypeChanged']) assert.deepEqual(lifecycle[key], ['', '', ''], key);
+        manifest.receipts.push({ lang, page, lifecycle });
+        fs.writeFileSync(path.join(output, 'manifest.json'), JSON.stringify(manifest, null, 2));
+      }
       // Slow responses must not overwrite a newer failure, restore stale focus,
       // or launch a fallback after the selected recipe/tab has been replaced.
       for (const lateOutcome of ['resolve', 'reject']) {

@@ -75,7 +75,7 @@ Then continue: “Add authentication”, “Highlight the cache-miss path”, or
 
 **No repository is required:** start with a description, or ask your agent to read a repository for a source-backed architecture diagram.
 
-[Choose your agent](https://archify.si/start.html?agent=cursor&type=architecture) · [Installation details and update checks](#quick-start)
+[Choose your agent](https://archify.si/start.html?agent=cursor&type=architecture) · [Installation details and update checks](#quick-start) · [Create and check diagrams with your agent](https://archify.si/agent-diagrams)
 
 ## Ask a question, get a one-page answer
 
@@ -121,10 +121,6 @@ Live examples: [First HTTPS visit](https://archify.si/cases/explainer/tls-first-
 <tr>
 <td align="center" width="240"><a href="https://www.aicodemirror.ai/register?invitecode=WC26FL"><img src="docs/assets/sponsors/aicodemirror-logo.jpg" alt="AICodeMirror" width="200" /></a><br/><strong><a href="https://www.aicodemirror.ai/register?invitecode=WC26FL">AICodeMirror</a></strong></td>
 <td>Thank you to AICodeMirror for sponsoring Archify! AICodeMirror provides API relay services for Claude, Codex, and Gemini, with enterprise-grade concurrency, invoice issuance, and 24/7 technical support. Codex pricing starts at 7% of standard rates, with additional top-up discounts.<br/><br/>Exclusive offer for Archify users: Register through our referral link to receive 20% off your first top-up.<br/><br/><a href="https://www.aicodemirror.ai/register?invitecode=WC26FL">Try AICodeMirror →</a></td>
-</tr>
-<tr>
-<td align="center" width="240"><a href="https://zturbo.top"><img src="docs/assets/sponsors/zturbo-logo.png" alt="ZTURBO" width="200" /></a><br/><strong><a href="https://zturbo.top">ZTURBO</a></strong></td>
-<td>Fast, stable connectivity for developers and AI users.<br/>New users can try the service for free and receive an exclusive bonus on their first top-up. Supports Windows, macOS, iOS, and Android; long-term plans work out to less than ¥1 per day.<br/><br/>Free trial · First top-up bonus · Multi-device connectivity<br/><br/><a href="https://zturbo.top">Try ZTURBO →</a></td>
 </tr>
 <tr>
 <td align="center" width="240"><a href="https://www.infistar.cc/register?aff=9N89LEMV&amp;ref_source=link"><img src="docs/assets/sponsors/infistar-logo.svg" alt="Infistar.cc" width="140" /></a><br/><strong><a href="https://www.infistar.cc/register?aff=9N89LEMV&amp;ref_source=link">Infistar.cc</a></strong></td>

@@ -253,11 +253,11 @@
   };
   try { const saved = localStorage.getItem('archify-explainer-style'); if (saved) setStyle(saved,false); } catch {}
   toolMenu(document.querySelector('.style-menu'),item=>setStyle(item.dataset.styleChoice,true),()=>styleItems.find(item=>item.getAttribute('aria-checked') === 'true'));
-  toolMenu(document.querySelector('.export-menu'),item=>item.matches('[data-print]') ? window.print() : exportImage());
+  toolMenu(document.querySelector('.export-menu'),item=>item.matches('[data-print]') ? window.print() : exportImage(item.dataset.exportImage));
   // Long image: the page as laid out now, drawn through an SVG foreignObject at twice the pixel
   // density. Controls, dialogs and walk-through bars are left out. Browsers that refuse to export a
   // foreignObject canvas (Safari) get a notice pointing to Print / PDF.
-  async function pageImage() {
+  async function pageImage(format = 'png') {
     const shell = document.querySelector('.shell'), width = document.documentElement.clientWidth, height = Math.ceil(shell.getBoundingClientRect().height + 48);
     const clone = root.cloneNode(true);
     clone.querySelectorAll('script,dialog,#toast,.skip-link,.tools,.ask-button,.ask-floating,.walk-bar,.walk-start,.interactive,.diagram-fit-status').forEach(element=>element.remove());
@@ -274,14 +274,17 @@
     const context = canvas.getContext('2d');
     context.fillStyle = getComputedStyle(document.body).backgroundColor; context.fillRect(0,0,canvas.width,canvas.height);
     context.drawImage(image,0,0,canvas.width,canvas.height);
-    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob ? resolve(blob) : reject(new Error('empty')),'image/png'));
+    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob ? resolve(blob) : reject(new Error('empty')),`image/${format}`,.92));
   }
   const exportToggle = document.querySelector('[data-export-toggle]');
-  async function exportImage() {
+  // PNG keeps text sharpest; WebP and JPG are smaller to share. A browser that cannot encode the
+  // chosen format returns PNG, and the file is named for what it actually holds.
+  async function exportImage(format) {
     exportToggle.disabled = true;
     try {
-      const blob = await pageImage(), link = document.createElement('a');
-      link.href = URL.createObjectURL(blob); link.download = `${(document.querySelector('h1')?.textContent || 'explainer').trim().replace(/[\\/:*?"<>|]+/g,' ').slice(0,80)}.png`;
+      const blob = await pageImage(format), link = document.createElement('a'), extension = {'image/jpeg':'jpg','image/webp':'webp'}[blob.type] || 'png';
+      if (blob.type !== `image/${format}`) notify(say(`This browser cannot save ${format.toUpperCase()}; saved as PNG.`,`当前浏览器不支持导出 ${format.toUpperCase()}，已改存为 PNG。`));
+      link.href = URL.createObjectURL(blob); link.download = `${(document.querySelector('h1')?.textContent || 'explainer').trim().replace(/[\\/:*?"<>|]+/g,' ').slice(0,80)}.${extension}`;
       document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(link.href),4000);
     } catch { notify(say('This browser cannot export the page as an image. Use Print / PDF instead.','当前浏览器无法导出长图，请用"打印 / PDF"。')); }
     finally { exportToggle.disabled = false; }

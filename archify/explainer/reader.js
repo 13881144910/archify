@@ -140,10 +140,28 @@
     }
     board.classList.add('measured');
   }
+  // Phase rows that step down share one lane width, which leaves a wide empty strip beside each row.
+  // In the preview each lane frame hugs its own nodes; the full Viewer keeps the native geometry.
+  function fitLaneFrames(svg) {
+    if (svg.closest('.bare-lanes')) return;
+    const frames = all('rect[data-composition-frame-kind="lane"]',svg);
+    if (frames.length < 2) return;
+    const nodes = all('[data-node-id]',svg).map(node=>node.getBBox());
+    frames.forEach(frame=>{
+      const y = frame.y.baseVal.value, bottom = y + frame.height.baseVal.value, label = frame.nextElementSibling?.tagName === 'text' ? frame.nextElementSibling : null;
+      const inside = nodes.filter(box=>box.y >= y && box.y + box.height <= bottom);
+      if (!inside.length) return;
+      const pad = 16, left = Math.min(...inside.map(box=>box.x)) - pad, right = Math.max(...inside.map(box=>box.x + box.width)) + pad;
+      const width = Math.max(right - left, (label?.getComputedTextLength() || 0) + 28);
+      frame.setAttribute('x',left); frame.setAttribute('width',width);
+      label?.setAttribute('x',left + 14);
+    });
+  }
   // The legend and grid are hidden in the preview, so fit the viewBox to the drawing itself.
   function cropDiagramPreviews() {
     all('.diagram-preview>svg').forEach(svg=>{
       if (svg.dataset.cropped) return;
+      fitLaneFrames(svg);
       let box; try { box = svg.getBBox(); } catch { return; }
       if (!box.width || !box.height) return;
       const pad = 6;

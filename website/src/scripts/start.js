@@ -142,7 +142,7 @@
       async function copyText(text, step, statusId) {
         var copyStatus = document.getElementById(statusId);
         var attempt = ++copyAttempt;
-        copyStatuses.forEach(function (status) { status.textContent = ''; });
+        copyStatus.textContent = '';
         var isCurrent = function () { return attempt === copyAttempt; };
         var ok = await ArchifyClipboard.copy(text, isCurrent);
         if (!isCurrent()) return;

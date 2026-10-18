@@ -84,7 +84,12 @@ test('real Chrome: website copy controls report real outcomes and preserve selec
           const writes = [], legacy = [];
           Object.defineProperty(navigator, 'clipboard', { configurable: true, value: api === 'missing' ? undefined : { writeText: async text => { writes.push(text); if (api === 'reject') throw Error('denied'); } } });
           document.execCommand = command => { legacy.push({ command, text: document.activeElement.value }); if (fallback === 'throw') throw Error('unsupported'); return fallback === 'true'; };
+          // Settle the previous receipt/recommendation layout before measuring
+          // this attempt; clearing old feedback is not a clipboard scroll jump.
+          status.textContent = '';
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           button.scrollIntoView({ block: 'center', behavior: 'instant' }); button.focus({ preventScroll: true });
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
           let events = 0; const onCopy = () => { events++; };
           window.addEventListener('archify:start-funnel', onCopy);
           const before = { areas: document.querySelectorAll('textarea').length, scroll: scrollY };
@@ -94,16 +99,17 @@ test('real Chrome: website copy controls report real outcomes and preserve selec
           const box = status.getBoundingClientRect();
           return { expected, writes, legacy, visible: box.width > 0 && box.height > 0 && box.top >= 0 && box.bottom <= innerHeight && box.left >= 0 && box.right <= innerWidth, status: status.textContent, role: status.getAttribute('role'), live: status.getAttribute('aria-live'), focus: document.activeElement === button, areas: document.querySelectorAll('textarea').length - before.areas, scrollDelta: scrollY - before.scroll, events };
         })()`);
+        manifest.receipts.push({ lang, page, selector, api, fallback, ...receipt });
+        fs.writeFileSync(path.join(output, 'manifest.json'), JSON.stringify(manifest, null, 2));
         const ok = api === 'success' || fallback === 'true';
         assert.equal(receipt.status, lang === 'zh' ? (ok ? '已复制到剪贴板。' : '复制失败，请手动选择文本。') : (ok ? 'Copied to clipboard.' : 'Copy failed. Select the text manually.'), `${page} ${selector} ${api}/${fallback}`);
         assert.deepEqual(receipt.writes, api === 'missing' ? [] : [receipt.expected]);
         assert.deepEqual(receipt.legacy, api === 'success' ? [] : [{ command: 'copy', text: receipt.expected }]);
         assert.equal(receipt.visible, true, 'feedback is visible near the clicked control at 320px');
         assert.equal(receipt.focus, true); assert.equal(receipt.areas, 0);
-        assert.equal(receipt.scrollDelta, 0, 'temporary textarea must not jump scroll');
+        assert.equal(receipt.scrollDelta, 0, `${lang} ${page} ${selector} ${api}/${fallback}: temporary textarea must not jump scroll`);
         assert.equal(receipt.role, 'status'); assert.equal(receipt.live, 'polite');
         if (page === 'start') assert.equal(receipt.events, ok ? 1 : 0, 'only successful copies emit conversion events');
-        manifest.receipts.push({ lang, page, selector, api, fallback, ...receipt });
       }
       // Slow responses must not overwrite a newer failure, restore stale focus,
       // or launch a fallback after the selected recipe/tab has been replaced.

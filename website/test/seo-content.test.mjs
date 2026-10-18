@@ -133,7 +133,7 @@ for (const lang of ['en', 'zh']) {
       return node.tagName === 'meta' && attr(node, 'name') === 'description' ? attr(node, 'content') : (node.childNodes || []).map(walk).find(Boolean);
     })(page);
     assert.ok(description.includes(lang === 'zh' ? '自动验证与人工视觉评审分别列出' : 'Automated validation and human visual review appear separately'));
-    const cards = byClass(page, 'life-card');
+    const cards = byClass(page, 'life-card').filter(card => links(card).some(link => (attr(link, 'class') || '').split(/\s+/).includes('create-link')));
     assert.equal(cards.length, 4);
     for (const [index, type] of ['workflow', 'lifecycle', 'dataflow', 'sequence'].entries()) {
       const entryLinks = links(cards[index]);

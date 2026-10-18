@@ -94,8 +94,9 @@ test('real Chrome: homepage category and identity remain readable across languag
           assert.equal(receipt.nodes.length, region === 'hero' ? 7 : region === 'identity' ? 3 : 1);
           for (const node of receipt.nodes) assert.ok(node.visible && node.fits && node.inView, `${name}: readable ${node.text}`);
           if (region === 'hero') {
-            assert.match(receipt.nodes[0].text, /AI agent|AI Agent/);
-            assert.match(receipt.nodes[1].text, /diagram skill|画图工具/);
+            assert.match(receipt.nodes[0].text, lang === 'en' ? /answers/ : /图和答案/);
+            assert.match(receipt.nodes[1].text, /AI agent|AI Agent/);
+            assert.match(receipt.nodes[1].text, /one-page answer|解答/);
           } else if (region === 'guide-discovery') {
             assert.match(receipt.nodes[0].text, lang === 'en' ? /create and check diagrams/ : /画图并检查结果/);
             assert.equal(receipt.nodes[0].href, `${lang === 'zh' ? 'zh/' : ''}agent-diagrams${mount ? '.html' : ''}`);

@@ -5,6 +5,7 @@
 
 /* Base */
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--paper);color:var(--secondary);font:14.5px/1.72 var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"kern"}
 h1,h2,h3,p,ul,ol,dl,dd,figure{margin:0}
 strong,b{color:var(--ink);font-weight:600}

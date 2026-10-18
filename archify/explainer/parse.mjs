@@ -196,7 +196,7 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
         case 'callout': rowWidth(rows,1,1,type);Object.assign(block,{level:a.level||'note',...select(a,['title']),text:a.text??rows.map(r=>r.cells[0]).join('\n')});break;
         case 'facts':rowWidth(rows,2,2,type);block.entries=rows.map(r=>({key:r.cells[0],value:r.cells[1]}));break;
         case 'metric':Object.assign(block,select(a,['label','unit','note']));for(const key of ['value','limit'])if(a[key]!==undefined)block[key]=number(a[key],at,type);if(a.typical!==undefined)block.typical=boolean(a.typical,at,type);break;
-        case 'steps':rowWidth(rows,2,7,type);block.items=rows.map(r=>{const [id,text,detail,diagram,node,route,edges]=r.cells;const target=diagram?{diagram,...(node?{node}:{}),...(route?{route:route.split('~')}:{}),...(edges?{edges:csv(edges)}:{})}:undefined;if(!diagram&&(node||route||edges))fail(r.line+1,type,'A step node, route or edge reference needs its diagram ID.','| step | Read cache | | cache-flow | redis | | |');return{id,text,...(detail?{detail}:{}),...(target?{target}:{})};});break;
+        case 'steps':rowWidth(rows,2,7,type);block.items=rows.map(r=>{let [id,text,detail,diagram,node,route,edges]=r.cells;if(node?.includes('~')&&!route){route=node;node='';}const target=diagram?{diagram,...(node?{node}:{}),...(route?{route:route.split('~')}:{}),...(edges?{edges:csv(edges)}:{})}:undefined;if(!diagram&&(node||route||edges))fail(r.line+1,type,'A step node, route or edge reference needs its diagram ID.','| step | Read cache | | cache-flow | redis | | |');return{id,text,...(detail?{detail}:{}),...(target?{target}:{})};});break;
         case 'diagram': {
           if(positional.length!==1)fail(at+1,type,'A diagram requires exactly one native type.','@diagram sequence source=cache.sequence.json');
           block.diagramType=positional[0];
@@ -225,7 +225,8 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
     function assessment(text) {
       // Citations may follow the assessment; they stay with the cell text.
       const match = text.match(/^(.*?)\s*\{(good|caution|bad)(?::([^}]+))?\}((?:\s*\[[^\]]*\]\([^)\s]*\))*)\s*$/u);
-      return match?{text:`${match[1].trim()}${match[4].trim()}`,assessment:match[2],...(match[3]?{verdict:match[3].trim()}:{})}:{text};
+      // A cell holding only a badge ({bad:Drop}) shows the badge; its label doubles as the cell text.
+      return match?{text:`${match[1].trim()}${match[4].trim()}`||match[3]?.trim()||'',assessment:match[2],...(match[3]?{verdict:match[3].trim()}:{})}:{text};
     }
     while(cursor<lines.length) {
       const at=cursor, trimmed=lines[at].trim();

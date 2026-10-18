@@ -97,16 +97,15 @@ for (const lang of ['en', 'zh']) {
 }
 
 for (const lang of ['en', 'zh']) {
-  test(`initial ${lang} homepage identifies agent diagramming before JavaScript`, () => {
+  test(`initial ${lang} homepage explains diagrams and one-page answers before JavaScript`, () => {
     const page = read('index', lang);
     const hero = byClass(page, 'hero-copy')[0];
     const heading = clean(text(byTag(hero, 'h1')));
     const lead = clean(text(byClass(hero, 'hero-sub')[0]));
-    assert.match(heading, /AI agent|AI Agent/);
-    assert.match(heading, /diagrams|图/);
+    assert.match(heading, lang === 'zh' ? /图和答案/ : /answers/);
     for (const concept of lang === 'zh'
-      ? ['开源', 'Agent Skill', '架构图', '流程图', '时序图', '代码仓库', '交互式 HTML']
-      : ['open-source', 'skill', 'architecture', 'workflow', 'sequence', 'repository', 'interactive HTML']) {
+      ? ['AI Agent', '图', '解答', '结论', '出处', 'HTML', '校验']
+      : ['AI agent', 'map', 'one-page answer', 'conclusion', 'sources', 'HTML', 'validated']) {
       assert.ok(lead.includes(concept), `hero must explain ${concept}`);
     }
     const identity = byClass(page, 'facts-identity')[0];
@@ -118,8 +117,8 @@ for (const lang of ['en', 'zh']) {
     ], 'visible product identity connects the official site and exact source repository');
     const facts = clean(text(find(page, 'about-archify')));
     for (const boundary of lang === 'zh'
-      ? ['类型化 JSON', '不证明系统的实际运行行为', '不用于生成照片或插画']
-      : ['typed JSON', 'does not prove runtime system behavior', 'not photo or illustration generation']) {
+      ? ['类型化 JSON', 'Markdown', '系统的实际运行行为', '不用于生成照片或插画']
+      : ['typed JSON', 'Markdown', 'not the truth of every claim or runtime system behavior', 'does not generate photos or illustrations']) {
       assert.ok(facts.includes(boundary), `product facts must explain ${boundary}`);
     }
   });
@@ -133,8 +132,8 @@ for (const lang of ['en', 'zh']) {
     const description = (function walk(node) {
       return node.tagName === 'meta' && attr(node, 'name') === 'description' ? attr(node, 'content') : (node.childNodes || []).map(walk).find(Boolean);
     })(page);
-    assert.ok(description.includes(lang === 'zh' ? '不代表已完成人工视觉评审' : 'do not establish human visual review'));
-    const cards = byClass(page, 'life-card');
+    assert.ok(description.includes(lang === 'zh' ? '自动验证与人工视觉评审分别列出' : 'Automated validation and human visual review appear separately'));
+    const cards = byClass(page, 'life-card').filter(card => links(card).some(link => (attr(link, 'class') || '').split(/\s+/).includes('create-link')));
     assert.equal(cards.length, 4);
     for (const [index, type] of ['workflow', 'lifecycle', 'dataflow', 'sequence'].entries()) {
       const entryLinks = links(cards[index]);

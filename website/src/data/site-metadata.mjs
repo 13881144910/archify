@@ -9,8 +9,8 @@ const descriptions = {
     zh: ['Archify Agent 画图指南 — 编写、检查与分享', '用 Claude Code、Codex、Cursor 等 Coding Agent 画图：从范围明确的提示词和仓库证据开始，检查事实、修改图表，再安全分享 Archify HTML 成品。'],
   },
   index: {
-    en: ['Archify — Interactive Diagram Skill for AI Coding Agents', 'Create architecture, workflow, and sequence diagrams with Claude Code, Codex, or other coding agents. Archify is an MIT-licensed skill that delivers interactive HTML.'],
-    zh: ['Archify — 面向 AI Agent 的交互式画图工具', '用 Claude Code、Codex 等 AI Agent 从自然语言或代码仓库创建架构图、流程图和时序图。Archify 是采用 MIT 许可证的开源画图 Skill，交付可探索、可导出的交互式 HTML。'],
+    en: ['Archify — AI Agent Skill for Interactive Diagrams and One-Page Answers', 'Archify is an MIT-licensed AI agent skill for validated HTML diagrams and conclusion-first one-page answers from descriptions or code, with interactive exploration, cited sources and browser export.'],
+    zh: ['Archify — 用自然语言生成交互式图表和一页式解答', 'Archify 是采用 MIT 许可证的 AI Agent 技能，可从自然语言或源码生成经过验证的独立 HTML 图表和结论在前、标注出处的一页式解答，支持交互探索与浏览器导出。'],
   },
   guide: {
     en: ['Archify Scenario Guide — Choose the Right Diagram', 'Choose an Archify diagram recipe for your question. Browse evidence checklists, use cases, boundaries, and prompts linked to the recipe source.'],
@@ -21,8 +21,8 @@ const descriptions = {
     zh: ['Archify 快速上手 — 创建第一张图', '为你的 AI Agent 安装 Archify 技能，从自然语言或代码仓库创建图表。选择 Agent、图表类型和输入方式，复制对应的命令与提示词。'],
   },
   gallery: {
-    en: ['Archify Proof Lab — Validated Diagram Gallery', 'Explore interactive Archify diagrams, their JSON sources, and automated structure and layout checks. These records do not establish human visual review.'],
-    zh: ['Archify 验证作品集 — 可探索的图表成品', '探索 Archify 交互式图表、对应 JSON 源码及自动结构与布局检查记录。这些记录不代表已完成人工视觉评审。'],
+    en: ['Archify Proof Lab — Validated Diagram Gallery', 'Explore validated Archify diagrams and one-page answers with interactive HTML, their JSON or Markdown sources, and recorded checks. Automated validation and human visual review appear separately.'],
+    zh: ['Archify 验证作品集 — 可探索的图表成品', '探索经过验证的 Archify 图表和一页式解答，查看交互式 HTML 成品、对应的 JSON 或 Markdown 源码与检查记录。自动验证与人工视觉评审分别列出。'],
   },
   community: {
     en: ['Archify Community — Packages Built on Archify', 'Explore independent packages built on Archify: skills, recipes, themes, locales, and CLI wrappers, with source, license, compatibility, and evidence.'],

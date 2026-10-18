@@ -4,6 +4,44 @@ All notable changes are documented here. Format loosely follows [Keep a Changelo
 
 ## [Unreleased]
 
+## [3.2.0] — 2026-10-18
+
+### Added
+
+- **One-page answers (explainer) (#993).** Ask your agent to answer as a page and Archify builds a conclusion-first explainer from a Markdown draft. Each panel answers one question, using prose, tables, steps, checklists, charts, code and validated native diagrams.
+  - **Authoring and delivery:** `finalize explainer` validates, delivers atomically and checks the page. Charts come from a Mermaid fence or a CSV/JSON file next to the draft. Repository excerpts are read from the pinned commit. `patch explainer` replaces one panel by ID.
+  - **Reading:**
+    - Steps sit beside the diagram they walk through, and you can step through them.
+    - Text and diagram nodes highlight each other.
+    - Clicking a node opens the full Viewer focused on it.
+    - Citations and source-linked nodes open source cards.
+    - Each panel or selected passage produces a follow-up question that targets that panel.
+  - **Sharing:** the page ships in four styles (clean, editorial, product, Swiss) with light and dark themes, and exports a PNG, WebP or JPG long image or prints to PDF.
+  - **Examples:** four live pages in `docs/cases/explainer/`.
+  - **Credit:** the one-page document direction of #942 by @goatliamia shaped this work.
+  - **Acknowledgment:** thanks to @QingYunA for the early one-page diagram-and-explanation proposal and demo prototype.
+
+### Fixed
+
+- **Explainer pages no longer carry local paths.** The draft embedded in a page names its source and data files relative to the page, so a shared page does not reveal the author's directories. `patch explainer` resolves them against the page again.
+
+- **Explainer long images keep the page's style and theme.** A PNG, WebP or JPG export of a dark page, or of the editorial, product or Swiss style, came out in the light clean style, because the page is drawn inside an SVG where its `<html>` is not `:root`. The export now selects the page root by its own attribute.
+
+- **Blank chart data is an error, not zero.** An empty CSV cell, a JSON `null` or a missing field in a charted column no longer becomes a zero bar. Finalize names the column and row instead.
+
+- **Workflow migration semantic contracts (#497).** Layout planning no longer checks full-topology requirements against a temporary graph with routed edges removed. Migrated documents retain their authored contracts and must pass complete validation before publication.
+
+- **Timeline 时区刻度（#926）。** 刻度按显示时区在各真实时刻的 UTC 偏移对齐，修复跨夏令时后日刻度漂移到 01:00／23:00、半小时跳变后小时刻度漂移的问题。回拨的重复时刻保持独立，跳过的小时或日期不生成虚构刻度；事件时间、标签精度、时间轴比例与断轴规则保持不变。
+
+### Changed
+- **Reader controls and node index.** Compact bottom index rows keep descriptions below titles; menu and roving keyboard navigation respect modifier keys.
+- **Update notices.** Available updates include a release summary and an offer to help update. Network failures remain non-blocking.
+- **Website and portability.** The bilingual homepage and gallery introduce one-page answers while retaining guides and source-backed cases. Browser discovery, Windows command paths, source-directory whitespace and temporary-worktree cleanup receive focused fixes.
+
+### Release follow-up
+- The stable update manifest remains on v3.1.0 until the v3.2.0 GitHub Release is published and its ZIP digest is verified.
+- The separately versioned DSH plugin is not republished with this release; maintainers must select a pinned source and complete its host/package acceptance in a separate follow-up.
+
 ## [3.1.0] — 2026-10-14
 
 ### Release highlights
@@ -24,6 +62,8 @@ All notable changes are documented here. Format loosely follows [Keep a Changelo
 - **GitLab source links.** Repository evidence on gitlab.com, or on a self-managed host declared with `provider: "gitlab"`, now generates revision-pinned web links (`/-/blob/<revision>/<path>#L<a>-<b>`, `/-/tree/<revision>`) instead of requiring `link_mode: "local-only"`. Nested groups are accepted, SSH and HTTPS origins on the same host match, paths compare case-insensitively, and cited Markdown line ranges open the plain view. Verification is unchanged and `local-only` remains available.
 
 ### Fixed
+
+- **ER 图主干桥接隔离（#896）。** 自动总线不再跨越、接触或覆盖无关关系及其他已生成的桥接；检查包含双方实际描边宽度（含显式 `width`），存在冲突时保留分离的主干段，避免校验通过的图看起来多出关系。实体位置、显式途经点、关系基数及正常共享主干保持不变。
 
 - **WebM 录制失败清理 (#622)。** 画布、捕获流、编码器启动、逐帧绘制或停止失败时，录制 Promise 现在会拒绝并释放已创建的流、临时 URL、动画帧和定时器；晚到的编码事件不能再将失败录制报告为成功。正常编码与最佳努力的最终片段 flush 行为保持不变。
 

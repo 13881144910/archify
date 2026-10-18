@@ -185,8 +185,12 @@
     const bodySize = parseFloat(getComputedStyle(document.querySelector('.block-prose>p') || document.body).fontSize);
     return window.innerWidth >= 1440 ? Math.max(10,bodySize * .75) : 10;
   }
-  function ensureDiagramReadability() {
+  // A fit notice that appears or goes away changes a panel's height after the board was planned,
+  // so the board is planned again and the notices rechecked at the new widths.
+  function ensureDiagramReadability() { if (fitDiagrams()) { layoutBoard(); fitDiagrams(); } }
+  function fitDiagrams() {
     const minimumText = textFloor();
+    let changed = false;
     // Only a diagram beside its steps stays in view; stacked above them, it would slide over them.
     all('.guided').forEach(guide=>guide.classList.toggle('beside',guide.firstElementChild.getBoundingClientRect().left >= guide.lastElementChild.getBoundingClientRect().right));
     all('.diagram-preview>svg').forEach(svg=>{
@@ -205,9 +209,11 @@
       preview.dataset.diagramFit = insufficient ? 'insufficient' : 'fit';
       preview.dataset.diagramMinimumText = String(minimumText);
       const status = svg.closest('.block-diagram').querySelector('.diagram-fit-status');
+      changed ||= status.hidden === insufficient;
       status.hidden = !insufficient;
       status.textContent = insufficient ? say('This diagram cannot fit this page width with readable text. Open the interactive view to inspect it.','此图在当前页宽下放不下且文字会太小，请打开交互图查看。') : '';
     });
+    return changed;
   }
   const preference = matchMedia('(prefers-color-scheme: dark)');
   let theme = 'auto';

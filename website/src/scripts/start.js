@@ -25,7 +25,7 @@
       var includeList = document.getElementById('include-list');
       var proofLink = document.getElementById('proof-link');
       var proofMeta = document.getElementById('proof-meta');
-      var copyStatus = document.getElementById('copy-status');
+      var copyStatuses = document.querySelectorAll('.copy-status');
       var languageButton = document.getElementById('language');
       var agentState = document.getElementById('agent-state');
       var installCommand = document.getElementById('install-command');
@@ -87,7 +87,9 @@
           : DATA[type][language].repositoryPrompt;
       }
 
+      var copyAttempt = 0;
       function render() {
+        copyAttempt++;
         language = ArchifySiteLanguage.write(language);
         var recipe = DATA[type];
         var copy = recipe[language];
@@ -123,21 +125,8 @@
         proofMeta.textContent = language === 'zh'
           ? '验证成品 · ' + recipe.presentation.preset + ' · ' + recipe.presentation.motion
           : 'Verified proof · ' + recipe.presentation.preset + ' · ' + recipe.presentation.motion;
-        copyStatus.textContent = '';
+        copyStatuses.forEach(function (status) { status.textContent = ''; });
         updateUrl();
-      }
-
-      function fallbackCopy(text) {
-        var area = document.createElement('textarea');
-        area.value = text;
-        area.setAttribute('readonly', '');
-        area.style.position = 'fixed';
-        area.style.opacity = '0';
-        document.body.appendChild(area);
-        area.select();
-        var ok = document.execCommand('copy');
-        area.remove();
-        if (!ok) throw new Error('copy failed');
       }
 
       function starterText() {
@@ -150,15 +139,17 @@
           + (input === 'description' ? '\n\nThen start any new chat and tell ' : '\n\nThen, in your target repository, ask ') + agentName + ':\n' + currentPrompt();
       }
 
-      async function copyText(text, step) {
-        try {
-          if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
-          else fallbackCopy(text);
-          if (step) recordStep(step);
-          copyStatus.textContent = language === 'zh' ? '已复制到剪贴板。' : 'Copied to clipboard.';
-        } catch (_) {
-          copyStatus.textContent = language === 'zh' ? '复制失败，请手动选择文本。' : 'Copy failed. Select the text manually.';
-        }
+      async function copyText(text, step, statusId) {
+        var copyStatus = document.getElementById(statusId);
+        var attempt = ++copyAttempt;
+        copyStatuses.forEach(function (status) { status.textContent = ''; });
+        var isCurrent = function () { return attempt === copyAttempt; };
+        var ok = await ArchifyClipboard.copy(text, isCurrent);
+        if (!isCurrent()) return;
+        if (ok && step) recordStep(step);
+        copyStatus.textContent = ok
+          ? (language === 'zh' ? '已复制到剪贴板。' : 'Copied to clipboard.')
+          : (language === 'zh' ? '复制失败，请手动选择文本。' : 'Copy failed. Select the text manually.');
       }
 
       document.querySelectorAll('[data-type]').forEach(function (button) {
@@ -221,14 +212,14 @@
       document.querySelectorAll('[data-copy-source]').forEach(function (button) {
         button.addEventListener('click', function () {
           var step = button.dataset.copySource === 'install-command' ? 'global_install_copy' : 'project_install_copy';
-          copyText(document.getElementById(button.dataset.copySource).textContent.trim(), step);
+          copyText(document.getElementById(button.dataset.copySource).textContent.trim(), step, button.getAttribute('aria-describedby'));
         });
       });
       document.getElementById('copy-prompt').addEventListener('click', function () {
-        copyText(currentPrompt(), 'prompt_copy');
+        copyText(currentPrompt(), 'prompt_copy', 'copy-status');
       });
       document.getElementById('copy-starter').addEventListener('click', function () {
-        copyText(starterText(), 'starter_copy');
+        copyText(starterText(), 'starter_copy', 'copy-status');
       });
       proofLink.addEventListener('click', function () { recordStep('proof_open'); });
 

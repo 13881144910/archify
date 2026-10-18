@@ -6,6 +6,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 import Navigation from '../components/Navigation.astro';
 import head from '../data/start-head.html?raw';
 import css from '../styles/start.css?raw';
+import clipboardScript from '../scripts/clipboard.js?raw';
 import pageScript from '../scripts/start.js?raw';
 const { lang = 'en' } = Astro.props;
 ---
@@ -64,12 +65,14 @@ const { lang = 'en' } = Astro.props;
         </div>
 
         <div class="command-block">
-          <div class="command-bar"><span data-en="Global install" data-zh="全局安装">Global install</span><button class="copy-button" type="button" data-copy-source="install-command" data-en="Copy" data-zh="复制">Copy</button></div>
+          <div class="command-bar"><span data-en="Global install" data-zh="全局安装">Global install</span><button class="copy-button" type="button" aria-describedby="install-copy-status" data-copy-source="install-command" data-en="Copy" data-zh="复制">Copy</button></div>
           <pre id="install-command">npx -y skills add tt-a1i/archify --skill archify --agent codex --global --copy --yes</pre>
+          <p id="install-copy-status" class="copy-status" role="status" aria-live="polite"></p>
         </div>
         <div class="command-block">
-          <div class="command-bar"><span data-en="This repository only" data-zh="仅安装到当前仓库">This repository only</span><button class="copy-button" type="button" data-copy-source="project-command" data-en="Copy" data-zh="复制">Copy</button></div>
+          <div class="command-bar"><span data-en="This repository only" data-zh="仅安装到当前仓库">This repository only</span><button class="copy-button" type="button" aria-describedby="project-copy-status" data-copy-source="project-command" data-en="Copy" data-zh="复制">Copy</button></div>
           <pre id="project-command">npx -y skills add tt-a1i/archify --skill archify --agent codex --copy --yes</pre>
+          <p id="project-copy-status" class="copy-status" role="status" aria-live="polite"></p>
         </div>
         <p class="secondary-note" data-en="The Start link carries only your agent, language, diagram type, input mode, and a coarse source label. Journey events stay in this browser session and are never sent by Archify. No repository path, title, node, relationship, or source JSON is recorded." data-zh="Start 链接只携带 Agent、语言、图表类型、输入模式和粗粒度来源标签。转化步骤只保存在当前浏览器会话中，Archify 不会发送这些数据，也不会记录仓库路径、标题、节点、关系或源 JSON。">The Start link carries only your agent, language, diagram type, input mode, and a coarse source label. Journey events stay in this browser session and are never sent by Archify. No repository path, title, node, relationship, or source JSON is recorded.</p>
       </article>
@@ -81,18 +84,18 @@ const { lang = 'en' } = Astro.props;
         <ul class="include-list" id="include-list" aria-label="Required evidence">{starts.architecture.en.include.map((item, index) => <li data-en={item} data-zh={starts.architecture.zh.include[index]}>{item}</li>)}</ul>
         <p class="prompt-box" id="recipe-prompt" data-en={starts.architecture.en.descriptionPrompt} data-zh={starts.architecture.zh.descriptionPrompt}>{starts.architecture.en.descriptionPrompt}</p>
         <div class="actions">
-          <button class="action action-primary" id="copy-starter" type="button" data-en="Copy install + prompt" data-zh="复制安装命令 + 提示词">Copy install + prompt</button>
-          <button class="action" id="copy-prompt" type="button" data-en="Prompt only" data-zh="仅复制提示词">Prompt only</button>
+          <button class="action action-primary" id="copy-starter" aria-describedby="copy-status" type="button" data-en="Copy install + prompt" data-zh="复制安装命令 + 提示词">Copy install + prompt</button>
+          <button class="action" id="copy-prompt" aria-describedby="copy-status" type="button" data-en="Prompt only" data-zh="仅复制提示词">Prompt only</button>
           <a class="action" id="proof-link" href={`gallery.html#proof-${starts.architecture.proof}`} data-en="Open verified proof ↗" data-zh="打开验证成品 ↗">Open verified proof ↗</a>
           <a class="action" href="guide.html" data-en="Need another recipe?" data-zh="需要其他配方？">Need another recipe?</a>
         </div>
+        <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
         <p class="proof-meta" id="proof-meta">{starts.architecture.type} · {starts.architecture.presentation.preset} · {starts.architecture.presentation.motion}</p>
       </article>
     </section>
 
     <footer class="page-footer">
       <span data-en={`Archify v${version} · ${productChannel} · self-contained HTML · typed JSON source`} data-zh={`Archify v${version} · ${productChannel === 'development' ? '开发版' : '稳定版'} · 独立 HTML · 类型化 JSON 源`}>Archify v{version} · {productChannel} · self-contained HTML · typed JSON source</span>
-      <span id="copy-status" role="status" aria-live="polite"></span>
       <a href="https://github.com/tt-a1i/archify" data-en="View source on GitHub ↗" data-zh="在 GitHub 查看源码 ↗">View source on GitHub ↗</a>
     </footer>
     <aside class="agent-guide-link" aria-label={lang === 'zh' ? 'Agent 画图指南' : 'Agent diagramming guide'}>
@@ -103,6 +106,6 @@ const { lang = 'en' } = Astro.props;
 
   <script is:inline id="start-data" type="application/json" set:html={jsonScript(starts)}></script>
   <script is:inline src="assets/site-language.js"></script>
-  <script is:inline set:html={versioned(pageScript)}></script>
+  <script is:inline set:html={versioned(clipboardScript + "\n" + pageScript)}></script>
 
 </SiteLayout>

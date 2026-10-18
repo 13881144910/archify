@@ -477,6 +477,16 @@
         "source": {
           "$ref": "#/$defs/short"
         },
+        "nodeSources": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/id"
+          },
+          "maxProperties": 500
+        },
         "changes": {
           "type": "array",
           "items": {

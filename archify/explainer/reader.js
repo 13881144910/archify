@@ -499,6 +499,47 @@
     floating.addEventListener('mousedown',event=>event.preventDefault());
     floating.addEventListener('click',()=>{ if (selected) open(selected.panel,selected.text); floating.hidden = true; });
   }
+  // Source cards: hovering or focusing a citation shows where the claim comes from, with the pinned
+  // code excerpt for a repository source, so a reader can check it without leaving the page.
+  function setupSourceCards() {
+    const sources = prepared.preparedSources?.sources || {};
+    const card = document.createElement('div'); card.className = 'source-card'; card.hidden = true; card.setAttribute('role','tooltip');
+    document.body.append(card);
+    let hideTimer;
+    const hide = () => { hideTimer = setTimeout(()=>{ card.hidden = true; },160); };
+    card.addEventListener('mouseenter',()=>clearTimeout(hideTimer)); card.addEventListener('mouseleave',hide);
+    const show = (link, id = decodeURIComponent(link.getAttribute('href').slice('#source-'.length))) => {
+      const source = sources[id] || prepared.document?.sources?.find(entry=>entry.id === id);
+      if (!source) return;
+      clearTimeout(hideTimer);
+      const escapeText = value => String(value ?? '').replace(/[&<>"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[character]));
+      const location = source.path ? `${source.path}${source.lines ? `:${source.lines.join('–')}` : ''}${source.revision ? ` @ ${String(source.revision).slice(0,10)}` : ''}` : (()=>{ try { return new URL(source.url).host; } catch { return ''; } })();
+      const lines = typeof source.text === 'string' ? source.text.split('\n') : [];
+      const first = source.lines?.[0] || 1;
+      const excerpt = lines.length ? `<pre><code>${lines.slice(0,14).map((line,index)=>`<span class="line"><i>${first + index}</i>${escapeText(line) || ' '}</span>`).join('')}${lines.length > 14 ? `<span class="line more"><i></i>…</span>` : ''}</code></pre>` : '';
+      card.innerHTML = `<b>${escapeText(source.title || source.path || id)}</b>${location ? `<code class="source-where">${escapeText(location)}</code>` : ''}${excerpt}${source.url ? `<a href="${escapeText(source.url)}" target="_blank" rel="noopener noreferrer">${say('Open source','打开原文')} ↗</a>` : ''}`;
+      card.hidden = false;
+      const box = link.getBoundingClientRect(), width = Math.min(520,innerWidth - 24);
+      card.style.width = `${width}px`;
+      card.style.left = `${Math.max(12,Math.min(innerWidth - width - 12,box.left - 24)) + scrollX}px`;
+      const below = box.bottom + 8 + card.offsetHeight < innerHeight;
+      card.style.top = `${(below ? box.bottom + 8 : box.top - 8 - card.offsetHeight) + scrollY}px`;
+    };
+    all('.cite a[href^="#source-"]').forEach(link=>{
+      link.addEventListener('mouseenter',()=>show(link)); link.addEventListener('focus',()=>show(link));
+      link.addEventListener('mouseleave',hide); link.addEventListener('blur',hide);
+    });
+    // A diagram node tied to a source opens the same card, so a code diagram doubles as a code tour.
+    all('.diagram-preview[data-node-sources]').forEach(preview=>{
+      let map = {}; try { map = JSON.parse(preview.dataset.nodeSources); } catch {}
+      all('[data-node-id]',preview).forEach(node=>{
+        const id = map[node.dataset.nodeId]; if (!id) return;
+        node.classList.add('has-source');
+        node.addEventListener('mouseenter',()=>show(node,id)); node.addEventListener('mouseleave',hide);
+      });
+    });
+    document.addEventListener('keydown',event=>{ if (event.key === 'Escape') card.hidden = true; });
+  }
   // Checklist ticks are the reader's own progress; keep them per page and block across reloads.
   all('.checklist').forEach(list=>{
     const key = `archify-checklist:${root.dataset.artifact}:${list.closest('.block').id}`, boxes = all('input',list);
@@ -516,6 +557,7 @@
   linkTerms();
   setupWalks();
   setupAsk();
+  setupSourceCards();
   layoutBoard();
   const relayout = () => { layoutBoard(); ensureDiagramReadability(); };
   Promise.resolve(document.fonts?.ready).then(()=>requestAnimationFrame(()=>requestAnimationFrame(relayout)));

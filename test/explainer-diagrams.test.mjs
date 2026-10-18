@@ -230,3 +230,9 @@ test('explainer diagrams: a single upstream architecture node is centred against
   assert.deepEqual([row('a'), row('b'), row('c')], [0, 1, 2]);
   assert.equal(row('api'), 1);
 });
+
+test('explainer diagrams: a phase that recurs later in the flow keeps phase rows instead of reordering the flow', () => {
+  const spec = compileExplainerDiagram('workflow', ['lane run | Orchestrate', 'lane work | Work', 'start | Start | backend | run', 'do | Do | backend | work', 'end | Record | backend | run', 'start > do', 'do > end'], { id: 'recur' });
+  assert.equal(spec.lanes.length, 2, 'the recurring phase stays a lane');
+  assert.equal(spec.phases, undefined);
+});

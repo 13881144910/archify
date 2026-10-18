@@ -165,3 +165,12 @@ test('a comparison assessment may be followed by a citation',()=>{
   assert.equal(cell.verdict,'Lose both');
   assert.equal(cell.text,'Can be ended[](source:law)');
 });
+
+test('a source cell ties a shorthand node to a declared source without entering the native spec',()=>{
+  const {document}=parse('# T\n\nA.\n\n@source router title="Router" path=src/router.js lines=1:3\n\n## Q {#q}\n\n@architecture id=map\n| api | API | backend | source:router |\n| db | DB | database |\n| api > db | reads |');
+  const block=document.panels[0].blocks[0];
+  assert.deepEqual(block.nodeSources,{api:'router'});
+  assert.ok(!JSON.stringify(block.spec).includes('source:router'));
+  const missing=validateExplainer(parse('# T\n\nA.\n\n## Q {#q}\n\n@architecture id=map\n| api | API | backend | source:nope |\n| db | DB | database |\n| api > db | reads |').document);
+  assert.equal(missing.ok,false);
+});

@@ -233,9 +233,11 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
         return ranked.map(node => { const col = nextCol.get(node.lane); nextCol.set(node.lane, col + 1); return { ...node, col }; });
       };
       const single = row.map(({ lane, ...node }, col) => ({ ...node, lane: 'flow', col }));
+      // Grouping by phase keeps the flow order only when each phase is one stretch of the flow.
+      const inOrder = ranked.every((node, i) => i === 0 || order.indexOf(node.lane) >= order.indexOf(ranked[i - 1].lane));
       const candidates = [
-        ...(ranked.length <= 6 && placed.every(node => node.row === 0) ? [{ nodes: single, single: true }] : []),
-        ...(sizes.reduce((sum, size) => sum + size, 0) - (sizes.length - 1) <= 6 ? [{ nodes: wrapped(true) }] : []),
+        ...(inOrder && ranked.length <= 6 && placed.every(node => node.row === 0) ? [{ nodes: single, single: true }] : []),
+        ...(inOrder && sizes.reduce((sum, size) => sum + size, 0) - (sizes.length - 1) <= 6 ? [{ nodes: wrapped(true) }] : []),
         { nodes: wrapped(false) },
       ];
       const chosen = candidates.find(candidate => workflowWidth(candidate.nodes, edges) <= READABLE_WORKFLOW_WIDTH) || candidates.at(-1);

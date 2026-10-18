@@ -118,11 +118,49 @@ const { lang = 'en' } = Astro.props;
     </div>
   </section>
 
+  <!-- ANSWERS — one-page explainers: the conclusion first, then panels that explain and can be checked -->
+  <section id="answers">
+    <div class="container">
+      <header class="section-head fade-up">
+        <p class="section-label"><span>01</span><span data-i18n="label-answers">One-page answers</span></p>
+        <h2 class="section-heading" data-i18n="answers-h2">Ask a question. <em>Get a page you can check.</em></h2>
+        <p class="section-body" data-i18n="answers-body">Not every answer is one diagram. Ask your agent to answer as a page: the conclusion comes first, then one panel per question with tables, steps, charts, code and validated diagrams. Steps light the diagram they walk through, claims cite their sources, and code is pinned to a commit.</p>
+      </header>
+      <div class="life-grid">
+        <a class="life-card fade-up" href="cases/explainer/p99-tail-latency.html" target="_blank" rel="noopener">
+          <span class="life-plate"><img src="assets/explainer/p99-tail-latency.webp" alt="接口 P99 从 80 ms 涨到 600 ms" loading="lazy" decoding="async" width="2160" height="1350"></span>
+          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="answers-p99-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+          <span class="life-q" data-i18n="answers-p99-q">Why did P99 jump while the mean stayed flat?</span>
+          <span class="life-title">接口 P99 从 80 ms 涨到 600 ms</span>
+        </a>
+        <a class="life-card fade-up" href="cases/explainer/tls-first-visit.html" target="_blank" rel="noopener">
+          <span class="life-plate"><img src="assets/explainer/tls-first-visit.webp" alt="What happens on a first HTTPS visit" loading="lazy" decoding="async" width="2160" height="1350"></span>
+          <span class="life-meta"><span class="life-lang">EN</span><span class="life-kind" data-i18n="answers-tls-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+          <span class="life-q" data-i18n="answers-tls-q">What crosses the wire before the first request?</span>
+          <span class="life-title">What happens on a first HTTPS visit</span>
+        </a>
+        <a class="life-card fade-up" href="cases/explainer/finalize-delivery.html" target="_blank" rel="noopener">
+          <span class="life-plate"><img src="assets/explainer/finalize-delivery.webp" alt="Archify finalize 经过哪些模块" loading="lazy" decoding="async" width="2160" height="1350"></span>
+          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="answers-repo-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+          <span class="life-q" data-i18n="answers-repo-q">How does finalize keep the last good file? Read from the repo.</span>
+          <span class="life-title">Archify finalize 经过哪些模块</span>
+        </a>
+        <a class="life-card fade-up" href="cases/explainer/first-rental.html" target="_blank" rel="noopener">
+          <span class="life-plate"><img src="assets/explainer/first-rental.webp" alt="第一次在大城市租房" loading="lazy" decoding="async" width="2160" height="1350"></span>
+          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="answers-rent-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+          <span class="life-q" data-i18n="answers-rent-q">What should I confirm before signing a lease?</span>
+          <span class="life-title">第一次在大城市租房</span>
+        </a>
+      </div>
+      <p class="life-note fade-up" data-i18n="answers-note">Four page styles, light and dark, export to a long image or PDF. Ask about any panel and your agent revises just that panel.</p>
+    </div>
+  </section>
+
   <!-- EVERYDAY — the same validated artifacts, for life outside the codebase -->
   <section id="everyday">
     <div class="container">
       <header class="section-head fade-up">
-        <p class="section-label"><span>01</span><span data-i18n="label-life">Beyond code</span></p>
+        <p class="section-label"><span>02</span><span data-i18n="label-life">Beyond code</span></p>
         <h2 class="section-heading" data-i18n="life-h2">Not just for code. <em>For anything with steps.</em></h2>
         <p class="section-body" data-i18n="life-body">Leave plans, job hunts, renting, a monthly budget — each one below is a real Archify artifact, generated and validated exactly like a system diagram. Open one and click around.</p>
       </header>
@@ -160,7 +198,7 @@ const { lang = 'en' } = Astro.props;
   <section id="types">
     <div class="container">
       <header class="section-head fade-up">
-        <p class="section-label"><span>02</span><span data-i18n="label-types">Diagram types</span></p>
+        <p class="section-label"><span>03</span><span data-i18n="label-types">Diagram types</span></p>
         <h2 class="section-heading" data-i18n="types-h2">Five starting questions. <em>Choose your map.</em></h2>
         <p class="section-body" data-i18n="types-body">Ask the question you actually have. Archify picks the picture that answers it — for a software system, a plan, or something in your own life.</p>
       </header>
@@ -225,7 +263,7 @@ const { lang = 'en' } = Astro.props;
   <section id="features">
     <div class="container">
       <header class="section-head fade-up">
-        <p class="section-label"><span>03</span><span data-i18n="label-features">Output</span></p>
+        <p class="section-label"><span>04</span><span data-i18n="label-features">Output</span></p>
         <h2 class="section-heading" data-i18n="features-h2">One file. <em>Everything inside.</em></h2>
       </header>
 
@@ -285,7 +323,7 @@ const { lang = 'en' } = Astro.props;
     <div class="container">
       <header class="section-head section-head-row fade-up">
         <div>
-          <p class="section-label"><span>04</span><span data-i18n="label-palette">Design system</span></p>
+          <p class="section-label"><span>05</span><span data-i18n="label-palette">Design system</span></p>
           <h2 class="section-heading" data-i18n="palette-h2">Color that <em>means something.</em></h2>
         </div>
         <p class="section-body" data-i18n="palette-body">Seven node colours, consistent in both themes. The legend renames them for your story — Backend can read as Vacation, Security as Rule.</p>
@@ -306,7 +344,7 @@ const { lang = 'en' } = Astro.props;
   <section id="quickstart">
     <div class="container">
       <header class="section-head fade-up">
-        <p class="section-label"><span>05</span><span data-i18n="label-qs">Quick start</span></p>
+        <p class="section-label"><span>06</span><span data-i18n="label-qs">Quick start</span></p>
         <h2 class="section-heading" data-i18n="qs-h2">Three steps. <em>One command.</em></h2>
         <p class="section-body" data-i18n="qs-body">One checked Skill for Claude Code, Codex, Cursor, OpenCode, and GitHub Copilot. Pick your agent for the exact command.</p>
       </header>

@@ -1,5 +1,13 @@
 export const indexCopy = {
     en: {
+      'label-answers':'One-page answers',
+      'answers-h2':'Ask a question. <em>Get a page you can check.</em>',
+      'answers-body':'Not every answer is one diagram. Ask your agent to answer as a page: the conclusion comes first, then one panel per question with tables, steps, charts, code and validated diagrams. Steps light the diagram they walk through, claims cite their sources, and code is pinned to a commit.',
+      'answers-note':'Four page styles, light and dark, export to a long image or PDF. Ask about any panel and your agent revises just that panel.',
+      'answers-p99-k':'Explainer','answers-p99-q':'Why did P99 jump while the mean stayed flat?',
+      'answers-tls-k':'Explainer','answers-tls-q':'What crosses the wire before the first request?',
+      'answers-repo-k':'Explainer','answers-repo-q':'How does finalize keep the last good file? Read from the repo.',
+      'answers-rent-k':'Explainer','answers-rent-q':'What should I confirm before signing a lease?',
       'label-life':'Beyond code',
       'life-h2':'Not just for code. <em>For anything with steps.</em>',
       'life-body':'Leave plans, job hunts, renting, a monthly budget — each one below is a real Archify artifact, generated and validated exactly like a system diagram. Open one and click around.',
@@ -82,6 +90,14 @@ export const indexCopy = {
       'footer-changelog':'Changelog','footer-license':'License','footer-community':'Community'
     },
     zh: {
+      'label-answers':'一页式解答',
+      'answers-h2':'问一个问题，<br><em>得到一页能核对的答案。</em>',
+      'answers-body':'不是每个答案都是一张图。让 Agent 用一页来回答：结论在最前面，每个面板回答一个问题，用表格、步骤、图表、代码和经过校验的图讲清楚。步骤会点亮它讲解的图，结论标注来源，代码固定到具体提交。',
+      'answers-note':'四种页面样式，浅色深色都有，可导出长图或 PDF。对任何面板追问，Agent 只改那一块。',
+      'answers-p99-k':'一页解答','answers-p99-q':'P99 暴涨、平均值不动，是什么原因？',
+      'answers-tls-k':'一页解答','answers-tls-q':'第一次打开 HTTPS 网站，发出请求前发生了什么？',
+      'answers-repo-k':'一页解答','answers-repo-q':'读仓库：finalize 失败时怎么保住旧产物？',
+      'answers-rent-k':'一页解答','answers-rent-q':'第一次租房，签合同前要确认什么？',
       'label-life':'不只是代码',
       'life-h2':'不只是代码，<br><em>生活里的事也能画。</em>',
       'life-body':'年假规划、求职进度、租房沟通、每月收支——下面每一张都是真实生成的 Archify 成品，和系统架构图走同一套生成与校验流程。点开就能探索。',

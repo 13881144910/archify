@@ -24,7 +24,9 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
   const html = artifactBytes.toString('utf8');
   let previous;
   try { previous = unpackPageBundle(embedded(html,'archify-explainer-prepared',artifactPath)); } catch (error) { if (error.diagnostics) throw error; fail('payload','Embedded native diagram payload cannot be inflated.',artifactPath,panelId,'Rebuild the original artifact before patching.'); }
-  const draft = previous;
+  // The page names local files relative to itself; resolve them before reading or re-preparing.
+  const near = value => typeof value === 'string' ? path.resolve(path.dirname(artifactPath), value) : value;
+  const draft = {...previous,sourcePath:near(previous.sourcePath)};
   if(typeof draft.sourceText !== 'string' || draft.sourceText !== previous.sourceText
     || createHash('sha256').update(draft.sourceText).digest('hex') !== previous.source?.sha256
     || createHash('sha256').update(JSON.stringify({...previous,digest:undefined})).digest('hex') !== previous.digest) {
@@ -67,7 +69,7 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
     && !(block.type==='image' && oldBlocks.get(block.id)?.path===block.path && previous.preparedSources?.assets?.[block.id])
     && !(block.type==='chart' && block.data && JSON.stringify(oldBlocks.get(block.id)?.data)===JSON.stringify(block.data) && previous.preparedSources?.charts?.[block.id]))
     .map(frozenDiagramInput)}],sources:parsed.document.sources.filter(source=>changedCodeIds.has(source.id))};
-  const common={repoRoot,baseDir:previous.baseDir || path.dirname(draft.sourcePath || artifactPath),sourceMap:parsed.sourceMap,sourcePath:draft.sourcePath || artifactPath,quality:selectedQuality};
+  const common={repoRoot,baseDir:near(previous.baseDir) || path.dirname(draft.sourcePath || artifactPath),sourceMap:parsed.sourceMap,sourcePath:draft.sourcePath || artifactPath,quality:selectedQuality};
   const partialMap={...parsed.sourceMap};
   for(const [partialIndex,block] of partial.panels[0].blocks.entries()) {
     const originalIndex=parsed.document.panels[index].blocks.findIndex(entry=>entry.id===block.id);

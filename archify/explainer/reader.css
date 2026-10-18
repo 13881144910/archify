@@ -342,13 +342,20 @@ footer{padding:28px 0 32px}
 /* Dialogs */
 dialog{color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:12px;box-shadow:0 24px 80px rgb(0 0 0/.25)}
 dialog::backdrop{background:rgb(10 10 12/.55);backdrop-filter:blur(2px)}
-.viewer-dialog{width:min(1380px,calc(100vw - 48px));height:calc(100dvh - 48px);padding:0;overflow:hidden}
+/* The interactive view fills the window: the Viewer brings its own title and tools, so the dialog
+   adds no bar of its own, only a close control on the backdrop above it. */
+.viewer-dialog{width:min(1440px,calc(100vw - 48px));height:calc(100dvh - 76px);max-height:none;margin:56px auto 20px;padding:0;border:0;border-radius:14px;overflow:hidden;background:var(--paper);box-shadow:0 30px 90px rgb(0 0 0/.45),0 0 0 1px rgb(255 255 255/.06)}
 .viewer-dialog[open]{display:flex;flex-direction:column}
-.viewer-dialog header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--rule);gap:15px}
-.viewer-dialog h2{font-size:14px}
-.viewer-dialog header button{font-size:12px}
+.viewer-dialog::backdrop{background:rgb(8 10 15/.72);backdrop-filter:blur(8px) saturate(.85)}
+.viewer-dialog h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.viewer-close{position:fixed;top:12px;right:max(24px,calc((100vw - 1440px) / 2));display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 8px 0 12px;border:1px solid rgb(255 255 255/.16);border-radius:999px;background:rgb(255 255 255/.1);color:#fff;font-size:13px;line-height:1;transition:background .15s}
+.viewer-close:hover{background:rgb(255 255 255/.18)}
+.viewer-close:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.viewer-close .tool-icon{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.viewer-close kbd{padding:3px 6px;border-radius:5px;background:rgb(255 255 255/.14);font:500 10.5px/1 var(--sans);color:rgb(255 255 255/.8)}
 .viewer-dialog iframe{width:100%;flex:1;border:0;min-height:0}
-.dialog-loading{padding:10px 16px;font-size:12px;color:var(--muted)}
+.dialog-loading{margin:auto;font-size:13px;color:var(--muted)}
+.dialog-loading[hidden]{display:none}
 .dialog-open{overflow:hidden}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 15px;border-radius:8px;font-size:12px;opacity:0;pointer-events:none;z-index:100}
 #toast.visible{opacity:1}

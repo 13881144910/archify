@@ -11,7 +11,10 @@ An Agent's long answer is tiring to read and its main point is hard to find. Exp
 - `answer.summary`: required direct conclusion.
 - `answer.reasons`: optional flat list, at most four items.
 - `answer.scope`: optional applicability and qualifications.
-- Panels contain prose, list, comparison, callout, facts, metric, steps, code, diff, image or native diagram blocks. Each panel and block has a stable ID.
+- Panels contain prose, list, checklist, comparison, callout, facts, metric, steps, chart, snippet, code, diff, image or native diagram blocks. Each panel and block has a stable ID.
+- Charts compile a Mermaid chart fence, or read a CSV or JSON file next to the draft (`@chart type=bar|line|pie data=… x=… y=…`); the file is read inside the input directory and frozen at delivery.
+- A native diagram node row may name `source:<id>`, tying the node to a repository source.
+- `meta.style` picks one of four page styles (`clean`, `editorial`, `product`, `swiss`), each with light and dark palettes; readers may switch, and print uses the light palette.
 - Sources contain a title and optional safe URL or repository position (`path`, `lines`, `revision`). Sources are a numbered footer list. Code blocks load committed Git bytes from their source location.
 - Internal revisions support patch and delivery identity. They are not displayed.
 
@@ -34,11 +37,22 @@ The static board packs in document order and lets panels shrink toward their min
 
 On desktop widths the reader script re-plans the board from measured heights. Each panel is measured at every allowed span. A row is a set of columns totalling 12; a column holds one panel or two consecutive panels stacked. The plan minimises page height plus unused cell area, penalises text set wider than a comfortable measure, rejects spans that clip tables or code, and derives each diagram's minimum span from its smallest label and the reading floor. Source order and the top-left conclusion are kept. Without JavaScript, below 1100 px, and in print, the static spans apply.
 
+A panel whose steps point into its one diagram reads them side by side: steps on the left, the diagram on the right, sized so its smallest label stays at the reading floor and kept in view while the steps scroll. Without room for 320 px of steps beside it, the diagram wraps above them. A diagram that cannot reach the floor at the page width shows a notice, and the board is planned again so the notice does not clip its panel.
+
+## Reading
+
+- A node label named in a panel's text links both ways with the node: hovering either lights the other. Hovering anywhere in a linked step lights its part of the diagram.
+- Step lists that point into a diagram, sequence diagrams and otherwise unwalked workflows can be walked one step, message or node at a time; the walk bar replaces its start button.
+- Clicking a preview node, or the diagram's "open interactive view" control, opens the native Viewer focused on that node. The Viewer follows the page theme, and editorial pages open it in its editorial preset.
+- Hovering a citation, or a node tied to a source, shows a source card: the kind of source, its location, the pinned excerpt or note, the commit and the link.
+- Each panel, and any selected text, can produce a follow-up question that names the page, panel and ID, for the agent to revise only that panel.
+- Export saves the page as a 2× PNG, WebP or JPG long image, or prints it to PDF; controls, dialogs and walk bars are left out.
+
 ## References
 
 `[text](source:id)` becomes normal text plus `<sup class="cite"><a href="#source-id">n</a></sup>`. Empty labels are allowed. Number sources by their first appearance in reading order, then append unused sources in declaration order. Repeated references keep their number. Source items contain only title, link or repository location.
 
-Native diagram links retain real node, route and edge checks. Linked steps open the full Viewer already focused on the intended targets. Static SVG remains available for reading and printing.
+Native diagram links retain real node, route and edge checks. Linked steps open the full Viewer already focused on the intended targets. Static SVG remains available for reading and printing. The page carries each Viewer compressed and inflates it on first open.
 
 ## Runtime and cost
 
@@ -56,6 +70,6 @@ Writing checks advise “把限定条件写进 scope 或来源” for qualifier 
 
 Build with `node docs/specs/explainer/prototypes/build.mjs /tmp/explainer-board`. No installation is required.
 
-Required regression coverage: summary/reasons/scope parsing and bounds; first-panel placement; 12-column row sums and fixed spans; first-use citations and empty labels; qualifier exclusions; fast finalize receipts; unchanged native finalize; Git excerpt safety; patch, packaged runtime, no-JavaScript, print and native target navigation.
+Required regression coverage: summary/reasons/scope parsing and bounds; first-panel placement; 12-column row sums and fixed spans; first-use citations and empty labels; qualifier exclusions; fast finalize receipts; unchanged native finalize; Git excerpt safety; data-chart reading and diagnostics; patch, packaged runtime, no-JavaScript, print and native target navigation; side-by-side steps and their wrap; walk-throughs, text-to-node links, follow-up questions, style menu and long-image export.
 
-Run `node --test test/explainer-*.test.mjs` and `npm test`. Measure all three fast finalizations. Tests confirm behavior; visual tuning remains a separate task.
+Run `node --test test/explainer-*.test.mjs` and `npm test`; browser coverage runs with `ARCHIFY_EXPLAINER_BROWSER_TESTS=1 node --test test/explainer-browser.test.mjs`. Measure all three fast finalizations. Tests confirm behavior; visual tuning remains a separate task.

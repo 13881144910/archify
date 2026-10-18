@@ -184,7 +184,9 @@ meter{width:100%;height:8px;accent-color:var(--accent)}
 .diagram-link>span{color:var(--faint);font-weight:400;transition:color .15s}
 .diagram-link:hover{color:var(--accent);text-decoration:none}
 .diagram-link:hover>span{color:var(--accent)}
-.steps li:has(.diagram-link:hover)::before,.steps li:has(.diagram-link:focus-visible)::before{background:var(--accent);color:#fff;border-color:var(--accent)}
+.steps li:has(.diagram-link):hover::before,.steps li:has(.diagram-link:focus-visible)::before{background:var(--accent);color:#fff;border-color:var(--accent)}
+.steps li:hover .diagram-link,.steps li:hover .diagram-link>span{color:var(--accent)}
+.steps li:has(.diagram-link):hover p{color:var(--secondary)}
 
 /* Diagram preview: native SVG re-tinted and re-typeset to the page */
 .diagram-panel .panel-body{display:flex;flex-direction:column;padding:14px 16px 16px}

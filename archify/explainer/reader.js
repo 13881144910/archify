@@ -379,8 +379,11 @@
   };
   all('[data-diagram-link]').forEach(link=>{
     link.addEventListener('click',event=>{ event.preventDefault(); openViewer(link.dataset.diagramLink,link.dataset.diagramHash || '',link); });
-    const highlight = active => { const {preview,nodes,edges} = targetOf(link); spotlight(preview,active ? nodes : [],active ? edges : []); };
-    link.addEventListener('mouseenter',()=>highlight(true)); link.addEventListener('mouseleave',()=>highlight(false)); link.addEventListener('focus',()=>highlight(true)); link.addEventListener('blur',()=>highlight(false));
+    // A walk-through owns the highlight while it runs.
+    const highlight = active => { if (walking) return; const {preview,nodes,edges} = targetOf(link); spotlight(preview,active ? nodes : [],active ? edges : []); };
+    // A step lights its part of the diagram from anywhere in it, its description included.
+    const hover = link.closest('.steps>li') || link;
+    hover.addEventListener('mouseenter',()=>highlight(true)); hover.addEventListener('mouseleave',()=>highlight(false)); link.addEventListener('focus',()=>highlight(true)); link.addEventListener('blur',()=>highlight(false));
   });
   // A name in the text that is also a node label is linked to that node, once per panel, both ways:
   // hovering the word lights the node, hovering the node lights the word.

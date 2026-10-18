@@ -117,6 +117,7 @@ test('text names light their diagram nodes and walk-throughs step through steps 
    const terms=[...document.querySelectorAll('#why .term')].map(t=>t.textContent);
    const redis=document.querySelector('#why .term[data-node="redis"]');redis.dispatchEvent(new MouseEvent('mouseenter'));
    const lit=[...document.querySelectorAll('#native .reader-highlight')].map(e=>e.dataset.nodeId||e.dataset.edgeId);redis.dispatchEvent(new MouseEvent('mouseleave'));
+   const step=document.querySelector('#return-step');step.dispatchEvent(new MouseEvent('mouseenter'));const stepHover=[...document.querySelectorAll('#native .reader-highlight')].map(e=>e.dataset.nodeId||e.dataset.edgeId);step.dispatchEvent(new MouseEvent('mouseleave'));const cleared=!document.querySelector('#native .reader-highlight');
    const steps=document.querySelector('ol.steps').previousElementSibling;steps.click();document.querySelector('.walk-bar [data-walk=next]').click();
    const current=document.querySelector('.walk-current')?.id,stepLit=[...document.querySelectorAll('#native .reader-highlight')].map(e=>e.dataset.nodeId||e.dataset.edgeId);
    document.querySelector('.walk-bar [data-walk=end]').click();const ended=!document.querySelector('.walk-bar')&&!document.querySelector('.walk-current');
@@ -124,9 +125,11 @@ test('text names light their diagram nodes and walk-throughs step through steps 
    const text=document.querySelector('.walk-text').textContent;
    document.querySelector('#how .ask-button').click();document.querySelector('.ask-dialog [data-chip]').click();
    let copied='';navigator.clipboard.writeText=value=>{copied=value;return Promise.resolve();};document.querySelector('.ask-dialog [type=submit]').click();
-   return new Promise(resolve=>setTimeout(()=>resolve({terms,lit,current,stepLit,ended,text,copied,open:document.querySelector('.ask-dialog').open}),50));})()`);
+   return new Promise(resolve=>setTimeout(()=>resolve({terms,lit,stepHover,cleared,current,stepLit,ended,text,copied,open:document.querySelector('.ask-dialog').open}),50));})()`);
   assert.deepEqual(result.terms,['API','Redis'],'each name is linked once per panel');
   assert.deepEqual(result.lit,['redis']);
+  assert.deepEqual(result.stepHover.sort(),['redis','redis-to-api-1'],'hovering anywhere in a step lights its node and edge');
+  assert.equal(result.cleared,true);
   assert.equal(result.current,'return-step');
   assert.ok(result.stepLit.includes('redis-to-api-1'));
   assert.equal(result.ended,true);

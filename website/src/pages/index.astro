@@ -322,14 +322,14 @@ const { lang = 'en' } = Astro.props;
       <header class="section-head fade-up">
         <p class="section-label"><span>04</span><span data-i18n="label-trust">Verified delivery</span></p>
         <h2 class="section-heading" data-i18n="trust-h2">Checked before <em>it reaches you.</em></h2>
-        <p class="section-body" data-i18n="trust-body">Your agent does not hand you a draft. Every map and every page goes through four gates, and the file on disk is only replaced when all of them pass.</p>
+        <p class="section-body" data-i18n="trust-body">Finalization validates and delivers the artifact, then checks the delivered file. Diagrams also run a browser check; one-page answers run it when requested. Later check failures are reported and do not roll back the delivered file.</p>
       </header>
       <div class="trust-layout" id="trust-run">
         <ol class="gates">
           <li class="gate" style="--d:1.5s"><span class="gate-no">01</span><div><h3><code>validate</code><span data-i18n="gate-1-h">The source means what it says</span></h3><p data-i18n="gate-1-p">Schema, IDs and references, then the layout itself: crossings, label clearance, corridors and legend room. A blank chart cell is an error, not a zero.</p></div><span class="gate-pass">PASS</span></li>
-          <li class="gate" style="--d:2.3s"><span class="gate-no">02</span><div><h3><code>deliver</code><span data-i18n="gate-2-h">Nothing half-written</span></h3><p data-i18n="gate-2-p">Rendered in a staging copy beside the target and swapped in atomically. If any step fails, the last good file stays where it was.</p></div><span class="gate-pass">PASS</span></li>
+          <li class="gate" style="--d:2.3s"><span class="gate-no">02</span><div><h3><code>deliver</code><span data-i18n="gate-2-h">Nothing half-written</span></h3><p data-i18n="gate-2-p">Rendered in a staging copy beside the target and swapped in atomically after delivery checks pass. A failed render does not replace the existing file.</p></div><span class="gate-pass">PASS</span></li>
           <li class="gate" style="--d:2.9s"><span class="gate-no">03</span><div><h3><code>check</code><span data-i18n="gate-3-h">The file is the one that was checked</span></h3><p data-i18n="gate-3-p">The delivered HTML is read back and checked again, and the receipt records the hashes of the source and of this exact file.</p></div><span class="gate-pass">PASS</span></li>
-          <li class="gate" style="--d:3.6s"><span class="gate-no">04</span><div><h3><code>browser-check</code><span data-i18n="gate-4-h">Readable in a real browser</span></h3><p data-i18n="gate-4-p">Chrome opens it at several desktop sizes: nothing overflows, the smallest text stays readable, and controls stay clear of the drawing.</p></div><span class="gate-pass">PASS</span></li>
+          <li class="gate" style="--d:3.6s"><span class="gate-no">04</span><div><h3><code>browser-check</code><span data-i18n="gate-4-h">Readable in a real browser</span></h3><p data-i18n="gate-4-p">When run, Chrome checks the artifact at several desktop sizes for overflow, text readability and controls. Browser checks are opt-in for one-page answers.</p></div><span class="gate-pass">PASS</span></li>
         </ol>
         <figure class="run">
           <div class="run-bar"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="run-title">finalize · cache-miss</span></div>

@@ -5,7 +5,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { scanHtml } from '../archify/explainer/check.mjs';
-import { unpackPageBundle } from '../archify/explainer/page-bundle.mjs';
+import { createHash } from 'node:crypto';
+import { preparePanelPatch } from '../archify/explainer/patch.mjs';
+import { packPageBundle, unpackPageBundle } from '../archify/explainer/page-bundle.mjs';
 import { compileExplainerDiagram } from '../archify/explainer/diagrams.mjs';
 const cli=path.resolve('archify/bin/archify.mjs');
 const run=args=>spawnSync(process.execPath,[cli,...args],{encoding:'utf8',maxBuffer:64*1024*1024,env:{...process.env,ARCHIFY_UPDATE_CHECK_DISABLED:'1'}});
@@ -116,4 +118,17 @@ test('panel patch across directories retains resource origins for subsequent edi
     assert.deepEqual(Buffer.from(result.preparedSources.assets[id].contentBase64,'base64'),png);
   }
   const checked=run(['check',output,'--json','--require-provenance']);assert.equal(checked.status,0,checked.stdout+checked.stderr);
+});
+
+
+test('a page without its source directory can patch prose but cannot read unrelated output-local assets',async t=>{
+  const dir=temp(t),{artifact}=deliver(dir),bundle=read(artifact),replacementPath=path.join(dir,'replacement.json');
+  bundle.sourcePath=null;bundle.baseDir=null;
+  bundle.digest=createHash('sha256').update(JSON.stringify({...bundle,digest:undefined})).digest('hex');
+  fs.writeFileSync(artifact,fs.readFileSync(artifact,'utf8').replace(/(<script type="application\/json" id="archify-explainer-prepared">)[\s\S]*?(<\/script>)/,(_,open,close)=>open+JSON.stringify(packPageBundle(bundle))+close));
+  const panel={...fixture().panels[0],title:'Updated prose'};fs.writeFileSync(replacementPath,JSON.stringify(panel));
+  const result=await preparePanelPatch({artifactPath:artifact,panelId:'first',replacementPath});assert.equal(result.bundle.baseDir,null);
+  fs.writeFileSync(path.join(dir,'asset.png'),'An unrelated file beside the HTML');
+  panel.blocks.push({id:'new-image',type:'image',path:'asset.png',alt:'New image'});fs.writeFileSync(replacementPath,JSON.stringify(panel));
+  await assert.rejects(preparePanelPatch({artifactPath:artifact,panelId:'first',replacementPath}),{message:'Local images require an input directory.'});
 });

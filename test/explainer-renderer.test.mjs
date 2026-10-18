@@ -212,3 +212,20 @@ test('renderer: shared pages omit disposable native checker filenames but retain
   }
   assert.equal(prepared.preparedDiagrams.diagrams['native-diagram'].checks.check.file,check.file);
 });
+
+
+test('renderer: manifest warnings use the same portable locations as the prepared bundle',()=>{
+  const diagnostics=[{code:'writing/test',severity:'warning',subject:{input:'/author/draft.md',output:'/published/page.html'}}];
+  const tree=parse(renderExplainer(fixture(),{...resources(),diagnostics,sourcePath:'/author/draft.md',pageDirectory:'/published'}));
+  const frozen=payload(tree,'archify-explainer-prepared'),manifest=JSON.parse(text(find(tree,'explainer-manifest')));
+  assert.deepEqual(manifest.diagnostics,frozen.diagnostics);assert.equal(manifest.diagnostics[0].subject.input.replaceAll('\\','/'),'../author/draft.md');
+});
+
+test('renderer: Windows cross-volume source locations are omitted instead of exposed',()=>{
+  const diagnostics=[{code:'writing/test',severity:'warning',subject:{input:'D:\\author\\draft.md'}}];
+  const document=fixture(),sourceText=JSON.stringify(document),prepared=resources();
+  const preparedBundle={...prepared,document,sourceText,diagnostics,sourcePath:'D:\\author\\draft.md',baseDir:'D:\\author',dependencies:[{kind:'image',id:'image',path:'D:\\author\\example.png'}]};
+  const tree=parse(renderExplainer(document,{...prepared,sourceText,preparedBundle,diagnostics,pageDirectory:'C:\\published'}));
+  const frozen=payload(tree,'archify-explainer-prepared'),manifest=JSON.parse(text(find(tree,'explainer-manifest')));
+  assert.equal(frozen.sourcePath,null);assert.equal(frozen.baseDir,null);assert.equal(frozen.dependencies[0].path,null);assert.equal(manifest.diagnostics[0].subject.input,null);
+});

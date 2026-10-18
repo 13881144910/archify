@@ -69,7 +69,7 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
     && !(block.type==='image' && oldBlocks.get(block.id)?.path===block.path && previous.preparedSources?.assets?.[block.id])
     && !(block.type==='chart' && block.data && JSON.stringify(oldBlocks.get(block.id)?.data)===JSON.stringify(block.data) && previous.preparedSources?.charts?.[block.id]))
     .map(frozenDiagramInput)}],sources:parsed.document.sources.filter(source=>changedCodeIds.has(source.id))};
-  const common={repoRoot,baseDir:near(previous.baseDir) || path.dirname(draft.sourcePath || artifactPath),sourceMap:parsed.sourceMap,sourcePath:draft.sourcePath || artifactPath,quality:selectedQuality};
+  const common={repoRoot,baseDir:previous.baseDir===null ? null : near(previous.baseDir) || path.dirname(draft.sourcePath || artifactPath),sourceMap:parsed.sourceMap,sourcePath:draft.sourcePath || artifactPath,quality:selectedQuality};
   const partialMap={...parsed.sourceMap};
   for(const [partialIndex,block] of partial.panels[0].blocks.entries()) {
     const originalIndex=parsed.document.panels[index].blocks.findIndex(entry=>entry.id===block.id);
@@ -107,7 +107,7 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
   const dependencyKey=entry=>`${entry.kind}:${entry.id}`;
   const newDependencies=[...(newSources.dependencies||[]),...(newDiagrams.dependencies||[])];
   const preparedIds=new Set(newDependencies.map(dependencyKey));
-  const localDependency=(entry,baseDir)=>({...entry,...(entry.kind==='repository'||entry.inline?{}:{path:path.resolve(baseDir,entry.path)})});
+  const localDependency=(entry,baseDir)=>({...entry,...(entry.kind==='repository'||entry.inline||!entry.path?{}:{path:path.resolve(baseDir,entry.path)})});
   const dependencies=[...(previous.dependencies||[]).filter(entry=>!preparedIds.has(dependencyKey(entry)) && (entry.kind!=='image'||imageIds.has(entry.id)) && (entry.kind!=='data'||dataChartIds.has(entry.id)) && (entry.kind!=='diagram-spec'||diagramIds.has(entry.id))).map(entry=>localDependency(entry,path.dirname(artifactPath))),
     ...newDependencies.map(entry=>localDependency(entry,common.baseDir))];
   // Old dependencies are embedded immutable bytes. Only newly prepared resources are reread/verified.

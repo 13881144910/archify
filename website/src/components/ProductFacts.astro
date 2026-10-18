@@ -2,7 +2,11 @@
 const facts = [
   {
     question: ['What is Archify?', 'Archify 是什么？'],
-    answer: ['Archify is an open-source Agent Skill for turning a system, process, or plan into a diagram. The agent authors typed JSON, then Archify renders and validates a self-contained interactive HTML artifact. The Skill and renderers are licensed under MIT.', 'Archify 是一个开源 Agent Skill，把系统、流程或计划变成图表。Agent 编写类型化 JSON，再由 Archify 渲染、校验并交付独立的交互 HTML 成品。Skill 和渲染器采用 MIT 许可证。'],
+    answer: ['Archify is an open-source Agent Skill for turning a system, process, or plan into a diagram, or a question into a one-page answer. For a diagram the agent authors typed JSON; for a page, a Markdown draft. Archify renders and validates a self-contained interactive HTML artifact. The Skill and renderers are licensed under MIT.', 'Archify 是一个开源 Agent Skill，把系统、流程或计划变成图表，也能把一个问题变成一页式解答。画图时 Agent 编写类型化 JSON，写一页答案时编写 Markdown 草稿，再由 Archify 渲染、校验并交付独立的交互 HTML 成品。Skill 和渲染器采用 MIT 许可证。'],
+  },
+  {
+    question: ['What is a one-page answer?', '一页式解答是什么？'],
+    answer: ['A page that leads with the conclusion and its reasons, then answers one question per panel with prose, tables, steps, charts, code and validated diagrams. Claims cite numbered sources, repository excerpts are read from a pinned commit, and blank chart data is rejected rather than drawn as zero. Readers can switch between four styles, export a long image or PDF, and ask about a single panel.', '一页先给结论和理由，再按问题分成几个面板，用文字、表格、步骤、图表、代码和经过校验的图讲清楚。结论标注编号来源，仓库代码从固定的提交读取，图表数据留空会报错而不是画成零。读者可以在四种样式间切换、导出长图或 PDF，也可以只追问其中一个面板。'],
   },
   {
     question: ['What can I provide as input?', '可以提供哪些输入？'],
@@ -20,7 +24,7 @@ const facts = [
 ---
 <section class="product-facts" id="about-archify" aria-labelledby="product-facts-title">
   <div class="container">
-    <div class="facts-heading"><span class="section-eyebrow" data-en="Product facts" data-zh="产品事实">Product facts</span><h2 id="product-facts-title" data-en="A diagram you can inspect and keep." data-zh="一张能检查、能保留的图。">A diagram you can inspect and keep.</h2></div>
+    <div class="facts-heading"><span class="section-eyebrow" data-en="Product facts" data-zh="产品事实">Product facts</span><h2 id="product-facts-title" data-en="A map or a page you can inspect and keep." data-zh="能检查、能保留的图和答案。">A map or a page you can inspect and keep.</h2></div>
     <div class="facts-grid">
       {facts.map(fact => <article><h3 data-en={fact.question[0]} data-zh={fact.question[1]}>{fact.question[0]}</h3><p data-en={fact.answer[0]} data-zh={fact.answer[1]}>{fact.answer[0]}</p></article>)}
     </div>
@@ -37,6 +41,7 @@ const facts = [
 <style>
  .product-facts { padding:80px 0; border-top:1px solid var(--line); }
  .facts-heading h2 { margin:12px 0 32px; font-size:clamp(28px,3vw,40px); line-height:1.2; }
+ .facts-grid article:last-child:nth-child(odd) { grid-column:1 / -1; }
  .facts-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:30px 48px; }
  h3 { font-size:17px; margin:0 0 10px; } p { font-size:14px; line-height:1.8; color:var(--text-2); }
  .facts-exports { margin-top:28px; } .facts-links { display:flex; flex-wrap:wrap; gap:14px 24px; margin-top:20px; font-size:13px; }

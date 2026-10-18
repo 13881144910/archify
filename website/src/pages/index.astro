@@ -28,8 +28,8 @@ const { lang = 'en' } = Astro.props;
         <span data-i18n="hero-badge">Development Agent Skill · see what's new</span>
         <span class="eyebrow-arrow" aria-hidden="true">→</span>
       </a>
-      <h1 data-i18n="hero-h1"><span class="l">Describe it in plain words.</span><span class="l">Get a map <em>you can trust.</em></span></h1>
-      <p class="hero-sub fade-up d2" data-i18n="hero-sub">A leave plan, a job hunt, a monthly budget, or a software system — if it has steps, parts, relationships, or states, your AI agent turns it into one explorable HTML map, validated before it ships.</p>
+      <h1 data-i18n="hero-h1"><span class="l">Ask in plain words.</span><span class="l">Get answers <em>you can trust.</em></span></h1>
+      <p class="hero-sub fade-up d2" data-i18n="hero-sub">A leave plan, a P99 spike, a first HTTPS visit, or a whole codebase — your AI agent answers with an explorable map, or a one-page answer that puts the conclusion first and cites its sources. Either way it is one HTML file, validated before it ships.</p>
       <div class="hero-actions fade-up d3">
         <div class="cmd-chip">
           <span class="cmd-prompt" aria-hidden="true">$</span>
@@ -63,21 +63,32 @@ const { lang = 'en' } = Astro.props;
   <section class="stage" id="tour" aria-labelledby="tour-title">
     <h2 class="sr-only" id="tour-title" data-i18n="tour-title">Live artifact tour</h2>
     <div class="stage-pin">
-      <div class="stage-window" id="hero-proof-stage" data-proof-playback="first-fold-once">
+      <div class="stage-window" id="hero-proof-stage" data-proof-playback="first-fold-once" data-mode="map">
         <div class="window-bar">
           <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="mode-switch" role="group" aria-label={lang === 'zh' ? '选择 Archify 生成什么' : 'Choose what Archify makes'}>
+            <span class="mode-thumb" aria-hidden="true"></span>
+            <button type="button" data-mode="map" aria-pressed="true"><span data-i18n="mode-map">Map</span></button>
+            <button type="button" data-mode="page" aria-pressed="false"><span data-i18n="mode-page">Page</span><i class="mode-new" data-i18n="mode-new">New</i></button>
+          </div>
           <div class="proof-rail" id="proof-tabs" role="tablist" aria-label="Choose a live Archify proof">
-            <button class="spec-card" id="proof-tab-signal" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="true" tabindex="0" data-proof="signal">
+            <button class="spec-card" id="proof-tab-signal" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="true" tabindex="0" data-proof="signal" data-mode="map">
               <span class="spec-idx">01</span><span class="spec-name">Agent Tool Call</span>
             </button>
-            <button class="spec-card" id="proof-tab-blueprint" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="blueprint">
+            <button class="spec-card" id="proof-tab-blueprint" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="blueprint" data-mode="map">
               <span class="spec-idx">02</span><span class="spec-name">Production Deployment</span>
             </button>
-            <button class="spec-card" id="proof-tab-classic" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="classic">
+            <button class="spec-card" id="proof-tab-classic" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="classic" data-mode="map">
               <span class="spec-idx">03</span><span class="spec-name">Cache Miss</span>
             </button>
-            <button class="spec-card" id="proof-tab-leave" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="leave">
+            <button class="spec-card" id="proof-tab-leave" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="leave" data-mode="map">
               <span class="spec-idx">04</span><span class="spec-name">Annual Leave</span>
+            </button>
+            <button class="spec-card" id="proof-tab-tls" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="tls" data-mode="page" hidden>
+              <span class="spec-idx">01</span><span class="spec-name">First HTTPS Visit</span>
+            </button>
+            <button class="spec-card" id="proof-tab-repo" type="button" role="tab" aria-controls="hero-proof-panel" aria-selected="false" tabindex="-1" data-proof="repo" data-mode="page" hidden>
+              <span class="spec-idx">02</span><span class="spec-name">Read a Repo</span>
             </button>
           </div>
           <div class="window-address" aria-hidden="true">
@@ -90,13 +101,22 @@ const { lang = 'en' } = Astro.props;
         </div>
         <div class="hero-frame" id="hero-proof-panel" role="tabpanel" aria-labelledby="proof-tab-signal">
           <iframe id="hero-proof-frame" data-proof="signal" src="gallery/artifacts/agent-tool-call.workflow.html?embed=1&amp;theme=dark#focus=planner&amp;reach=downstream" title="Agent Tool Call live Archify proof" loading="eager" sandbox="allow-scripts allow-same-origin"></iframe>
+          <!-- A real explainer page, driven by the scroll; the reader opens it in a tab to use it. -->
+          <iframe id="hero-page-frame" class="page-frame" title="One-page answer live Archify proof" tabindex="-1" sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
         <div class="beat-card" aria-live="polite">
-          <div class="beat-rail" role="group" aria-label="Camera beats">
+          <div class="beat-rail" role="group" aria-label="Camera beats" data-mode="map">
             <button class="beat-tick" type="button" data-beat="0" aria-pressed="true"><span data-i18n="beat-0-k">Map</span></button>
             <button class="beat-tick" type="button" data-beat="1" aria-pressed="false"><span data-i18n="beat-1-k">Focus</span></button>
             <button class="beat-tick" type="button" data-beat="2" aria-pressed="false"><span data-i18n="beat-2-k">Upstream</span></button>
             <button class="beat-tick" type="button" data-beat="3" aria-pressed="false"><span data-i18n="beat-3-k">Lens</span></button>
+          </div>
+          <div class="beat-rail" role="group" aria-label="Page beats" data-mode="page" hidden>
+            <button class="beat-tick" type="button" data-beat="0" aria-pressed="false"><span data-i18n="pbeat-0-k">Answer</span></button>
+            <button class="beat-tick" type="button" data-beat="1" aria-pressed="false"><span data-i18n="pbeat-1-k">Walk</span></button>
+            <button class="beat-tick" type="button" data-beat="2" aria-pressed="false"><span data-i18n="pbeat-2-k">Check</span></button>
+            <button class="beat-tick" type="button" data-beat="3" aria-pressed="false"><span data-i18n="pbeat-3-k">Style</span></button>
+            <button class="beat-tick" type="button" data-beat="4" aria-pressed="false"><span data-i18n="pbeat-4-k">Ask</span></button>
           </div>
           <p class="beat-meta"><span class="proof-live" data-i18n="proof-live">Live proof</span><span id="proof-meta" data-en={defaultProofLabels.meta.en} data-zh={defaultProofLabels.meta.zh}>{defaultProofLabels.meta.en}</span></p>
           <h3 class="beat-title" id="beat-title" data-i18n="beat-0-t">The whole system, in one readable frame.</h3>
@@ -110,10 +130,10 @@ const { lang = 'en' } = Astro.props;
   <!-- PROOF STRIP — receipts, not adjectives -->
   <section class="receipts" aria-label="Archify at a glance">
     <div class="container receipts-row">
-      <div class="receipt fade-up"><b>10</b><span data-i18n="stat-types">Diagram types</span></div>
-      <div class="receipt fade-up d1"><b>4</b><span data-i18n="stat-presets">Visual presets</span></div>
-      <div class="receipt fade-up d2"><b>9/9</b><span data-i18n="stat-checks">Validation checks per artifact</span></div>
-      <div class="receipt fade-up d3"><b>4×</b><span data-i18n="stat-export">Native export scale</span></div>
+      <div class="receipt fade-up"><b>2</b><span data-i18n="stat-modes">Ways to answer: map or page</span></div>
+      <div class="receipt fade-up d1"><b>10</b><span data-i18n="stat-types">Diagram types</span></div>
+      <div class="receipt fade-up d2"><b>4</b><span data-i18n="stat-styles">Page styles, light and dark</span></div>
+      <div class="receipt fade-up d3"><b>9/9</b><span data-i18n="stat-checks">Validation checks per diagram</span></div>
       <div class="receipt fade-up d4"><b>0</b><span data-i18n="stat-deps">Runtime dependencies</span></div>
     </div>
   </section>
@@ -126,30 +146,30 @@ const { lang = 'en' } = Astro.props;
         <h2 class="section-heading" data-i18n="answers-h2">Ask a question. <em>Get a page you can check.</em></h2>
         <p class="section-body" data-i18n="answers-body">Not every answer is one diagram. Ask your agent to answer as a page: the conclusion comes first, then one panel per question with tables, steps, charts, code and validated diagrams. Steps light the diagram they walk through, claims cite their sources, and code is pinned to a commit.</p>
       </header>
-      <div class="life-grid">
-        <a class="life-card fade-up" href="cases/explainer/p99-tail-latency.html" target="_blank" rel="noopener">
-          <span class="life-plate"><img src="assets/explainer/p99-tail-latency.webp" alt="接口 P99 从 80 ms 涨到 600 ms" loading="lazy" decoding="async" width="2160" height="1350"></span>
-          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="answers-p99-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+      <ul class="answer-traits fade-up" aria-label={lang === 'zh' ? '一页式解答包含什么' : 'What a one-page answer holds'}>
+        <li data-i18n="trait-1">Conclusion first</li><li data-i18n="trait-2">Steps beside the diagram</li><li data-i18n="trait-3">Numbered sources</li><li data-i18n="trait-4">Code pinned to a commit</li><li data-i18n="trait-5">Charts from your data</li><li data-i18n="trait-6">Checklists</li><li data-i18n="trait-7">Four styles · light and dark</li><li data-i18n="trait-8">Long image · PDF</li><li data-i18n="trait-9">Follow-up per panel</li>
+      </ul>
+      <!-- Each plate holds the whole page; hovering scrolls through it top to bottom. -->
+      <div class="page-grid">
+        <a class="page-card fade-up" href="cases/explainer/p99-tail-latency.html" target="_blank" rel="noopener">
+          <span class="page-plate"><img src="assets/explainer/p99-tail-latency.webp" alt="接口 P99 从 80 ms 涨到 600 ms" loading="lazy" decoding="async" width="640" height="882"></span>
+          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="style-clean">Clean · light</span><span class="life-open" aria-hidden="true">↗</span></span>
           <span class="life-q" data-i18n="answers-p99-q">Why did P99 jump while the mean stayed flat?</span>
-          <span class="life-title">接口 P99 从 80 ms 涨到 600 ms</span>
         </a>
-        <a class="life-card fade-up" href="cases/explainer/tls-first-visit.html" target="_blank" rel="noopener">
-          <span class="life-plate"><img src="assets/explainer/tls-first-visit.webp" alt="What happens on a first HTTPS visit" loading="lazy" decoding="async" width="2160" height="1350"></span>
-          <span class="life-meta"><span class="life-lang">EN</span><span class="life-kind" data-i18n="answers-tls-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+        <a class="page-card fade-up d1" href="cases/explainer/tls-first-visit.html" target="_blank" rel="noopener">
+          <span class="page-plate"><img src="assets/explainer/tls-first-visit.webp" alt="What happens when a browser opens an HTTPS site for the first time?" loading="lazy" decoding="async" width="640" height="1124"></span>
+          <span class="life-meta"><span class="life-lang">EN</span><span class="life-kind" data-i18n="style-editorial">Editorial · dark</span><span class="life-open" aria-hidden="true">↗</span></span>
           <span class="life-q" data-i18n="answers-tls-q">What crosses the wire before the first request?</span>
-          <span class="life-title">What happens on a first HTTPS visit</span>
         </a>
-        <a class="life-card fade-up" href="cases/explainer/finalize-delivery.html" target="_blank" rel="noopener">
-          <span class="life-plate"><img src="assets/explainer/finalize-delivery.webp" alt="Archify finalize 经过哪些模块" loading="lazy" decoding="async" width="2160" height="1350"></span>
-          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="answers-repo-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+        <a class="page-card fade-up d2" href="cases/explainer/finalize-delivery.html" target="_blank" rel="noopener">
+          <span class="page-plate"><img src="assets/explainer/finalize-delivery.webp" alt="Archify finalize 经过哪些模块？失败时旧产物怎么保住？" loading="lazy" decoding="async" width="640" height="1152"></span>
+          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="style-product">Product · light</span><span class="life-open" aria-hidden="true">↗</span></span>
           <span class="life-q" data-i18n="answers-repo-q">How does finalize keep the last good file? Read from the repo.</span>
-          <span class="life-title">Archify finalize 经过哪些模块</span>
         </a>
-        <a class="life-card fade-up" href="cases/explainer/first-rental.html" target="_blank" rel="noopener">
-          <span class="life-plate"><img src="assets/explainer/first-rental.webp" alt="第一次在大城市租房" loading="lazy" decoding="async" width="2160" height="1350"></span>
-          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="answers-rent-k">Explainer</span><span class="life-open" aria-hidden="true">↗</span></span>
+        <a class="page-card fade-up d3" href="cases/explainer/first-rental.html" target="_blank" rel="noopener">
+          <span class="page-plate"><img src="assets/explainer/first-rental.webp" alt="第一次在大城市租房，签合同前要确认哪些事？" loading="lazy" decoding="async" width="640" height="912"></span>
+          <span class="life-meta"><span class="life-lang">中文</span><span class="life-kind" data-i18n="style-swiss">Swiss · light</span><span class="life-open" aria-hidden="true">↗</span></span>
           <span class="life-q" data-i18n="answers-rent-q">What should I confirm before signing a lease?</span>
-          <span class="life-title">第一次在大城市租房</span>
         </a>
       </div>
       <p class="life-note fade-up" data-i18n="answers-note">Four page styles, light and dark, export to a long image or PDF. Ask about any panel and your agent revises just that panel.</p>
@@ -314,6 +334,17 @@ const { lang = 'en' } = Astro.props;
           <p data-i18n="f7-p">Route Journey keeps the complete authored path visible while you inspect any stop or play one finite, reader-controlled pass over each exact incoming relationship.</p>
           <span class="feature-tag" data-i18n="f7-tag">INSPECT · PLAY · PAUSE</span>
         </div>
+        <div class="feature cell fade-up">
+          <span class="cell-glyph" aria-hidden="true">[1]</span>
+          <h3 data-i18n="f8-h">Sources you can check</h3>
+          <p data-i18n="f8-p">In a one-page answer, every claim cites a numbered source. Hover it for a source card: repository code is quoted from a pinned commit, web sources link to the original.</p>
+        </div>
+        <div class="feature cell fade-up d1">
+          <span class="cell-glyph" aria-hidden="true">?</span>
+          <h3 data-i18n="f9-h">Follow up on one panel</h3>
+          <p data-i18n="f9-p">Ask about any panel, or a passage you select, and copy a message that names it. Your agent revises that panel and leaves the rest of the page untouched.</p>
+          <span class="feature-tag" data-i18n="f9-tag">ASK · COPY · PATCH</span>
+        </div>
       </div>
     </div>
   </section>
@@ -373,6 +404,7 @@ const { lang = 'en' } = Astro.props;
             <p class="install-cmd"><span aria-hidden="true">$ </span><code>npx skills use tt-a1i/archify@archify --agent codex</code></p>
             <p class="install-cmt" data-i18n="term-c3"># Then just ask</p>
             <p class="install-ask" data-i18n="term-ask">› Use Archify to plan my annual leave: 10 days, plus 2 comp days that expire at the end of June.</p>
+            <p class="install-ask" data-i18n="term-ask2">› Use Archify to answer as one page: our API's P99 went from 80 ms to 600 ms while the mean barely moved. Why?</p>
           </div>
         </div>
 
@@ -384,13 +416,13 @@ const { lang = 'en' } = Astro.props;
           </li>
           <li class="step">
             <span class="step-num">2</span>
-            <div><h3 data-i18n="step2-h">Describe your system</h3>
-            <p data-i18n="step2-p">Describe the steps, people, parts, or states — or ask your agent to read a repository first.</p></div>
+            <div><h3 data-i18n="step2-h">Describe it, or ask</h3>
+            <p data-i18n="step2-p">Describe the steps, people, parts, or states, or ask the question you have — or ask your agent to read a repository first.</p></div>
           </li>
           <li class="step">
             <span class="step-num">3</span>
-            <div><h3 data-i18n="step3-h">Ask your agent to draw it</h3>
-            <p data-i18n="step3-p">Tell your agent to use Archify. It generates a self-contained HTML file you can open in any browser and refine in chat.</p></div>
+            <div><h3 data-i18n="step3-h">Get a map or a page</h3>
+            <p data-i18n="step3-p">Ask for a map to explore, or a one-page answer for the conclusion and its reasons. Either way you get one self-contained HTML file to open in any browser and refine in chat.</p></div>
           </li>
         </ol>
       </div>
@@ -421,8 +453,8 @@ const { lang = 'en' } = Astro.props;
   <section id="cta">
     <div class="cta-glow" aria-hidden="true"></div>
     <div class="container cta-inner">
-      <h2 class="cta-h fade-up" data-i18n="cta-h">Describe it once.<br><em>Share the map.</em></h2>
-      <p class="cta-sub fade-up d1" data-i18n="cta-sub">One command installs the checked skill for your agent — and your next diagram is a chat message away.</p>
+      <h2 class="cta-h fade-up" data-i18n="cta-h">Ask once.<br><em>Share the answer.</em></h2>
+      <p class="cta-sub fade-up d1" data-i18n="cta-sub">One command installs the checked skill for your agent — your next map or one-page answer is a chat message away.</p>
       <div class="cta-actions fade-up d2">
         <a class="btn btn-primary btn-lg" href="start.html" data-i18n="cta-install">Install the skill</a>
         <a class="btn btn-ghost btn-lg" href="https://github.com/tt-a1i/archify" target="_blank" rel="noopener"><span data-i18n="cta-gh">Star on GitHub</span> <span aria-hidden="true">↗</span></a>

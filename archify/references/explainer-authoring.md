@@ -90,7 +90,7 @@ Write for a reader who will act on the page and may check it. Use the user's lan
 - The conclusion is read first; every panel after it supports, qualifies or applies it. Stop once nothing is left to support.
 - Cover what the reader needs to act on the answer: the mechanism behind the conclusion, how to check it, and the cases where it does not hold. The next question a careful reader would ask gets a panel, a table row or a line in scope; a fact the reader could get wrong without it is not optional.
 - Each panel takes one question and each sentence makes one claim. A claim a table or diagram already shows is not restated; the text adds its reason or exception.
-- Keep one term per thing across the title, panels, diagram labels and table headers, and prefer the reader's own term.
+- Keep one term per thing across the title, panels, diagram labels and table headers, and prefer the reader's own term. The page links a name in the text to the node with that label, so a reader can point at it in the diagram.
 - Give results with their evidence: a number with its unit, a file position, a source. When a value is unknown or estimated, say so in scope.
 - Cite a `@source` for each claim the reader cannot check alone: protocol details, thresholds, benchmark figures, API behaviour. A rule of thumb without a source is labelled as one, or left out.
 - Recompute every derived number before delivery and show the arithmetic once: “990 of 1000 requests at 80 ms → P99 = 80 ms; 11 slow → P99 = 600 ms.” Totals in tables add up.

@@ -105,3 +105,35 @@ test('public system-theme mode starts with fresh storage and stable DOM identiti
   await browser.resetPage();const disabled=await inspectPublicHtml(browser,{artifactPath:file,width:1440,theme:'dark',themeControl:'system',javascript:false,keyboard:false});assert.equal(await pageValue(browser,'Boolean(window.artifactRan)'),false);assert.equal(disabled.fontReadiness.status,'loaded');assert.equal(disabled.measurementMethod.clipCoverage,'not-measured-script-disabled');assert.equal(disabled.measurementMethod.documentExtentMeasured,true);assert.equal(disabled.background,'rgb(23, 23, 23)');
  }finally{await browser.close();}
 });
+test('text names light their diagram nodes and walk-throughs step through steps and messages',{skip:!chrome},async()=>{
+ const {renderExplainer}=await import('../archify/explainer/render.mjs');const {compileExplainerDiagram,prepareExplainerDiagrams}=await import('../archify/explainer/diagrams.mjs');
+ const spec=compileExplainerDiagram('sequence',['actor api | API | backend','actor redis | Redis | database','api | redis | Read cache','redis | api | Return cache'],{title:'Cache lookup',id:'native',quality:'showcase'});
+ const doc=formalDocument();doc.meta.id='walk-browser';doc.meta.quality_profile='showcase';doc.panels.push({id:'how',title:'Where does the request go?',blocks:[{id:'native',type:'diagram',diagramType:'sequence',spec},{id:'why',type:'prose',text:'The API asks Redis first, and Redis answers from memory.'},{id:'step',type:'steps',items:[{id:'read-step',text:'Read cache',target:{diagram:'native',node:'api',edges:['api-to-redis-1']}},{id:'return-step',text:'Return cache',target:{diagram:'native',node:'redis',edges:['redis-to-api-1']}}]}]});
+ const preparedDiagrams=await prepareExplainerDiagrams(doc,{baseDir:dir,sourcePath:path.join(dir,'walk.json'),quality:'showcase'});
+ const file=artifact('walk',renderExplainer(doc,{sourceText:JSON.stringify(doc),preparedDiagrams,preparedSources:{sources:{example:{title:'Example'}}}}));
+ const browser=new ChromeVisualBrowser(chrome);try {
+  await inspectPublicHtml(browser,{artifactPath:file,width:1440,keyboard:false});
+  const result=await pageValue(browser,`(function(){
+   const terms=[...document.querySelectorAll('#why .term')].map(t=>t.textContent);
+   const redis=document.querySelector('#why .term[data-node="redis"]');redis.dispatchEvent(new MouseEvent('mouseenter'));
+   const lit=[...document.querySelectorAll('#native .reader-highlight')].map(e=>e.dataset.nodeId||e.dataset.edgeId);redis.dispatchEvent(new MouseEvent('mouseleave'));
+   const steps=document.querySelector('ol.steps').previousElementSibling;steps.click();document.querySelector('.walk-bar [data-walk=next]').click();
+   const current=document.querySelector('.walk-current')?.id,stepLit=[...document.querySelectorAll('#native .reader-highlight')].map(e=>e.dataset.nodeId||e.dataset.edgeId);
+   document.querySelector('.walk-bar [data-walk=end]').click();const ended=!document.querySelector('.walk-bar')&&!document.querySelector('.walk-current');
+   const messages=document.querySelector('#native figcaption .walk-start');messages.click();
+   const text=document.querySelector('.walk-text').textContent;
+   document.querySelector('#how .ask-button').click();document.querySelector('.ask-dialog [data-chip]').click();
+   let copied='';navigator.clipboard.writeText=value=>{copied=value;return Promise.resolve();};document.querySelector('.ask-dialog [type=submit]').click();
+   return new Promise(resolve=>setTimeout(()=>resolve({terms,lit,current,stepLit,ended,text,copied,open:document.querySelector('.ask-dialog').open}),50));})()`);
+  assert.deepEqual(result.terms,['API','Redis'],'each name is linked once per panel');
+  assert.deepEqual(result.lit,['redis']);
+  assert.equal(result.current,'return-step');
+  assert.ok(result.stepLit.includes('redis-to-api-1'));
+  assert.equal(result.ended,true);
+  assert.equal(result.text,'API → Redis: Read cache');
+  assert.match(result.copied,/Where: Panel 2 "Where does the request go\?" \(ID: how\)/);
+  assert.match(result.copied,/Question: I do not follow this part/);
+  assert.match(result.copied,/patch explainer/);
+  assert.equal(result.open,false);
+ }finally{await browser.close();}
+});

@@ -293,23 +293,179 @@
   viewerDialog.addEventListener('close',()=>{ document.body.classList.remove('dialog-open'); viewerOpener?.focus({preventScroll:true}); });
   window.addEventListener('message',event=>{ if(!viewer || event.source !== viewer.frame.contentWindow || event.data?.token !== viewer.token) return; if(event.data.kind === 'archify-explainer-ready') {viewer.ready = true; viewerDialog.dataset.nativeReady = 'true'; viewerDialog.querySelector('.dialog-loading').hidden = true; sendViewer();} else if(event.data.kind === 'archify-explainer-focus-result') {viewerDialog.dataset.nativeFocus = JSON.stringify({nodes:event.data.nodes,edges:event.data.edges,active:event.data.active});} else if(event.data.kind === 'archify-explainer-escape') closeViewer(); });
   all('[data-open-diagram]').forEach(button=>button.addEventListener('click',()=>openViewer(button.dataset.openDiagram,'',button)));
+  // One spotlight for every text-to-diagram link: the named nodes and edges stay lit, the rest dims.
+  const previewOf = id => byId(id)?.querySelector('.diagram-preview');
+  function spotlight(preview, nodes = [], edges = []) {
+    if (!preview) return;
+    let matched = false;
+    all('[data-node-id],[data-edge-id]',preview).forEach(element=>{const hit = nodes.includes(element.dataset.nodeId) || edges.includes(element.dataset.edgeId); matched ||= hit; element.classList.toggle('reader-highlight',hit);});
+    preview.classList.toggle('focusing',matched);
+  }
+  const targetOf = link => {
+    const hash = link.dataset.diagramHash || '';
+    let edges = []; try { edges = JSON.parse(link.dataset.diagramEdges || '[]'); } catch {}
+    return {preview:previewOf(link.dataset.diagramLink),nodes:hash.startsWith('focus=') ? [decodeURIComponent(hash.slice(6))] : hash.startsWith('route=') ? hash.slice(6).split('~').map(decodeURIComponent) : [],edges};
+  };
   all('[data-diagram-link]').forEach(link=>{
     link.addEventListener('click',event=>{ event.preventDefault(); openViewer(link.dataset.diagramLink,link.dataset.diagramHash || '',link); });
-    const highlight = active => {
-      const preview = byId(link.dataset.diagramLink)?.querySelector('.diagram-preview'); if(!preview) return;
-      const target = link.dataset.diagramHash || '';
-      const nodes = target.startsWith('focus=') ? [decodeURIComponent(target.slice(6))] : target.startsWith('route=') ? target.slice(6).split('~').map(decodeURIComponent) : [];
-      let edges = []; try { edges = JSON.parse(link.dataset.diagramEdges || '[]'); } catch {}
-      let matched = false;
-      all('[data-node-id],[data-edge-id]',preview).forEach(element=>{const hit = active && (nodes.includes(element.dataset.nodeId) || edges.includes(element.dataset.edgeId)); matched ||= hit; element.classList.toggle('reader-highlight',hit);});
-      preview.classList.toggle('focusing',matched);
-    };
+    const highlight = active => { const {preview,nodes,edges} = targetOf(link); spotlight(preview,active ? nodes : [],active ? edges : []); };
     link.addEventListener('mouseenter',()=>highlight(true)); link.addEventListener('mouseleave',()=>highlight(false)); link.addEventListener('focus',()=>highlight(true)); link.addEventListener('blur',()=>highlight(false));
   });
+  // A name in the text that is also a node label is linked to that node, once per panel, both ways:
+  // hovering the word lights the node, hovering the node lights the word.
+  function linkTerms() {
+    const terms = new Map();
+    all('.diagram-preview').forEach(preview=>all('[data-node-id][data-node-label]',preview).forEach(node=>{
+      const label = node.dataset.nodeLabel.trim();
+      const target = {diagram:preview.closest('.block').id,node:node.dataset.nodeId};
+      if ((/\p{Script=Han}/u.test(label) ? label.length >= 2 : label.length >= 3) && !terms.has(label.toLowerCase())) terms.set(label.toLowerCase(),target);
+      // A plain-word ID ("server" for "Server :443") also names the node in English prose.
+      if (/^[a-z]{3,}$/.test(target.node) && !terms.has(target.node)) terms.set(target.node,target);
+    }));
+    if (!terms.size) return;
+    const pattern = new RegExp([...terms.keys()].sort((a,b)=>b.length - a.length).map(label=>label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))
+      .join('|'),'giu');
+    const word = /[\p{L}\p{N}_]/u;
+    all('.panel').forEach(panel=>{
+      const seen = new Set();
+      const walker = document.createTreeWalker(panel.querySelector('.panel-body') || panel,NodeFilter.SHOW_TEXT,{acceptNode:text=>text.parentElement.closest('.block-diagram,.block-chart,pre,code,a,button,svg,figcaption,.term,.diagram-semantics,thead') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT});
+      const texts = []; while (walker.nextNode()) texts.push(walker.currentNode);
+      for (const text of texts) {
+        const value = text.nodeValue, parts = []; let last = 0;
+        for (const match of value.matchAll(pattern)) {
+          const before = value[match.index - 1], after = value[match.index + match[0].length];
+          if (seen.has(match[0].toLowerCase()) || (!/\p{Script=Han}/u.test(match[0]) && ((before && word.test(before)) || (after && word.test(after))))) continue;
+          seen.add(match[0].toLowerCase()); parts.push(value.slice(last,match.index),match[0]); last = match.index + match[0].length;
+        }
+        if (!parts.length) continue;
+        const fragment = document.createDocumentFragment();
+        parts.forEach((part,index)=>{ if (index % 2 === 0) { fragment.append(part); return; } const target = terms.get(part.toLowerCase()), span = document.createElement('span'); span.className = 'term'; span.dataset.diagram = target.diagram; span.dataset.node = target.node; span.textContent = part; fragment.append(span); });
+        fragment.append(value.slice(last)); text.replaceWith(fragment);
+      }
+    });
+    all('.term').forEach(term=>{ const lit = on => spotlight(previewOf(term.dataset.diagram),on ? [term.dataset.node] : []); term.addEventListener('mouseenter',()=>lit(true)); term.addEventListener('mouseleave',()=>lit(false)); });
+    all('.diagram-preview').forEach(preview=>{
+      const id = preview.closest('.block').id;
+      preview.addEventListener('mouseover',event=>{ const node = event.target.closest('[data-node-id]')?.dataset.nodeId; all('.term').forEach(term=>term.classList.toggle('term-lit',term.dataset.diagram === id && term.dataset.node === node)); });
+      preview.addEventListener('mouseleave',()=>all('.term-lit').forEach(term=>term.classList.remove('term-lit')));
+    });
+  }
+  // Walk-through: step lists that point into a diagram, and sequence diagrams message by message.
+  // Each step lights its part of the diagram; arrow keys move, Escape ends.
+  let walking = null;
+  function walk(control, items, show) {
+    const stop = () => { walking?.end(); };
+    if (walking?.control === control) { stop(); return; }
+    stop();
+    let index = 0;
+    const bar = document.createElement('div'); bar.className = 'walk-bar';
+    bar.innerHTML = `<button type="button" data-walk="prev">← ${words.prev}</button><span class="walk-count"></span><button type="button" data-walk="next">${words.next} →</button><span class="walk-text" aria-live="polite"></span><button type="button" data-walk="end">${words.end}</button>`;
+    // A diagram's bar sits above the diagram, so it stays in view while a tall diagram scrolls past.
+    const figure = control.closest('figcaption')?.closest('figure'); if (figure) figure.before(bar); else control.after(bar);
+    control.setAttribute('aria-pressed','true');
+    // The bar changes the panel height the board was planned with.
+    const replan = () => requestAnimationFrame(()=>{ layoutBoard(); ensureDiagramReadability(); });
+    replan();
+    const render = () => { bar.querySelector('.walk-count').textContent = `${index + 1} / ${items.length}`; bar.querySelector('.walk-text').textContent = show(index) || ''; };
+    const move = delta => { index = Math.max(0,Math.min(items.length - 1,index + delta)); render(); };
+    bar.addEventListener('click',event=>{ const action = event.target.closest('[data-walk]')?.dataset.walk; if (action === 'end') stop(); else if (action) move(action === 'next' ? 1 : -1); });
+    const keys = event => { if (event.target.closest('input,textarea') || viewerDialog.open) return; if (event.key === 'ArrowRight') { event.preventDefault(); move(1); } else if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); } else if (event.key === 'Escape') stop(); };
+    document.addEventListener('keydown',keys);
+    walking = {control,end:()=>{ document.removeEventListener('keydown',keys); bar.remove(); control.setAttribute('aria-pressed','false'); show(-1); walking = null; replan(); }};
+    render();
+  }
+  function setupWalks() {
+    all('ol.steps').forEach(list=>{
+      const steps = all(':scope>li',list).filter(item=>item.querySelector('[data-diagram-link]'));
+      if (steps.length < 2) return;
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'walk-start interactive'; button.textContent = `▶ ${words.walk}`; button.setAttribute('aria-pressed','false');
+      list.before(button);
+      button.addEventListener('click',()=>walk(button,steps,index=>{
+        steps.forEach((step,i)=>step.classList.toggle('walk-current',i === index));
+        all('.diagram-preview').forEach(preview=>spotlight(preview));
+        if (index < 0) return;
+        const {preview,nodes,edges} = targetOf(steps[index].querySelector('[data-diagram-link]'));
+        spotlight(preview,nodes,edges);
+        const box = preview?.getBoundingClientRect();
+        if (box && (box.bottom < 0 || box.top > innerHeight)) preview.scrollIntoView({block:'nearest',behavior:'smooth'});
+      }));
+    });
+    all('.block-diagram').forEach(block=>{
+      if (diagrams[block.id]?.diagramType !== 'sequence') return;
+      const preview = block.querySelector('.diagram-preview'), messages = all('[data-edge-id]',preview);
+      if (messages.length < 2) return;
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'text-button walk-start'; button.textContent = `▶ ${words.walkMessages}`; button.setAttribute('aria-pressed','false');
+      block.querySelector('figcaption button')?.before(button);
+      const label = id => preview.querySelector(`[data-node-id="${CSS.escape(id)}"]`)?.dataset.nodeLabel || id;
+      button.addEventListener('click',()=>walk(button,messages,index=>{
+        if (index < 0) { spotlight(preview); return; }
+        const message = messages[index];
+        spotlight(preview,[message.dataset.edgeFrom,message.dataset.edgeTo],[message.dataset.edgeId]);
+        const box = message.getBoundingClientRect();
+        if (box.top < 0 || box.bottom > innerHeight - 80) message.scrollIntoView({block:'center',behavior:'smooth'});
+        return `${label(message.dataset.edgeFrom)} → ${label(message.dataset.edgeTo)}${say(': ','：')}${message.dataset.edgeLabel || ''}`;
+      }));
+    });
+  }
   all('[data-copy]').forEach(button=>button.addEventListener('click',()=>{
     const text = button.closest('figure').querySelector('pre code').textContent;
     Promise.resolve(navigator.clipboard?.writeText(text)).then(()=>{button.textContent = words.copied;setTimeout(()=>{button.textContent = words.copy;},1600);},()=>notify(say('Copy failed.','复制失败。')));
   }));
+  // Follow-up questions: a reader asks about a panel, or about selected text in it, and copies a
+  // message that names the page, the panel ID and the quote, so the agent can revise just that panel.
+  function setupAsk() {
+    const dialog = document.createElement('dialog'); dialog.className = 'ask-dialog';
+    dialog.innerHTML = `<form method="dialog"><header><h2></h2><button type="button" data-ask-cancel aria-label="${words.askCancel}">×</button></header><blockquote hidden></blockquote><div class="ask-chips">${words.askChips.map(chip=>`<button type="button" data-chip>${chip}</button>`).join('')}</div><textarea rows="3" placeholder="${words.askPlaceholder}"></textarea><footer><button type="button" data-ask-cancel>${words.askCancel}</button><button type="submit" class="primary">${words.askCopy}</button></footer></form>`;
+    document.body.append(dialog);
+    const area = dialog.querySelector('textarea'), quoteBox = dialog.querySelector('blockquote');
+    let context = null;
+    const open = (panel, quote = '') => {
+      const number = panel.id === 'answer' ? words.answer : panel.querySelector('.panel-id')?.textContent.trim();
+      const title = panel.id === 'answer' ? words.answer : panel.dataset.title || panel.querySelector('h2')?.textContent.trim();
+      context = {panel,quote,number,title};
+      dialog.querySelector('h2').textContent = `${words.ask} · ${panel.id === 'answer' ? title : `${number} ${title}`}`;
+      quoteBox.hidden = !quote; quoteBox.textContent = quote;
+      area.value = ''; dialog.showModal(); area.focus();
+    };
+    dialog.querySelectorAll('[data-chip]').forEach(chip=>chip.addEventListener('click',()=>{ area.value = area.value ? `${area.value}\n${chip.textContent}` : chip.textContent; area.focus(); }));
+    dialog.querySelectorAll('[data-ask-cancel]').forEach(button=>button.addEventListener('click',()=>dialog.close()));
+    dialog.querySelector('form').addEventListener('submit',event=>{
+      event.preventDefault();
+      const {panel,quote,number,title} = context, page = document.querySelector('h1')?.textContent.trim();
+      const file = location.protocol === 'file:' ? decodeURIComponent(location.pathname) : location.href.split('#')[0];
+      const quoteMark = text => english ? `"${text}"` : `「${text}」`;
+      const lines = [
+        `${words.askPage}${say(': ','：')}${quoteMark(page)}`,
+        `${words.askFile}${say(': ','：')}${file}`,
+        `${words.askWhere}${say(': ','：')}${panel.id === 'answer' ? title : say(`Panel ${number} ${quoteMark(title)}`,`面板 ${number}${quoteMark(title)}`)}${say(` (ID: ${panel.id})`,`（ID: ${panel.id}）`)}`,
+        ...(quote ? [`${words.askQuoteLabel}${say(': ','：')}${quoteMark(quote)}`] : []),
+        `${words.askQuestion}${say(': ','：')}${area.value.trim() || words.askChips[0]}`,
+        ...(panel.id === 'answer' ? [] : [words.askPatch]),
+      ];
+      const text = lines.join('\n');
+      Promise.resolve(navigator.clipboard?.writeText(text)).then(()=>{ dialog.close(); notify(words.askCopied); },()=>{ area.value = text; area.select(); });
+    });
+    all('.panel').forEach(panel=>{
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'ask-button interactive'; button.textContent = words.ask;
+      button.addEventListener('click',()=>open(panel));
+      panel.querySelector('.panel-head')?.append(button);
+    });
+    const floating = document.createElement('button'); floating.type = 'button'; floating.className = 'ask-floating'; floating.textContent = words.askQuote; floating.hidden = true;
+    document.body.append(floating);
+    let selected = null;
+    document.addEventListener('selectionchange',()=>{
+      const selection = getSelection(), text = selection.toString().replace(/\s+/g,' ').trim();
+      const panel = selection.rangeCount ? selection.getRangeAt(0).commonAncestorContainer.parentElement?.closest?.('.panel') || (selection.getRangeAt(0).commonAncestorContainer.closest?.('.panel')) : null;
+      if (!panel || text.length < 2 || dialog.open) { floating.hidden = true; selected = null; return; }
+      const box = selection.getRangeAt(0).getBoundingClientRect();
+      selected = {panel,text:text.slice(0,400)};
+      floating.style.left = `${Math.max(8,Math.min(innerWidth - 120,box.left + box.width / 2 - 45 + scrollX))}px`;
+      floating.style.top = `${box.top + scrollY - 38}px`;
+      floating.hidden = false;
+    });
+    floating.addEventListener('mousedown',event=>event.preventDefault());
+    floating.addEventListener('click',()=>{ if (selected) open(selected.panel,selected.text); floating.hidden = true; });
+  }
   // Checklist ticks are the reader's own progress; keep them per page and block across reloads.
   all('.checklist').forEach(list=>{
     const key = `archify-checklist:${root.dataset.artifact}:${list.closest('.block').id}`, boxes = all('input',list);
@@ -324,6 +480,9 @@
   root.classList.add('js');
   applyTheme();
   cropDiagramPreviews();
+  linkTerms();
+  setupWalks();
+  setupAsk();
   layoutBoard();
   const relayout = () => { layoutBoard(); ensureDiagramReadability(); };
   Promise.resolve(document.fonts?.ready).then(()=>requestAnimationFrame(()=>requestAnimationFrame(relayout)));

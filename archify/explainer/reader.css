@@ -138,6 +138,20 @@ meter{width:100%;height:8px;accent-color:var(--accent)}
 .steps li:not(:last-child)::after{content:"";position:absolute;left:11px;top:25px;bottom:3px;width:1.5px;background:var(--rule)}
 .steps b{display:block;font-size:14.5px;line-height:1.6;color:var(--ink)}
 .steps p{font-size:13.5px;line-height:1.65;color:var(--muted);margin-top:1px}
+/* Text linked to a diagram node, and the step-through controls */
+.term{text-decoration:underline dotted color-mix(in srgb,var(--accent) 55%,transparent);text-underline-offset:3px;text-decoration-thickness:1.5px;border-radius:3px;transition:background .15s}
+.term:hover,.term.term-lit{background:var(--accent-soft);color:var(--accent-ink);text-decoration-color:var(--accent)}
+.walk-start{margin-bottom:10px;font-size:12px;color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--rule))}
+.walk-start[aria-pressed=true]{background:var(--accent-soft)}
+figcaption .walk-start{margin:0;border:0}
+.walk-bar{position:sticky;top:8px;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:6px 8px;border:1px solid var(--rule);border-radius:10px;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(6px);box-shadow:var(--shadow);font-size:12px}
+.walk-text{flex:1 1 220px;min-width:0;color:var(--ink);font-size:13px}
+.walk-text:empty{display:none}
+.walk-bar button{font-size:12px;padding:2px 10px}
+.walk-count{min-width:44px;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+.steps li.walk-current::before{background:var(--accent);color:#fff;border-color:var(--accent)}
+.steps li.walk-current b,.steps li.walk-current .diagram-link{color:var(--accent-ink)}
+.steps li:not(.walk-current):has(~ .walk-current) b,.steps:has(.walk-current) li:not(.walk-current) p{opacity:.55}
 .diagram-link{color:var(--ink)}
 .diagram-link>span{color:var(--faint);font-weight:400;transition:color .15s}
 .diagram-link:hover{color:var(--accent);text-decoration:none}
@@ -148,7 +162,7 @@ meter{width:100%;height:8px;accent-color:var(--accent)}
 .diagram-panel .panel-body{display:flex;flex-direction:column;padding:14px 16px 16px}
 .block-diagram{flex:1;display:flex;flex-direction:column}
 .diagram{flex:1;display:flex;flex-direction:column}
-.diagram-preview{flex:1;min-width:0;max-width:100%;overflow:auto;display:flex;align-items:center;padding:0}
+.diagram-preview{flex:1;min-width:0;max-width:100%;overflow:auto;display:flex;align-items:flex-start;padding:0}
 .diagram-preview>svg{display:block;width:min(100%,calc(var(--native-width,100vw) * 1.25))!important;margin-inline:auto;height:auto!important;min-height:0!important;max-height:none!important;max-width:none!important}
 .diagram-preview>svg>rect[fill^="url("],.diagram-preview [data-legend]{display:none}
 /* A single lane is the whole diagram, and lanes the shorthand adds only to stack branches carry no
@@ -217,6 +231,28 @@ footer{padding:28px 0 32px}
 .sources code{display:block;margin-top:2px;font-size:11px;background:none;border:0;padding:0;color:var(--muted)}
 .colophon{margin-top:20px;font-size:11px;color:var(--faint);letter-spacing:.04em}
 .colophon code{font-size:10px}
+
+/* Follow-up questions */
+.ask-button{margin-left:auto;flex-shrink:0;font-size:12px;padding:1px 9px;color:var(--muted);border-color:transparent;background:none;opacity:.7;transition:opacity .15s,color .15s,border-color .15s}
+.panel:hover .ask-button,.ask-button:focus-visible{opacity:1;border-color:var(--rule-strong)}
+.ask-button:hover{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--rule))}
+.ask-floating{position:absolute;z-index:20;font-size:12px;padding:3px 10px;border-radius:999px;background:var(--ink);color:var(--paper);border:0;box-shadow:0 4px 14px rgb(0 0 0/.18)}
+.ask-floating:hover{background:var(--accent);color:#fff}
+.ask-dialog{width:min(520px,calc(100vw - 32px));padding:0}
+.ask-dialog form{margin:0;display:flex;flex-direction:column;gap:12px;padding:16px 18px 18px}
+.ask-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ask-dialog h2{font-size:14.5px;font-weight:600;overflow-wrap:anywhere}
+.ask-dialog header button{border:0;background:none;font-size:18px;line-height:1;padding:2px 6px;color:var(--muted)}
+.ask-dialog blockquote{margin:0;padding:8px 12px;border-radius:8px;background:var(--sunk);box-shadow:inset 3px 0 0 var(--accent);font-size:13px;color:var(--secondary);max-height:120px;overflow:auto}
+.ask-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ask-chips button{font-size:12px;padding:2px 10px;border-radius:999px;color:var(--secondary)}
+.ask-chips button:hover{color:var(--accent);border-color:var(--accent)}
+.ask-dialog textarea{font:inherit;font-size:13.5px;color:var(--ink);background:var(--panel);border:1px solid var(--rule-strong);border-radius:8px;padding:8px 10px;resize:vertical}
+.ask-dialog textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.ask-dialog footer{display:flex;justify-content:flex-end;gap:8px}
+.ask-dialog .primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme=dark] .ask-dialog .primary{color:#0c0d10}
+@media print{.ask-button,.ask-floating{display:none!important}}
 
 /* Dialogs */
 dialog{color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:12px;box-shadow:0 24px 80px rgb(0 0 0/.25)}

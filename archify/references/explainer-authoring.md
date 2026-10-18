@@ -85,16 +85,16 @@ A small answer gets a small page: the conclusion plus one or two panels. A how-i
 
 ## Writing
 
-Every sentence gives the reader one fact they need. Write in the user's language.
+Write for a reader who will act on the page and may check it. Use the user's language.
 
-- Start with the fact. The title asks the question, the conclusion answers it, and the page ends when the facts end.
+- The conclusion is read first; every panel after it supports, qualifies or applies it. Stop once nothing is left to support.
 - Cover what the reader needs to act on the answer: the mechanism behind the conclusion, how to check it, and the cases where it does not hold. The next question a careful reader would ask gets a panel, a table row or a line in scope; a fact the reader could get wrong without it is not optional.
-- One sentence carries one fact; one panel answers one question. Say each fact once: when a table or diagram shows it, the text adds only what the figure cannot.
-- Call each thing by one name throughout the page, and use the name the reader already knows.
+- Each panel takes one question and each sentence makes one claim. A claim a table or diagram already shows is not restated; the text adds its reason or exception.
+- Keep one term per thing across the title, panels, diagram labels and table headers, and prefer the reader's own term.
 - Give results with their evidence: a number with its unit, a file position, a source. When a value is unknown or estimated, say so in scope.
 - Cite a `@source` for each claim the reader cannot check alone: protocol details, thresholds, benchmark figures, API behaviour. A rule of thumb without a source is labelled as one, or left out.
 - Recompute every derived number before delivery and show the arithmetic once: “990 of 1000 requests at 80 ms → P99 = 80 ms; 11 slow → P99 = 600 ms.” Totals in tables add up.
-- Write steps as commands with the condition first: “If the build fails, read the log.”
+- Phrase an action as an imperative with its trigger in front: “If the migration reports a schema mismatch, roll it back before retrying.”
 - When the reader must act or verify, end with a checklist panel: `- [ ] item`, one concrete check per item. Readers tick items on the page.
 
 English: short sentences (under about 25 words), common words (use, before, to, because), active voice with a named actor.
@@ -258,7 +258,7 @@ After a pass, reply in two or three lines: the conclusion, then a Markdown link 
 
 Add `--repo-root <path>` when the draft uses `@code`. Finalize validates, atomically delivers and checks the HTML; it does not launch a browser, and its receipt records the browser gate as not run. A failure names the line, component, reason and a repair example; fix the draft and rerun to the same output path.
 
-Writing warnings apply the [Writing](#writing) rules: sentences over 50 Chinese units or 28 English words, paragraphs over four sentences or 120 units, chained “的”, light verbs, stock phrases and filler, unbounded quantities, “以上/以下/以内” after a number, long English words with a common equivalent, qualifiers such as “示例”, “未实测” or “illustrative” outside scope, a mostly bold conclusion and a scope over 50 units. Each warning names the matched text and a repair; fix it when the repair keeps the meaning. `--writing warn|strict|off` sets the severity.
+Writing warnings apply the [Writing](#writing) rules: sentences over 50 Chinese units or 28 English words, paragraphs over four sentences or 120 units, chained “的”, light verbs, set phrases, openers and sign-offs, unbounded quantities, “以上/以下/以内” after a number, long English words with a common equivalent, qualifiers such as “示例”, “未实测” or “illustrative” outside scope, a mostly bold conclusion and a scope over 50 units. Each warning names the matched text and a repair; fix it when the repair keeps the meaning. `--writing warn|strict|off` sets the severity.
 
 ## Panel replacement
 

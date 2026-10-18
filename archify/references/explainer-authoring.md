@@ -192,18 +192,18 @@ Other native types (`dataflow`, `lifecycle`, `class`, `waterfall`) and diagrams 
 A ```` ```mermaid ```` fence draws a chart from numbers: `pie`, `xychart-beta` (bar and line), `quadrantChart`, `sankey-beta`, `radar-beta` or `venn-beta`. The page renders it to static SVG in the page theme. An optional `title="..."` becomes the caption.
 
 ````md
-```mermaid title="Mean and P99 before and after"
+```mermaid title="Latency before and after the release (ms)"
 xychart-beta
-  x-axis ["Before", "After"]
+  x-axis ["Mean", "P50", "P99"]
   y-axis "ms" 0 --> 700
-  bar [80, 600]
-  line [80, 85]
+  bar "Before" [80, 75, 80]
+  bar "After" [88, 76, 600]
 ```
 ````
 
-Bars show their values, and a pie legend shows each value with its share. Use `xychart-beta horizontal` for ranked items or long category names. Put the contrast the reader must see in one chart, such as P50 beside P99.
+Name each series (`bar "Before" [...]`) so the chart gets a legend. Bars show their values, and a pie legend shows each value with its share. Use `xychart-beta horizontal` for ranked items or long category names. When numbers carry the point, such as one value jumping while others stay flat, a before/after or a share, chart them so the contrast is seen at a glance; a table under the chart adds only the words each number needs. Put the contrast in one chart, such as mean, P50 and P99 before and after.
 
-Chart only numbers the reader can trust: values from the user, a source or a measurement. Mark illustrative values in scope. Quote every label that contains spaces or non-ASCII text. Flowcharts, sequences, class, ER, state, timeline and mind-map Mermaid use the native shorthand above, which Archify validates and lets readers explore.
+Chart only numbers the reader can trust: values from the user, a source or a measurement. Illustrative values, such as a worked example, may be charted too when scope says they are illustrative. Quote every label that contains spaces or non-ASCII text. Flowcharts, sequences, class, ER, state, timeline and mind-map Mermaid use the native shorthand above, which Archify validates and lets readers explore.
 
 ## Directive reference
 

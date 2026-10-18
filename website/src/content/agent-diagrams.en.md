@@ -20,11 +20,35 @@ That distinction matters: Archify is not an independent source-code discovery se
 
 ## Set up your agent
 
-Open the [agent-aware quick start](start.html). Select the agent you actually use and choose a project-scoped or global installation. Follow the command shown there rather than copying another agent's installation path.
+Open the [agent-aware quick start](start.html). Select the agent you actually use and choose a project-scoped or global installation. The commands below are the same global, copy-based installations offered by Start, not commands for a plain web chat.
 
-The [installation reference](https://github.com/tt-a1i/archify/blob/main/README.md#installation-options) explains supported surfaces and their constraints. The renderer workflow needs an environment with file access and Node.js; requirements can differ by integration. Being able to chat with an AI model alone does not establish that the environment can run the workflow.
+### What environment does Archify need?
 
-Installation instructions are not a guarantee that every agent/version combination has been tested. If setup fails, record the agent, its version, your operating system, and the exact error before changing the diagram itself.
+Use a coding-agent environment that can read and write files and execute commands with Node.js. “No repository required” means you can supply a natural-language description without existing source code; the agent still needs a workspace to write JSON and HTML and run the renderer and checks. Viewing the finished HTML only needs a browser.
+
+The [installation reference](https://github.com/tt-a1i/archify/blob/main/README.md#installation-options) distinguishes these surfaces. Claude Code and Codex CLI support the full renderer and validation workflow. Claude.ai depends on Node.js access in its sandbox; uploading a ZIP to Project Knowledge is a prompt-driven fallback, not the same execution environment. Other integrations have their own requirements.
+
+<span id="setup-claude-code" class="section-anchor" aria-hidden="true"></span>
+
+### Install Archify for Claude Code
+
+For a global copied installation, run this in the terminal of the environment where you use Claude Code:
+
+<pre><code>npx -y skills add tt-a1i/archify --skill archify --agent claude-code --global --copy --yes</code></pre>
+
+Claude Code uses `~/.claude/skills/` for global skills or `.claude/skills/` in the project. For a project-scoped installation instead, choose [Claude Code in Start](start.html?agent=claude-code#install) and use “This repository only” from the intended project directory.
+
+<span id="setup-codex" class="section-anchor" aria-hidden="true"></span>
+
+### Install Archify for Codex CLI
+
+For a global copied installation, run this in the terminal of the environment where you use Codex CLI:
+
+<pre><code>npx -y skills add tt-a1i/archify --skill archify --agent codex --global --copy --yes</code></pre>
+
+Codex CLI uses `~/.agents/skills/` for global skills or `.agents/skills/` in the project. For a project-scoped installation instead, choose [Codex in Start](start.html?agent=codex#install) and use “This repository only” from the intended project directory.
+
+After installation, use the description or repository prompt in Start. Installation instructions are not a guarantee that every agent/version combination has been tested. If setup fails, record the agent, its version, your operating system, and the exact error before changing the diagram itself.
 
 <span id="description-workflow" class="section-anchor" aria-hidden="true"></span>
 

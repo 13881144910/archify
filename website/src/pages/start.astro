@@ -23,15 +23,15 @@ const { lang = 'en' } = Astro.props;
         <h1><span data-en="Describe it." data-zh="直接说，">Describe it.</span><span class="title-gap" aria-hidden="true"> </span><em data-en="Archify maps it." data-zh="Archify 就能画。">Archify maps it.</em></h1>
       </div>
       <div>
-        <p class="lead-copy" data-en="No repository is required. Describe a plan, a process, or a system in a normal agent chat and Archify turns it into a checked, interactive diagram. If code exists, the same skill can inspect it for evidence." data-zh="不需要绑定代码库。在任意 Agent 对话里用大白话描述一份计划、一个流程或一套系统，Archify 就会把它变成经过校验的交互图；如果有代码，也可以再让它读取仓库作为证据。">No repository is required. Describe a plan, a process, or a system in a normal agent chat and Archify turns it into a checked, interactive diagram. If code exists, the same skill can inspect it for evidence.</p>
-        <div class="trust-line" data-en="Your description is enough to make the first diagram." data-zh="只有一段描述，也足够画出第一张图。">Your description is enough to make the first diagram.</div>
+        <p class="lead-copy" data-en="No existing repository is required. Describe a plan, a process, or a system to a coding agent with Archify installed, file access, and command execution with Node.js. If code exists, the same skill can inspect it for evidence." data-zh="不需要已有代码库。向已安装 Archify、能够读写文件并通过 Node.js 执行命令的 Coding Agent 描述计划、流程或系统；如果有代码，也可以让它检查仓库作为证据。">No existing repository is required. Describe a plan, a process, or a system to a coding agent with Archify installed, file access, and command execution with Node.js. If code exists, the same skill can inspect it for evidence.</p>
+        <div class="trust-line" data-en="Start from your description once the agent environment is ready." data-zh="配置好 Agent 环境后，就可以从一段描述开始。">Start from your description once the agent environment is ready.</div>
       </div>
     </header>
 
     <section class="type-shell" aria-labelledby="type-label">
       <p class="type-label"><span data-en="Choose how to start" data-zh="选择如何开始">Choose how to start</span><strong data-en="Repository optional" data-zh="代码库可选">Repository optional</strong></p>
       <div class="input-paths" role="tablist" aria-label="Input source">
-        <button class="input-path" type="button" role="tab" data-input="description"><strong data-en="Just describe it" data-zh="直接描述">直接描述</strong><span data-en="Start in any chat. No files or repository needed." data-zh="在任意对话里开始，不需要文件或代码库。">Start in any chat. No files or repository needed.</span></button>
+        <button class="input-path" type="button" role="tab" data-input="description"><strong data-en="Just describe it" data-zh="直接描述">直接描述</strong><span data-en="No existing source files or repository needed. Use your configured coding agent." data-zh="无需已有源文件或代码库，使用已配置好的 Coding Agent。">No existing source files or repository needed. Use your configured coding agent.</span></button>
         <button class="input-path" type="button" role="tab" data-input="repository"><strong data-en="Use a repository" data-zh="从代码库开始">Use a repository</strong><span data-en="Let the agent inspect code when source evidence matters." data-zh="需要源码证据时，再让 Agent 检查代码。">Let the agent inspect code when source evidence matters.</span></button>
       </div>
       <p class="question mermaid-guide-link"><a href="agent-diagrams.html#mermaid-input" data-en="Already have Mermaid? Learn how to use it as agent input →" data-zh="已有 Mermaid？了解怎样把它交给 Agent →">Already have Mermaid? Learn how to use it as agent input →</a></p>
@@ -52,6 +52,8 @@ const { lang = 'en' } = Astro.props;
         <div class="panel-kicker"><b>01</b><span data-en="Install the skill" data-zh="安装 Skill">Install the skill</span></div>
         <h2 data-en="Keep the tool local." data-zh="让工具留在本地。">Keep the tool local.</h2>
         <p class="panel-intro" data-en="Choose Cursor, Codex, Claude Code, OpenCode, or GitHub Copilot. The switcher gives each one the same checked Skill and zero-dependency renderers—no vendor-specific fork." data-zh="选择 Cursor、Codex、Claude Code、OpenCode 或 GitHub Copilot。切换器为每个 Agent 提供同一份经过检查的 Skill 与零依赖渲染器，不维护厂商专属分叉。">Choose Cursor, Codex, Claude Code, OpenCode, or GitHub Copilot. The switcher gives each one the same checked Skill and zero-dependency renderers—no vendor-specific fork.</p>
+
+        <p class="question setup-guide-link"><a href="agent-diagrams.html#setup" data-en="Check environment requirements and Claude Code / Codex CLI setup →" data-zh="查看环境要求与 Claude Code / Codex CLI 配置说明 →">Check environment requirements and Claude Code / Codex CLI setup →</a></p>
 
         <div class="agent-picker">
           <p class="agent-picker-head"><span data-en="Choose your coding agent" data-zh="选择你的编码 Agent">Choose your coding agent</span><strong id="agent-state">Codex · same Skill</strong></p>

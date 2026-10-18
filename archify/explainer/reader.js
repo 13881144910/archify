@@ -210,6 +210,39 @@
   all('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>{theme = button.dataset.themeChoice; applyTheme();}));
   preference.addEventListener?.('change',applyTheme);
   document.querySelector('[data-print]').addEventListener('click',()=>window.print());
+  // Long image: the page as laid out now, drawn through an SVG foreignObject at twice the pixel
+  // density. Controls, dialogs and walk-through bars are left out. Browsers that refuse to export a
+  // foreignObject canvas (Safari) get a notice pointing to Print / PDF.
+  async function pageImage() {
+    const shell = document.querySelector('.shell'), width = document.documentElement.clientWidth, height = Math.ceil(shell.getBoundingClientRect().height + 48);
+    const clone = root.cloneNode(true);
+    clone.querySelectorAll('script,dialog,#toast,.skip-link,.tools,.ask-button,.ask-floating,.walk-bar,.walk-start,.interactive,.diagram-fit-status').forEach(element=>element.remove());
+    clone.querySelectorAll('.reader-highlight').forEach(element=>element.classList.remove('reader-highlight'));
+    clone.querySelectorAll('.focusing').forEach(element=>element.classList.remove('focusing'));
+    clone.style.width = `${width}px`;
+    const xhtml = new XMLSerializer().serializeToString(clone);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><foreignObject x="0" y="0" width="${width}" height="${height}">${xhtml}</foreignObject></svg>`;
+    const image = new Image();
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    await image.decode();
+    const scale = Math.min(2,16000 / height), canvas = document.createElement('canvas');
+    canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
+    const context = canvas.getContext('2d');
+    context.fillStyle = getComputedStyle(document.body).backgroundColor; context.fillRect(0,0,canvas.width,canvas.height);
+    context.drawImage(image,0,0,canvas.width,canvas.height);
+    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob ? resolve(blob) : reject(new Error('empty')),'image/png'));
+  }
+  const imageButton = document.querySelector('[data-export-image]');
+  imageButton?.addEventListener('click',async()=>{
+    imageButton.disabled = true;
+    try {
+      const blob = await pageImage(), link = document.createElement('a');
+      link.href = URL.createObjectURL(blob); link.download = `${(document.querySelector('h1')?.textContent || 'explainer').trim().replace(/[\\/:*?"<>|]+/g,' ').slice(0,80)}.png`;
+      document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(link.href),4000);
+    } catch { notify(say('This browser cannot export the page as an image. Use Print / PDF instead.','当前浏览器无法导出长图，请用"打印 / PDF"。')); }
+    finally { imageButton.disabled = false; }
+  });
+  window.ArchifyExplainer = {pageImage};
   // Only the isolated srcdoc copy receives this bridge. The payload remains byte-for-byte native.
   const viewerDialog = byId('diagram-dialog');
   let viewer = null;

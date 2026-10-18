@@ -135,5 +135,7 @@ test('text names light their diagram nodes and walk-throughs step through steps 
   assert.match(result.copied,/Question: I do not follow this part/);
   assert.match(result.copied,/patch explainer/);
   assert.equal(result.open,false);
+  const image=await pageValue(browser,`window.ArchifyExplainer.pageImage().then(blob=>({type:blob.type,size:blob.size}))`);
+  assert.equal(image.type,'image/png');assert.ok(image.size>20000,'the long image carries the rendered page');
  }finally{await browser.close();}
 });

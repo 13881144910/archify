@@ -5,7 +5,7 @@
   const prepared = read('archify-explainer-prepared');
   const diagrams = prepared.preparedDiagrams.diagrams || prepared.preparedDiagrams;
   const words = read('explainer-reader-words');
-  const english = root.lang.startsWith('en');
+  const english = !root.lang.startsWith('zh');
   const say = (en,zh) => english ? en : zh;
   const byId = id => document.getElementById(id);
   const all = (selector, within = document) => [...within.querySelectorAll(selector)];

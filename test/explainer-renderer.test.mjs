@@ -150,6 +150,14 @@ test('renderer: over-limit metrics disclose the excess and limit-only metrics im
   assert.equal(text(all(find(tree,'capacity-only'),node=>attr(node,'class') === 'metric-value')[0]),'Limit 10requests');
 });
 
+test('renderer: only Chinese pages get Chinese controls; other languages fall back to English',()=>{
+  for (const [locale,expected] of [['es','Over limit by'],['ko','Over limit by'],['zh-TW','超限']]) {
+    const input = fixture(); input.meta.locale = locale;
+    input.panels[0].blocks = [{id:'overflow',type:'metric',label:'Requests',value:12,limit:10}];
+    assert.match(text(find(parse(renderExplainer(input)),'overflow')),new RegExp(expected),locale);
+  }
+});
+
 test('renderer: native diagram panels receive responsive space without changing the frozen native diagram',()=>{
   const input = fixture();
   input.panels.push({id:'text-only',title:'What stays in context?',blocks:[{id:'plain-only',type:'prose',text:'The narrative still provides the context.'}]});

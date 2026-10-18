@@ -79,7 +79,7 @@ A diagram replaces the paragraph that would describe it. When the answer involve
 | A change to code | `@diff` or a ```` ```diff ```` fence |
 | A command, config or code that does not exist yet | Plain fence |
 
-Steps that walk through a diagram belong in the diagram's panel: the page reads them beside it, each step lighting its part, and the reader can step through them.
+Steps that walk through a diagram belong in the diagram's panel: the page reads them beside it, each step lighting its part, and the reader can step through them. Title each step with the label of the node it points at, so the text and the diagram match at a glance; the detail column says what to do there.
 
 A small answer gets a small page: the conclusion plus one or two panels. A how-it-works, diagnosis or checklist question usually needs three to five.
 

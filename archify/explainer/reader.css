@@ -172,7 +172,6 @@ meter{width:100%;height:8px;accent-color:var(--accent)}
 .term:hover,.term.term-lit{background:var(--accent-soft);color:var(--accent-ink);text-decoration-color:var(--accent)}
 .walk-start{margin-bottom:10px;font-size:12px;color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--rule))}
 .walk-start[aria-pressed=true]{background:var(--accent-soft)}
-figcaption .walk-start{margin:0;border:0}
 .walk-bar{position:sticky;top:8px;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:6px 8px;border:1px solid var(--rule);border-radius:10px;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(6px);box-shadow:var(--shadow);font-size:12px}
 .walk-text{flex:1 1 220px;min-width:0;color:var(--ink);font-size:13px}
 .walk-text:empty{display:none}
@@ -208,7 +207,26 @@ figcaption .walk-start{margin:0;border:0}
 .diagram-preview [data-node-id].reader-highlight rect:not(.c-mask){stroke:var(--accent);stroke-width:2}
 .diagram-preview [data-edge-id].reader-highlight path{stroke:var(--accent)}
 .diagram-preview [data-edge-id].reader-highlight text{fill:var(--accent)}
-.diagram figcaption,.image figcaption,.code figcaption,.diff figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:10px;padding:0 4px}
+/* Steps beside the diagram they walk through, text on the left. The reader sets the diagram column
+   to the width its text needs; with less than 320px left for the steps, the diagram wraps above
+   them. The diagram stays in view while long steps scroll. */
+.diagram-panel .guided{flex-flow:row-reverse wrap;justify-content:center;align-items:flex-start;gap:16px 36px}
+.guided>.guide-figure{flex:1 0 var(--guide-figure,100%);max-width:min(100%,var(--guide-figure-max,100%));min-width:0;display:flex;flex-direction:column}
+.guided.beside>.guide-figure{position:sticky;top:12px}
+.guided>.guide-text{flex:1 1 320px;min-width:0}
+/* The diagram's header: its title, and the way into the interactive view. */
+.diagram>figcaption{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-height:28px;margin:0 0 10px;padding:0 2px;font-size:12px;color:var(--muted)}
+.diagram-title{font-size:12.5px;font-weight:500;color:var(--secondary)}
+.js .diagram-actions{display:flex!important;align-items:center;gap:10px;margin-left:auto}
+.explore-hint{font-size:11.5px;color:var(--faint)}
+.block-diagram{container-type:inline-size}
+@container (max-width:640px){.explore-hint{display:none!important}}
+.explore-button{height:28px;padding:0 10px;font-size:12.5px;line-height:1;color:var(--accent-ink);border-color:color-mix(in srgb,var(--accent) 32%,var(--rule))}
+.explore-button .tool-icon{width:14px;height:14px;color:var(--accent)}
+.explore-button:hover{background:var(--accent-soft);color:var(--accent-ink)}
+.diagram>figcaption .walk-start{margin:0}
+.js .diagram-preview [data-node-id]{cursor:pointer}
+.image figcaption,.code figcaption,.diff figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:10px;padding:0 4px}
 .js .diagram-semantics{display:none}
 .diagram-semantics{margin-top:8px;font-size:11px;color:var(--muted)}
 .diagram-semantics ul{padding-left:18px}

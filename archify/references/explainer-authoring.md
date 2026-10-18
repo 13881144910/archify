@@ -32,8 +32,6 @@ The browser and server must agree on keys before any request is sent: **one extr
 | browser | server | Finished + GET / | emphasis |
 | server | browser | 200 OK | return |
 
-## What does each message do? {#messages}
-
 @steps id=handshake-steps
 | hello | ClientHello | Offers cipher suites and a key share. | handshake-flow | browser |
 | reply | ServerHello | Picks a suite and sends its key share; the certificate follows encrypted. | handshake-flow | server |
@@ -80,6 +78,8 @@ A diagram replaces the paragraph that would describe it. When the answer involve
 | Code that exists in a repository | `@code` |
 | A change to code | `@diff` or a ```` ```diff ```` fence |
 | A command, config or code that does not exist yet | Plain fence |
+
+Steps that walk through a diagram belong in the diagram's panel: the page reads them beside it, each step lighting its part, and the reader can step through them.
 
 A small answer gets a small page: the conclusion plus one or two panels. A how-it-works, diagnosis or checklist question usually needs three to five.
 

@@ -135,6 +135,15 @@ test('text names light their diagram nodes and walk-throughs step through steps 
   assert.match(result.copied,/Question: I do not follow this part/);
   assert.match(result.copied,/patch explainer/);
   assert.equal(result.open,false);
+  const placement=`(function(){const guide=document.querySelector('#how .guided'),figure=guide.querySelector('.guide-figure').getBoundingClientRect(),text=guide.querySelector('.guide-text').getBoundingClientRect();return {beside:guide.classList.contains('beside'),right:figure.left>=text.right,above:figure.bottom<=text.top,fit:guide.querySelector('.diagram-preview').dataset.diagramFit};})()`;
+  assert.deepEqual(await pageValue(browser,placement),{beside:true,right:true,above:false,fit:'fit'},'steps read beside the diagram they walk through');
+  await browser.cdp.send('Emulation.setDeviceMetricsOverride',{width:600,height:900,deviceScaleFactor:1,mobile:false},await browser.sessionPromise);
+  await pageValue(browser,'new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+  assert.deepEqual(await pageValue(browser,placement),{beside:false,right:false,above:true,fit:'fit'},'without room for both, the diagram wraps above its steps');
+  await pageValue(browser,`document.querySelector('#native .diagram-preview [data-node-id="redis"]').dispatchEvent(new MouseEvent('click',{bubbles:true}))`);
+  let focused;for(let attempt=0;attempt<40;attempt++){focused=await inspectNativeViewer(browser);if(focused.available&&focused.nodes.includes('redis'))break;await new Promise(resolve=>setTimeout(resolve,50));}
+  assert.deepEqual(focused.nodes,['redis'],'a node clicked in the preview opens the interactive view focused on it');
+  await keyboardActivate(browser,'[data-close-diagram]');
   const style=await pageValue(browser,`(function(){const toggle=document.querySelector('[data-style-toggle]');toggle.click();const open=!document.querySelector('.style-options').hidden&&toggle.getAttribute('aria-expanded')==='true';document.querySelector('[data-style-choice=swiss]').click();return {open,closed:document.querySelector('.style-options').hidden,style:document.documentElement.dataset.style,label:document.querySelector('[data-style-label]').textContent,checked:document.querySelector('[data-style-choice=swiss]').getAttribute('aria-checked'),saved:localStorage.getItem('archify-explainer-style')};})()`);
   assert.deepEqual(style,{open:true,closed:true,style:'swiss',label:'Swiss',checked:'true',saved:'swiss'});
   const image=await pageValue(browser,`window.ArchifyExplainer.pageImage().then(blob=>({type:blob.type,size:blob.size}))`);

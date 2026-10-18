@@ -18,22 +18,31 @@
   const board = document.querySelector('.board');
   function layoutBoard() {
     const panels = all(':scope>.panel',board);
+    const floor = textFloor();
+    // A diagram needs enough width for its smallest label to reach the reading floor.
+    const readableWidth = svg => {
+      const viewWidth = svg.viewBox.baseVal?.width || svg.getBoundingClientRect().width;
+      const smallest = Math.min(...all('text',svg).filter(text=>text.textContent.trim() && !text.closest('[data-legend]')).map(text=>(parseFloat(text.getAttribute('font-size')) || parseFloat(getComputedStyle(text).fontSize)) / secondary(text)));
+      return Number.isFinite(smallest) && smallest > 0 ? viewWidth * floor / smallest : 0;
+    };
+    // Beside its steps, the diagram column is exactly that wide; without room for both, it wraps above them.
+    // It grows no wider than the preview draws the diagram, so spare width goes to the steps.
+    all('.guided').forEach(guide=>{
+      const preview = guide.querySelector('.diagram-preview'), need = Math.ceil(readableWidth(preview.querySelector('svg')) + 2);
+      guide.style.setProperty('--guide-figure',need + 'px');
+      guide.style.setProperty('--guide-figure-max',Math.max(need,Math.ceil(parseFloat(getComputedStyle(preview).getPropertyValue('--native-width')) * 1.25 || 0)) + 'px');
+    });
     const reset = () => { board.classList.remove('measured'); panels.forEach(panel=>{panel.style.gridColumn = '';panel.style.gridRow = '';}); };
     if (window.innerWidth <= 760 || panels.length < 2) { reset(); return; }
     const gap = parseFloat(getComputedStyle(board).columnGap) || 0;
     const column = (board.clientWidth - gap * 11) / 12;
     const px = span => span * column + (span - 1) * gap;
-    const floor = textFloor();
-    // A diagram needs enough width for its smallest label to reach the reading floor.
     const readableSpan = panel => {
       const svgs = all('.diagram-preview>svg',panel);
       if (!svgs.length) return 0;
-      const inset = panel.offsetWidth - panel.querySelector('.diagram-preview').clientWidth;
-      const need = Math.max(...svgs.map(svg=>{
-        const viewWidth = svg.viewBox.baseVal?.width || svg.getBoundingClientRect().width;
-        const smallest = Math.min(...all('text',svg).filter(text=>text.textContent.trim() && !text.closest('[data-legend]')).map(text=>(parseFloat(text.getAttribute('font-size')) || parseFloat(getComputedStyle(text).fontSize)) / secondary(text)));
-        return Number.isFinite(smallest) && smallest > 0 ? viewWidth * floor / smallest + inset : 0;
-      }));
+      const body = panel.querySelector('.panel-body'), style = getComputedStyle(body);
+      const inset = panel.offsetWidth - body.clientWidth + parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const need = Math.max(...svgs.map(svg=>readableWidth(svg) + inset));
       return [3,4,5,6,7,8,9,12].find(span=>px(span) >= need) || 12;
     };
     const SPANS = [4,5,6,7,8,12];
@@ -178,6 +187,8 @@
   }
   function ensureDiagramReadability() {
     const minimumText = textFloor();
+    // Only a diagram beside its steps stays in view; stacked above them, it would slide over them.
+    all('.guided').forEach(guide=>guide.classList.toggle('beside',guide.firstElementChild.getBoundingClientRect().left >= guide.lastElementChild.getBoundingClientRect().right));
     all('.diagram-preview>svg').forEach(svg=>{
       // Measure the current available width, rather than retaining a wider viewport's floor.
       svg.style.minWidth = '0px';
@@ -195,7 +206,7 @@
       preview.dataset.diagramMinimumText = String(minimumText);
       const status = svg.closest('.block-diagram').querySelector('.diagram-fit-status');
       status.hidden = !insufficient;
-      status.textContent = insufficient ? say('This diagram cannot fit this page width with readable text. Open the full diagram to inspect it.','此图无法在当前页宽内同时完整展示并保持文字清晰。请展开交互图查看。') : '';
+      status.textContent = insufficient ? say('This diagram cannot fit this page width with readable text. Open the interactive view to inspect it.','此图在当前页宽下放不下且文字会太小，请打开交互图查看。') : '';
     });
   }
   const preference = matchMedia('(prefers-color-scheme: dark)');
@@ -287,7 +298,7 @@
     const selectedEdges = (diagram.semantic?.edges || []).filter(edge=>requestedEdges.includes(edge.id));
     const requestedNodes = [...new Set(hash.startsWith('focus=') ? [decodeURIComponent(hash.slice(6))] : hash.startsWith('route=') ? hash.slice(6).split('~').map(decodeURIComponent) : selectedEdges.flatMap(edge=>[edge.from,edge.to]))];
     viewerOpener = opener;
-    byId('diagram-dialog-title').textContent = byId(id).querySelector('figcaption span').textContent;
+    byId('diagram-dialog-title').textContent = byId(id).querySelector('.diagram-title').textContent;
     viewerDialog.showModal(); document.body.classList.add('dialog-open');
     if(viewer?.id === id) { viewer.hash = hash; viewer.nodes = requestedNodes; viewer.edges = requestedEdges; sendViewer(); return; }
     viewer?.frame.remove();
@@ -348,6 +359,11 @@
   viewerDialog.addEventListener('close',()=>{ document.body.classList.remove('dialog-open'); viewerOpener?.focus({preventScroll:true}); });
   window.addEventListener('message',event=>{ if(!viewer || event.source !== viewer.frame.contentWindow || event.data?.token !== viewer.token) return; if(event.data.kind === 'archify-explainer-ready') {viewer.ready = true; viewerDialog.dataset.nativeReady = 'true'; viewerDialog.querySelector('.dialog-loading').hidden = true; sendViewer();} else if(event.data.kind === 'archify-explainer-focus-result') {viewerDialog.dataset.nativeFocus = JSON.stringify({nodes:event.data.nodes,edges:event.data.edges,active:event.data.active});} else if(event.data.kind === 'archify-explainer-escape') closeViewer(); });
   all('[data-open-diagram]').forEach(button=>button.addEventListener('click',()=>openViewer(button.dataset.openDiagram,'',button)));
+  // A node clicked in the preview opens the interactive view focused on it, with its links.
+  all('.diagram-preview').forEach(preview=>preview.addEventListener('click',event=>{
+    const node = event.target.closest('[data-node-id]')?.dataset.nodeId, block = preview.closest('.block');
+    if (node) openViewer(block.id,`focus=${encodeURIComponent(node)}`,block.querySelector('[data-open-diagram]'));
+  }));
   // One spotlight for every text-to-diagram link: the named nodes and edges stay lit, the rest dims.
   const previewOf = id => byId(id)?.querySelector('.diagram-preview');
   function spotlight(preview, nodes = [], edges = []) {
@@ -449,8 +465,8 @@
       if (diagrams[block.id]?.diagramType !== 'sequence') return;
       const preview = block.querySelector('.diagram-preview'), messages = all('[data-edge-id]',preview);
       if (messages.length < 2) return;
-      const button = document.createElement('button'); button.type = 'button'; button.className = 'text-button walk-start'; button.textContent = `▶ ${words.walkMessages}`; button.setAttribute('aria-pressed','false');
-      block.querySelector('figcaption button')?.before(button);
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'walk-start'; button.textContent = `▶ ${words.walkMessages}`; button.setAttribute('aria-pressed','false');
+      block.querySelector('.diagram-title')?.after(button);
       const label = id => preview.querySelector(`[data-node-id="${CSS.escape(id)}"]`)?.dataset.nodeLabel || id;
       button.addEventListener('click',()=>walk(button,messages,index=>{
         if (index < 0) { spotlight(preview); return; }

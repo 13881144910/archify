@@ -174,3 +174,8 @@ test('a source cell ties a shorthand node to a declared source without entering 
   const missing=validateExplainer(parse('# T\n\nA.\n\n## Q {#q}\n\n@architecture id=map\n| api | API | backend | source:nope |\n| db | DB | database |\n| api > db | reads |').document);
   assert.equal(missing.ok,false);
 });
+
+test('an authored page style is kept and limited to the shipped styles',()=>{
+  assert.equal(parse('# T\n\nA.\n\n@meta style=editorial\n\n## Q {#q}\n\nText.').document.meta.style,'editorial');
+  assert.equal(validateExplainer(parse('# T\n\nA.\n\n@meta style=neon\n\n## Q {#q}\n\nText.').document).ok,false);
+});

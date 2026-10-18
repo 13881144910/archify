@@ -42,6 +42,14 @@
         "quality_profile": {
           "$ref": "common.schema.json#/$defs/qualityProfile"
         },
+        "style": {
+          "enum": [
+            "clean",
+            "editorial",
+            "product",
+            "swiss"
+          ]
+        },
         "repository": {
           "$ref": "common.schema.json#/$defs/repository"
         }

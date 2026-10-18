@@ -210,6 +210,10 @@
   all('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>{theme = button.dataset.themeChoice; applyTheme();}));
   preference.addEventListener?.('change',applyTheme);
   document.querySelector('[data-print]').addEventListener('click',()=>window.print());
+  // The author picks a default style; a reader's own choice is kept for every explainer page.
+  const styleChoice = document.querySelector('[data-style-choice]');
+  try { const saved = localStorage.getItem('archify-explainer-style'); if (saved && [...styleChoice.options].some(option=>option.value === saved)) { root.dataset.style = saved; styleChoice.value = saved; } } catch {}
+  styleChoice?.addEventListener('change',()=>{ root.dataset.style = styleChoice.value; try { localStorage.setItem('archify-explainer-style',styleChoice.value); } catch {} requestAnimationFrame(()=>{ layoutBoard(); ensureDiagramReadability(); }); });
   // Long image: the page as laid out now, drawn through an SVG foreignObject at twice the pixel
   // density. Controls, dialogs and walk-through bars are left out. Browsers that refuse to export a
   // foreignObject canvas (Safari) get a notice pointing to Print / PDF.

@@ -223,3 +223,10 @@ test('explainer diagrams: a linear workflow too wide for one row wraps into rows
   assert.equal(short.nodes[0].icon, 'decision');
   assert.equal(short.nodes[1].icon, undefined);
 });
+
+test('explainer diagrams: a single upstream architecture node is centred against the column it feeds', () => {
+  const spec = compileExplainerDiagram('architecture', ['api | API | frontend', 'a | A', 'b | B', 'c | C', 'api > a', 'api > b', 'api > c'], { id: 'fan' });
+  const row = id => spec.components.find(node => node.id === id).row;
+  assert.deepEqual([row('a'), row('b'), row('c')], [0, 1, 2]);
+  assert.equal(row('api'), 1);
+});

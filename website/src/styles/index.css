@@ -238,11 +238,13 @@
     .types-index { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:4rem; align-items:start; }
     .types-list { list-style:none; border-top:1px solid var(--line-hi); }
     .type-item { border-bottom:1px solid var(--line-hi); }
-    .type-item button { width:100%; display:flex; align-items:baseline; gap:1.25rem; padding:1.35rem 0; border:0; background:none; color:var(--text-3); text-align:left; cursor:pointer; transition:color .3s var(--ease-out); }
+    .type-group { padding:1.6rem 0 .6rem; border-bottom:1px solid var(--line-hi); font-family:var(--font-mono); font-size:.625rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--text-3); }
+    .type-group:first-child { padding-top:.9rem; }
+    .type-item button { width:100%; display:flex; align-items:baseline; gap:1.25rem; padding:.95rem 0; border:0; background:none; color:var(--text-3); text-align:left; cursor:pointer; transition:color .3s var(--ease-out); }
     .type-item button:hover, .type-item.is-active button { color:var(--text); }
     .type-no { font-family:var(--font-mono); font-size:.6875rem; letter-spacing:.1em; transition:color .3s var(--ease-out); }
     .type-item.is-active .type-no { color:var(--accent-text); }
-    .type-name { display:flex; flex-direction:column; gap:.4rem; font-family:var(--font-grot); font-size:clamp(1.5rem,2.4vw,2.15rem); font-weight:500; letter-spacing:-.03em; line-height:1.1; text-wrap:balance; }
+    .type-name { display:flex; flex-direction:column; gap:.3rem; font-family:var(--font-grot); font-size:clamp(1.25rem,1.9vw,1.7rem); font-weight:500; letter-spacing:-.03em; line-height:1.1; text-wrap:balance; }
     .type-kind { font-family:var(--font-mono); font-size:.6875rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); }
     .type-item.is-active .type-kind { color:var(--accent-text); }
     .type-detail { display:grid; grid-template-rows:0fr; transition:grid-template-rows .45s var(--ease-out); }
@@ -263,6 +265,57 @@
     .type-more-sub { grid-column:1; font-size:.75rem; color:var(--text-3); }
     .type-more-arrow { grid-column:2; grid-row:1 / 3; width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid var(--line-hi); transition:background .25s var(--ease-out),border-color .25s var(--ease-out),transform .25s var(--ease-out); }
     .type-more:hover .type-more-arrow { background:var(--accent); border-color:var(--accent); transform:rotate(45deg); }
+
+    /* ══════════════════════════════════════
+       TRUST — four gates beside a replayed finalize run.
+       Everything is visible by default; the script arms the replay (.is-armed) only while the
+       section is still below the fold, then plays it once (.is-run) on arrival.
+    ══════════════════════════════════════ */
+    #trust { padding:8rem 0 0; }
+    .trust-layout { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:3.5rem; align-items:start; }
+    .gates { position:relative; list-style:none; display:flex; flex-direction:column; }
+    .gates::before { content:''; position:absolute; left:19px; top:28px; bottom:28px; width:1px; background:var(--line-hi); }
+    .gates::after { content:''; position:absolute; left:19px; top:28px; width:1px; height:calc(100% - 56px); background:linear-gradient(var(--accent),var(--signal)); transform-origin:top; box-shadow:0 0 12px rgba(var(--accent-rgb),.6); }
+    .gate { position:relative; display:grid; grid-template-columns:40px minmax(0,1fr) auto; gap:1rem; align-items:start; padding:1.15rem 0; }
+    .gate-no { position:relative; z-index:1; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid var(--line-hi); background:var(--bg); font-family:var(--font-mono); font-size:.6875rem; color:var(--accent-text); transition:border-color .4s var(--ease-out),box-shadow .4s var(--ease-out); }
+    .gate h3 { display:flex; flex-wrap:wrap; align-items:baseline; gap:.3rem .65rem; margin:.45rem 0 .4rem; font-family:var(--font-grot); font-size:1.125rem; font-weight:500; letter-spacing:-.015em; color:var(--text); }
+    .gate h3 code { padding:.12rem .45rem; border-radius:6px; background:rgba(var(--fg-rgb),.07); font-family:var(--font-mono); font-size:.75rem; font-weight:500; color:var(--accent-text); }
+    .gate p { font-size:.875rem; line-height:1.65; color:var(--text-2); text-wrap:pretty; }
+    .gate-pass { margin-top:.55rem; padding:.2rem .5rem; border-radius:6px; border:1px solid rgba(var(--signal-rgb),.45); background:rgba(var(--signal-rgb),.1); font-family:var(--font-mono); font-size:.5625rem; font-weight:600; letter-spacing:.14em; color:var(--signal-text); }
+    .run { position:sticky; top:calc(var(--nav-h) + 2rem); border-radius:16px; overflow:hidden; border:1px solid var(--line-hi); background:var(--surface); box-shadow:0 40px 100px -40px rgba(var(--accent-rgb),.3); }
+    .run-bar { display:flex; align-items:center; gap:1rem; height:44px; padding:0 1rem; border-bottom:1px solid var(--line); }
+    .run-title { font-family:var(--font-mono); font-size:.6875rem; letter-spacing:.06em; color:var(--text-3); }
+    .run-body { padding:1.25rem 1.4rem 1.1rem; font-family:var(--font-mono); font-size:.78rem; line-height:1.9; color:var(--text-2); overflow-wrap:anywhere; }
+    .t-cmd { color:var(--text); } .t-cmd > span { color:var(--accent-text); }
+    .t-ok { color:var(--signal-text); font-weight:600; }
+    .t-line b { font-weight:500; color:var(--signal-text); }
+    .receipt-sum { padding:1rem 1.4rem 1.4rem; border-top:1px dashed var(--line-hi); background:rgba(var(--fg-rgb),.02); }
+    .sum-head { margin-bottom:.75rem; font-family:var(--font-mono); font-size:.5625rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--text-3); }
+    .sum-row { display:grid; grid-template-columns:72px minmax(0,1fr); gap:1rem; padding:.5rem 0; border-top:1px solid var(--line); }
+    .sum-row:first-of-type { border-top:0; }
+    .sum-k { font-family:var(--font-mono); font-size:.6875rem; color:var(--text-3); padding-top:.2rem; }
+    .sum-v { display:flex; flex-wrap:wrap; align-items:center; gap:.45rem .6rem; font-size:.75rem; color:var(--text-2); }
+    .sum-v > b { font-family:var(--font-grot); font-size:1.125rem; font-weight:500; color:var(--text); }
+    .sum-v code { font-family:var(--font-mono); font-size:.75rem; color:var(--text); }
+    .sum-v small { width:100%; font-family:var(--font-mono); font-size:.6875rem; color:var(--text-3); }
+    .chips { display:flex; flex-wrap:wrap; gap:.35rem; }
+    .chips i { font-style:normal; padding:.15rem .45rem; border-radius:6px; border:1px solid var(--line); background:var(--bg-2); font-family:var(--font-mono); font-size:.625rem; color:var(--text-2); }
+    .chips i::before { content:'✓ '; color:var(--signal-text); }
+    /* the replay */
+    .trust-layout.is-armed .t-line, .trust-layout.is-armed .chips i, .trust-layout.is-armed .gate-pass { opacity:0; }
+    .trust-layout.is-armed .gates::after { transform:scaleY(0); }
+    .trust-layout.is-run .t-line, .trust-layout.is-run .chips i { animation:runIn .45s var(--ease-out) var(--d,0s) both; }
+    .trust-layout.is-run .gate-pass { animation:passIn .5s cubic-bezier(.3,1.6,.5,1) var(--d,0s) both; }
+    .trust-layout.is-run .gate-no { animation:gateLit .8s var(--ease-out) var(--d,0s) both; }
+    @media(min-width:901px) { .trust-layout.is-run .t-cmd { animation:typeIn 1.3s steps(48,end) .1s both; } }
+    .trust-layout.is-run .gates::after { animation:gateLine 2.4s cubic-bezier(.5,0,.3,1) 1.3s both; }
+    @keyframes runIn { from { opacity:0; transform:translateY(4px); } }
+    @keyframes passIn { from { opacity:0; transform:scale(.6); } }
+    @keyframes gateLit { 40% { border-color:var(--accent); box-shadow:0 0 0 6px rgba(var(--accent-rgb),.16); } to { border-color:rgba(var(--accent-rgb),.6); } }
+    @keyframes typeIn { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
+    @keyframes gateLine { from { transform:scaleY(0); } }
+    @media(max-width:900px) { .trust-layout { grid-template-columns:1fr; gap:2rem; } .run { position:relative; top:auto; } }
+    .feature p code { font-family:var(--font-mono); font-size:.85em; padding:.05em .35em; border-radius:5px; background:rgba(var(--fg-rgb),.07); }
 
     /* ══════════════════════════════════════
        FEATURES — compare centerpiece + hairline grid

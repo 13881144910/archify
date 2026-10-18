@@ -378,6 +378,31 @@
   fitPage();
   applyScroll();
 
+  /* ══ Arrival effects: the finalize replay and the counting stats. Each arms only while its
+     section is still below the fold, so nothing a reader already sees is hidden. ══ */
+  function onArrival(element, arm, play) {
+    if (!element || reducedMotion.matches || !('IntersectionObserver' in window) || element.getBoundingClientRect().top < innerHeight) return;
+    arm();
+    const seen = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      seen.disconnect();
+      play();
+    }, { threshold: .3 });
+    seen.observe(element);
+  }
+  const trustRun = $('trust-run');
+  onArrival(trustRun, () => trustRun.classList.add('is-armed'), () => trustRun.classList.replace('is-armed', 'is-run'));
+  const counters = [...document.querySelectorAll('.receipt b')];
+  onArrival(document.querySelector('.receipts'), () => counters.forEach(b => { b.dataset.final = b.textContent; }), () => {
+    const start = performance.now();
+    const frame = now => {
+      const t = Math.min(1, (now - start) / 1100), ease = 1 - Math.pow(1 - t, 3);
+      counters.forEach(b => { b.textContent = b.dataset.final.replace(/\d+/g, n => String(Math.round(+n * ease))); });
+      if (t < 1) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+
   /* ══ Hero pointer spotlight — fine pointers only, never under reduced motion ══ */
   const hero = document.querySelector('.hero');
   if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reducedMotion.matches) {

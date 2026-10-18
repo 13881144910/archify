@@ -220,8 +220,9 @@ export function parseExplainer(sourceText, { inputPath, output } = {}) {
       }
     }
     function assessment(text) {
-      const match = text.match(/^(.*?)\s*\{(good|caution|bad)(?::([^}]+))?\}$/u);
-      return match?{text:match[1].trim(),assessment:match[2],...(match[3]?{verdict:match[3].trim()}:{})}:{text};
+      // Citations may follow the assessment; they stay with the cell text.
+      const match = text.match(/^(.*?)\s*\{(good|caution|bad)(?::([^}]+))?\}((?:\s*\[[^\]]*\]\([^)\s]*\))*)\s*$/u);
+      return match?{text:`${match[1].trim()}${match[4].trim()}`,assessment:match[2],...(match[3]?{verdict:match[3].trim()}:{})}:{text};
     }
     while(cursor<lines.length) {
       const at=cursor, trimmed=lines[at].trim();

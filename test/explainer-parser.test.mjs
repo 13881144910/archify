@@ -157,3 +157,11 @@ test('a callout may take the following paragraph and may share its panel ID with
   assert.equal(callout.text,'Do not pay before checking the deed.\nAsk for the owner ID.');
   assert.equal(parseExplainer('# T\n\nA.\n\n## Q {#flow}\n\n@sequence id=flow\n| a | b | hi |').document,null,'a diagram keeps its ID, so a clash with its panel still fails');
 });
+
+test('a comparison assessment may be followed by a citation',()=>{
+  const {document}=parse('# T\n\nA.\n\n@source law title="Civil code" url=https://example.com/law\n\n## Q {#q}\n\n| Who | Risk |\n| --- | --- |\n| Sublet | Can be ended {bad:Lose both} [](source:law) |');
+  const cell=document.panels[0].blocks[0].rows[0].cells[0];
+  assert.equal(cell.assessment,'bad');
+  assert.equal(cell.verdict,'Lose both');
+  assert.equal(cell.text,'Can be ended[](source:law)');
+});

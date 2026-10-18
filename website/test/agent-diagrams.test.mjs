@@ -163,3 +163,35 @@ test('Mermaid guidance preserves the literal example, explains semantic reauthor
     assert.deepEqual(entryNodes.filter(node => attr(node, 'data-input')).map(node => attr(node, 'data-input')), ['description', 'repository'], 'Mermaid help does not introduce a new input mode');
   }
 });
+
+
+test('setup answers are readable without scripts and distinguish prerequisites from optional source code', () => {
+  const origin = cloudflare ? 'https://archify.si/' : 'https://tt-a1i.github.io/archify/';
+  for (const lang of ['en', 'zh']) {
+    const prefix = lang === 'zh' ? 'zh/' : '';
+    const page = nodes(parse(fs.readFileSync(new URL(`${prefix}agent-diagrams.html`, output), 'utf8')));
+    const article = page.find(node => node.tagName === 'article');
+    const visible = text(article);
+    assert.match(visible, lang === 'en' ? /read and write files and execute commands with Node.js/ : /读写文件、通过 Node.js 执行命令/);
+    assert.match(visible, lang === 'en' ? /without existing source code/ : /不必已有源码/);
+    assert.match(visible, lang === 'en' ? /Claude.ai depends on Node.js access/ : /Claude.ai 取决于沙箱是否能使用 Node.js/);
+    assert.match(visible, lang === 'en' ? /prompt-driven fallback/ : /提示词驱动的回退方式/);
+    const base = new URL(attr(page.find(node => node.tagName === 'base'), 'href'), origin + `${prefix}agent-diagrams.html`);
+    for (const [agent, directory] of [['claude-code', '.claude'], ['codex', '.agents']]) {
+      assert.equal(page.filter(node => attr(node, 'id') === `setup-${agent}`).length, 1);
+      const command = `npx -y skills add tt-a1i/archify --skill archify --agent ${agent} --global --copy --yes`;
+      assert.ok(nodes(article).some(node => node.tagName === 'pre' && text(node).trim() === command), `${agent}: exact existing Start command is visible in SSR`);
+      for (const location of [`~/${directory}/skills/`, `${directory}/skills/`]) assert.ok(visible.includes(location));
+      const link = nodes(article).find(node => node.tagName === 'a' && attr(node, 'href')?.includes(`agent=${agent}#install`));
+      assert.equal(new URL(attr(link, 'href'), base).href, origin + `${prefix}start${cloudflare ? '' : '.html'}?agent=${agent}#install`);
+    }
+    const start = nodes(parse(fs.readFileSync(new URL(`${prefix}start.html`, output), 'utf8')));
+    const lead = start.find(node => attr(node, 'class') === 'lead');
+    assert.match(text(lead), /Node.js/);
+    assert.doesNotMatch(text(start.find(node => node.tagName === 'main')), /normal agent chat|Start in any chat|No files or repository needed|任意.*对话|不需要文件或代码库/);
+    const help = start.find(node => attr(node, 'class') === 'question setup-guide-link');
+    const helpLink = nodes(help).find(node => node.tagName === 'a');
+    assert.match(text(helpLink), lang === 'en' ? /environment requirements/ : /环境要求/);
+    assert.equal(new URL(attr(helpLink, 'href'), base).href, origin + `${prefix}agent-diagrams${cloudflare ? '' : '.html'}#setup`);
+  }
+});

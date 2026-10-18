@@ -119,6 +119,7 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
         // silently cropped or squeezed into an unreadable full-page thumbnail.
         for (const [region, startId, endId] of [
           ['opening', null, 'responsibilities'],
+          ['setup', 'setup', 'description-workflow'],
           ['description-workflow', 'description-workflow', 'mermaid-input'],
           ['mermaid-input', 'mermaid-input', 'cache-scenarios'],
           ['cache-example', 'cache-scenarios', 'repository-evidence'],
@@ -150,6 +151,19 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
         assert.equal(reading.width, width);
         assert.ok(reading.pageWidth <= width + 1, 'no horizontal page overflow');
         assert.deepEqual(reading.failures, [], 'all article text remains visible and unclipped');
+      }
+      // Follow each static setup answer into the existing interactive installer.
+      for (const agent of ['claude-code', 'codex']) {
+        await loadedAction(() => evaluate(`document.querySelector('.article-body a[href*="agent=${agent}#install"]').click()`));
+        assert.equal(await evaluate('location.pathname'), new URL(urlFor('start', lang)).pathname);
+        assert.equal(await evaluate('location.hash'), '#install');
+        assert.equal(await evaluate(`document.querySelector('[data-agent="${agent}"]').getAttribute('aria-selected')`), 'true');
+        assert.equal(await evaluate('document.getElementById("install-command").textContent.trim()'), `npx -y skills add tt-a1i/archify --skill archify --agent ${agent} --global --copy --yes`);
+        assert.equal(await evaluate('document.getElementById("project-command").textContent.trim()'), `npx -y skills add tt-a1i/archify --skill archify --agent ${agent} --copy --yes`);
+        await loadedAction(() => evaluate(`document.querySelector('.setup-guide-link a').click()`));
+        assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
+        assert.equal(await evaluate('location.hash'), '#setup');
+        await assertSectionVisible();
       }
       // Exercise real authored links, including section and locale continuity.
       await evaluate(`document.querySelector('.article-toc a[href$="#cache-scenarios"]').click()`);
@@ -189,23 +203,32 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
       assert.equal(await evaluate(`document.querySelector('[data-input="description"]').getAttribute('aria-selected')`), 'true');
       for (const theme of ['light', 'dark']) {
         await evaluate(`if (document.documentElement.dataset.theme !== ${JSON.stringify(theme)}) document.querySelector('[data-theme-toggle]').click()`);
-        await evaluate(`document.querySelector('.mermaid-guide-link').scrollIntoView({ block: 'center', behavior: 'instant' })`);
+        await evaluate(`scrollTo({ top: 0, behavior: 'instant' })`);
         await settled();
-        const help = await evaluate(`(() => {
-          const link = document.querySelector('.mermaid-guide-link a'), style = getComputedStyle(link);
-          const range = document.createRange(); range.selectNodeContents(link);
-          const rects = [...range.getClientRects()];
-          return { theme: document.documentElement.dataset.theme, pageWidth: document.documentElement.scrollWidth, visible: style.visibility === 'visible' && style.display !== 'none', rects: rects.map(({ left, right, top, bottom }) => ({ left, right, top, bottom })), navBottom: document.querySelector('.site-nav').getBoundingClientRect().bottom };
-        })()`);
-        assert.equal(help.theme, theme);
-        assert.ok(help.visible && help.rects.length > 0, 'Start help is visible');
-        assert.ok(help.pageWidth <= width + 1, 'Start has no horizontal page overflow');
-        assert.ok(help.rects.every(box => box.left >= 0 && box.right <= width && box.top >= help.navBottom && box.bottom <= 1000), 'the complete Start help link is readable below navigation');
-        const name = `agent-diagrams-${lang}-${width}-${theme}-start-help.png`;
-        const image = await browser.cdp.send('Page.captureScreenshot', { format: 'png' }, session);
-        fs.writeFileSync(path.join(output, name), Buffer.from(image.data, 'base64'));
-        manifest.screenshots.push({ file: name, width, height: 1000, lang, theme, region: 'start-help', reading: help });
+        const leadName = `agent-diagrams-${lang}-${width}-${theme}-start-prerequisites.png`;
+        const leadImage = await browser.cdp.send('Page.captureScreenshot', { format: 'png' }, session);
+        fs.writeFileSync(path.join(output, leadName), Buffer.from(leadImage.data, 'base64'));
+        manifest.screenshots.push({ file: leadName, width, height: 1000, lang, theme, region: 'start-prerequisites' });
         saveManifest();
+        for (const region of ['mermaid', 'setup']) {
+          await evaluate(`document.querySelector('.${region}-guide-link').scrollIntoView({ block: 'center', behavior: 'instant' })`);
+          await settled();
+          const help = await evaluate(`(() => {
+            const link = document.querySelector('.${region}-guide-link a'), style = getComputedStyle(link);
+            const range = document.createRange(); range.selectNodeContents(link);
+            const rects = [...range.getClientRects()];
+            return { theme: document.documentElement.dataset.theme, pageWidth: document.documentElement.scrollWidth, visible: style.visibility === 'visible' && style.display !== 'none', rects: rects.map(({ left, right, top, bottom }) => ({ left, right, top, bottom })), navBottom: document.querySelector('.site-nav').getBoundingClientRect().bottom };
+          })()`);
+          assert.equal(help.theme, theme);
+          assert.ok(help.visible && help.rects.length > 0, 'Start help is visible');
+          assert.ok(help.pageWidth <= width + 1, 'Start has no horizontal page overflow');
+          assert.ok(help.rects.every(box => box.left >= 0 && box.right <= width && box.top >= help.navBottom && box.bottom <= 1000), 'the complete Start help link is readable below navigation');
+          const name = `agent-diagrams-${lang}-${width}-${theme}-start-${region}-help.png`;
+          const image = await browser.cdp.send('Page.captureScreenshot', { format: 'png' }, session);
+          fs.writeFileSync(path.join(output, name), Buffer.from(image.data, 'base64'));
+          manifest.screenshots.push({ file: name, width, height: 1000, lang, theme, region: `start-${region}-help`, reading: help });
+          saveManifest();
+        }
       }
       await loadedAction(() => evaluate(`document.querySelector('.mermaid-guide-link a').click()`));
       assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
@@ -223,7 +246,7 @@ test('real Chrome: agent guide stays readable and navigable in both languages, t
       await navigate(urlFor('guide', lang));
       await loadedAction(() => evaluate(`document.querySelector('.agent-guide-link a').click()`));
       assert.equal(await evaluate('location.pathname'), new URL(urlFor('agent-diagrams', lang)).pathname);
-      manifest.navigation.push({ width, lang, result: 'passed', tocPosition, localePosition, workflowPosition, workflowLocalePosition, mermaidPosition, mermaidLocalePosition, mermaidStartPosition, paths: ['toc', 'language with fragment', 'workflow section and locale', 'Mermaid section and locale', 'workflow description quick start', 'Start Mermaid help', 'existing leave artifact', 'article to start', 'start to article', 'guide to article'] });
+      manifest.navigation.push({ width, lang, result: 'passed', tocPosition, localePosition, workflowPosition, workflowLocalePosition, mermaidPosition, mermaidLocalePosition, mermaidStartPosition, paths: ['Claude Code setup to selected installer', 'Codex setup to selected installer', 'Start prerequisites back to setup', 'toc', 'language with fragment', 'workflow section and locale', 'Mermaid section and locale', 'workflow description quick start', 'Start Mermaid help', 'existing leave artifact', 'article to start', 'start to article', 'guide to article'] });
       saveManifest();
     }
   } finally {

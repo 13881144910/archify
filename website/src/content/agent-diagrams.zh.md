@@ -20,11 +20,35 @@ Archify 根据源文件生成 HTML，并执行对应的渲染与校验。你可�
 
 ## 先配置你实际使用的 Agent
 
-打开[快速开始](start.html)，选择自己的 Agent，再按需要选择项目级或全局安装。使用页面给出的对应命令，不要套用其他 Agent 的安装目录。
+打开[快速开始](start.html)，选择自己的 Agent，再按需要选择项目级或全局安装。下面展示的是 Start 中相同的全局复制安装命令，不是在普通网页聊天框里执行的命令。
 
-[安装说明](https://github.com/tt-a1i/archify/blob/main/README.md#installation-options)列出了不同使用入口及限制。完整渲染流程需要文件访问和 Node.js 等环境能力，具体要求因集成方式而异。能与模型聊天，不等于当前环境能执行完整工作流。
+### Archify 需要什么运行环境？
 
-安装说明也不表示所有 Agent 版本组合都已验证。如果失败，先记录 Agent 及版本、操作系统和完整错误，再判断问题出在配置还是图表本身。
+使用能够读写文件、通过 Node.js 执行命令的 Coding Agent 环境。“不需要代码库”是指可以只提供自然语言描述，不必已有源码；Agent 仍需工作目录来写入 JSON、HTML，并执行渲染和校验。查看生成的 HTML 则只需要浏览器。
+
+[安装说明](https://github.com/tt-a1i/archify/blob/main/README.md#installation-options)区分了这些入口：Claude Code 和 Codex CLI 支持完整渲染与校验流程；Claude.ai 取决于沙箱是否能使用 Node.js；向 Project Knowledge 上传 ZIP 是提示词驱动的回退方式，不等于具备相同执行环境。其他集成方式有各自的要求。
+
+<span id="setup-claude-code" class="section-anchor" aria-hidden="true"></span>
+
+### 为 Claude Code 安装 Archify
+
+如果选择全局复制安装，在运行 Claude Code 的环境终端中执行：
+
+<pre><code>npx -y skills add tt-a1i/archify --skill archify --agent claude-code --global --copy --yes</code></pre>
+
+Claude Code 的全局 Skill 目录是 `~/.claude/skills/`，项目目录是 `.claude/skills/`。如果只想在当前项目使用，打开 [Start 的 Claude Code 选项](start.html?agent=claude-code#install)，在目标项目目录中使用“仅安装到当前仓库”的命令。
+
+<span id="setup-codex" class="section-anchor" aria-hidden="true"></span>
+
+### 为 Codex CLI 安装 Archify
+
+如果选择全局复制安装，在运行 Codex CLI 的环境终端中执行：
+
+<pre><code>npx -y skills add tt-a1i/archify --skill archify --agent codex --global --copy --yes</code></pre>
+
+Codex CLI 的全局 Skill 目录是 `~/.agents/skills/`，项目目录是 `.agents/skills/`。如果只想在当前项目使用，打开 [Start 的 Codex 选项](start.html?agent=codex#install)，在目标项目目录中使用“仅安装到当前仓库”的命令。
+
+安装完成后，使用 Start 中的文字描述或代码库提示词。安装说明不表示所有 Agent 版本组合都已验证。如果失败，先记录 Agent 及版本、操作系统和完整错误，再判断问题出在配置还是图表本身。
 
 <span id="description-workflow" class="section-anchor" aria-hidden="true"></span>
 

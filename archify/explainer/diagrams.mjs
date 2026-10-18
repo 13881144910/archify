@@ -203,8 +203,18 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
       const cols = Math.max(1, ...placed.map(node => node.col + 1));
       if (cols > 12) fail(context, 'diagram-shorthand-limit', 'This architecture needs more than twelve native grid columns.', 'Use native JSON with explicit component positions.');
       const fitWidth = node => Math.ceil(textUnits(node.label) * 6.6 + 16);
+      // Order each column by where its upstream nodes sit, then centre it against the tallest column,
+      // so a hub sits between the nodes it connects instead of on the first row.
+      const height = Math.max(...Array.from({ length: cols }, (_, col) => placed.filter(node => node.col === col).length));
+      const rowOf = new Map();
+      for (let col = 0; col < cols; col++) {
+        const column = placed.filter(node => node.col === col);
+        const upstream = node => { const rows = edges.filter(edge => edge.to === node.id && rowOf.has(edge.from)).map(edge => rowOf.get(edge.from)); return rows.length ? rows.reduce((sum, row) => sum + row, 0) / rows.length : node.row; };
+        column.sort((a, b) => upstream(a) - upstream(b) || a.row - b.row)
+          .forEach((node, i) => rowOf.set(node.id, Math.floor((height - column.length) / 2) + i));
+      }
       spec.layout = { mode: 'grid', cols, cellW: Math.max(176, ...placed.map(fitWidth)), cellH: 76, gapX: 100, gapY: 110 };
-      spec.components = placed.map(node => fitWidth(node) > 120 ? { ...node, size: [fitWidth(node), 60] } : node);
+      spec.components = placed.map(node => ({ ...node, row: rowOf.get(node.id), ...(fitWidth(node) > 120 ? { size: [fitWidth(node), 60] } : {}) }));
       spec.connections = edges;
     } else if (lanes.size) {
       for (const [id, { lane, context: ctx }] of nodeLanes) if (!lanes.has(lane)) fail(ctx, 'diagram-lane', `Node ${id} names an undeclared lane.`, 'lane locate | Locate the cause');

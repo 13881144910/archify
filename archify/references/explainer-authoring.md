@@ -200,6 +200,8 @@ xychart-beta
 ```
 ````
 
+Bars show their values, and a pie legend shows each value with its share. Use `xychart-beta horizontal` for ranked items or long category names. Put the contrast the reader must see in one chart, such as P50 beside P99.
+
 Chart only numbers the reader can trust: values from the user, a source or a measurement. Mark illustrative values in scope. Quote every label that contains spaces or non-ASCII text. Flowcharts, sequences, class, ER, state, timeline and mind-map Mermaid use the native shorthand above, which Archify validates and lets readers explore.
 
 ## Directive reference

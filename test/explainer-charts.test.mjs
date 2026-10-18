@@ -42,3 +42,12 @@ test('explainer chart CJK axis titles stand upright and task lists become checkl
   const mixed = finalize(t, 'pie\n  "A" : 1\n```\n\n- [ ] Task\n- Plain\n\n```text\nx');
   assert.ok(mixed.receipt.diagnostics.some(d => d.code === 'explainer/parse-list' && /checklist/.test(d.message)));
 });
+
+test('explainer charts label bar values and give pie slices their value and share', t => {
+  const bars = finalize(t, 'xychart-beta\n  x-axis ["Before", "After"]\n  bar [80, 600]');
+  assert.match(bars.html, /<text[^>]*>600<\/text>/, 'bars carry their value');
+  const pie = finalize(t, 'pie showData\n  "Viewer" : 0.8\n  "字体" : 0.2');
+  assert.match(pie.html, /Viewer · 0\.8 \(80%\)/);
+  assert.match(pie.html, /字体 · 0\.2（20%）/);
+  assert.doesNotMatch(pie.html, /\[0\.8\]/);
+});

@@ -220,9 +220,21 @@
   }
   all('[data-theme-choice]').forEach(button=>button.addEventListener('click',()=>{theme = button.dataset.themeChoice; applyTheme();}));
   preference.addEventListener?.('change',applyTheme);
-  document.querySelector('[data-print]').addEventListener('click',()=>window.print());
+  // Toolbar menus, not native selects, so they match the toolbar: arrow keys move, Escape or Tab
+  // closes, and a click elsewhere closes.
+  function toolMenu(container, pick, current = () => null) {
+    const toggle = container.querySelector('[aria-haspopup]'), panel = container.querySelector('[role=menu]'), items = all('[role^=menuitem]',panel);
+    const set = open => { panel.hidden = !open; toggle.setAttribute('aria-expanded',String(open)); if (open) (current() || items[0]).focus(); };
+    toggle.addEventListener('click',()=>set(panel.hidden));
+    items.forEach(item=>item.addEventListener('click',()=>{ set(false); toggle.focus(); pick(item); }));
+    panel.addEventListener('keydown',event=>{
+      const index = items.indexOf(document.activeElement);
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); items[(index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus(); }
+      else if (event.key === 'Escape' || event.key === 'Tab') { set(false); if (event.key === 'Escape') toggle.focus(); }
+    });
+    document.addEventListener('click',event=>{ if (!panel.hidden && !container.contains(event.target)) set(false); });
+  }
   // The author picks a default style; a reader's own choice is kept for every explainer page.
-  // A small menu, not a native select, so it matches the toolbar; arrow keys move, Escape closes.
   const styleToggle = document.querySelector('[data-style-toggle]'), styleMenu = document.querySelector('.style-options');
   const styleItems = all('[data-style-choice]',styleMenu || document);
   const setStyle = (style, remember) => {
@@ -233,16 +245,9 @@
     styleToggle.querySelector('.style-swatch').dataset.swatch = style;
     if (remember) { try { localStorage.setItem('archify-explainer-style',style); } catch {} requestAnimationFrame(()=>{ layoutBoard(); ensureDiagramReadability(); }); }
   };
-  const toggleMenu = open => { styleMenu.hidden = !open; styleToggle.setAttribute('aria-expanded',String(open)); if (open) (styleItems.find(item=>item.getAttribute('aria-checked') === 'true') || styleItems[0]).focus(); };
   try { const saved = localStorage.getItem('archify-explainer-style'); if (saved) setStyle(saved,false); } catch {}
-  styleToggle?.addEventListener('click',()=>toggleMenu(styleMenu.hidden));
-  styleItems.forEach(item=>item.addEventListener('click',()=>{ setStyle(item.dataset.styleChoice,true); toggleMenu(false); styleToggle.focus(); }));
-  styleMenu?.addEventListener('keydown',event=>{
-    const index = styleItems.indexOf(document.activeElement);
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); styleItems[(index + (event.key === 'ArrowDown' ? 1 : -1) + styleItems.length) % styleItems.length].focus(); }
-    else if (event.key === 'Escape' || event.key === 'Tab') { toggleMenu(false); if (event.key === 'Escape') styleToggle.focus(); }
-  });
-  document.addEventListener('click',event=>{ if (styleMenu && !styleMenu.hidden && !event.target.closest('.style-menu')) toggleMenu(false); });
+  toolMenu(document.querySelector('.style-menu'),item=>setStyle(item.dataset.styleChoice,true),()=>styleItems.find(item=>item.getAttribute('aria-checked') === 'true'));
+  toolMenu(document.querySelector('.export-menu'),item=>item.matches('[data-print]') ? window.print() : exportImage());
   // Long image: the page as laid out now, drawn through an SVG foreignObject at twice the pixel
   // density. Controls, dialogs and walk-through bars are left out. Browsers that refuse to export a
   // foreignObject canvas (Safari) get a notice pointing to Print / PDF.
@@ -265,16 +270,16 @@
     context.drawImage(image,0,0,canvas.width,canvas.height);
     return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob ? resolve(blob) : reject(new Error('empty')),'image/png'));
   }
-  const imageButton = document.querySelector('[data-export-image]');
-  imageButton?.addEventListener('click',async()=>{
-    imageButton.disabled = true;
+  const exportToggle = document.querySelector('[data-export-toggle]');
+  async function exportImage() {
+    exportToggle.disabled = true;
     try {
       const blob = await pageImage(), link = document.createElement('a');
       link.href = URL.createObjectURL(blob); link.download = `${(document.querySelector('h1')?.textContent || 'explainer').trim().replace(/[\\/:*?"<>|]+/g,' ').slice(0,80)}.png`;
       document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(link.href),4000);
     } catch { notify(say('This browser cannot export the page as an image. Use Print / PDF instead.','当前浏览器无法导出长图，请用"打印 / PDF"。')); }
-    finally { imageButton.disabled = false; }
-  });
+    finally { exportToggle.disabled = false; }
+  }
   window.ArchifyExplainer = {pageImage};
   // Only the isolated srcdoc copy receives this bridge. The payload remains byte-for-byte native.
   const viewerDialog = byId('diagram-dialog');
@@ -289,7 +294,8 @@
     } catch {}
     return false;
   }
-  function sendViewer() { if(!viewer?.ready) return; viewer.frame.contentWindow.postMessage({kind:'archify-explainer-host',token:viewer.token,theme:root.dataset.theme,hash:viewer.hash,nodes:viewer.nodes,edges:viewer.edges},'*'); }
+  // The Viewer follows the page's theme, and its editorial preset matches the editorial style.
+  function sendViewer() { if(!viewer?.ready) return; viewer.frame.contentWindow.postMessage({kind:'archify-explainer-host',token:viewer.token,theme:root.dataset.theme,preset:root.dataset.style === 'editorial' ? 'editorial' : 'classic',hash:viewer.hash,nodes:viewer.nodes,edges:viewer.edges},'*'); }
   function openViewer(id,hash,opener) {
     const diagram = diagrams[id];
     if(!diagram || !validHash(diagram,hash)) { notify(say('Diagram target unavailable.','图中目标不可用。')); return; }
@@ -330,6 +336,7 @@
         const data=event.data;
         if(event.source!==parent||data?.kind!=='archify-explainer-host'||data.token!==token)return;
         if(['light','dark'].includes(data.theme))document.documentElement.dataset.theme=data.theme;
+        if(['classic','editorial'].includes(data.preset))window.Archify?.preset?.apply?.(data.preset);
         if(typeof data.hash!=='string'||!/^(?:|focus=[^&]+|route=[^&]+~[^&]+)$/.test(data.hash))return;
         pending=data;
         if(location.hash.slice(1)===data.hash)dispatchEvent(new HashChangeEvent('hashchange'));
@@ -436,7 +443,10 @@
     bar.innerHTML = `<button type="button" data-walk="prev">← ${words.prev}</button><span class="walk-count"></span><button type="button" data-walk="next">${words.next} →</button><span class="walk-text" aria-live="polite"></span><button type="button" data-walk="end">${words.end}</button>`;
     // A diagram's bar sits above the diagram, so it stays in view while a tall diagram scrolls past.
     const figure = control.closest('figcaption')?.closest('figure'); if (figure) figure.before(bar); else control.after(bar);
-    control.setAttribute('aria-pressed','true');
+    // The bar takes the start button's place while the walk runs, so one set of controls shows.
+    const hadFocus = document.activeElement === control;
+    control.setAttribute('aria-pressed','true'); control.hidden = true;
+    if (hadFocus) bar.querySelector('[data-walk=next]').focus();
     // The bar changes the panel height the board was planned with.
     const replan = () => requestAnimationFrame(()=>{ layoutBoard(); ensureDiagramReadability(); });
     replan();
@@ -445,7 +455,7 @@
     bar.addEventListener('click',event=>{ const action = event.target.closest('[data-walk]')?.dataset.walk; if (action === 'end') stop(); else if (action) move(action === 'next' ? 1 : -1); });
     const keys = event => { if (event.target.closest('input,textarea') || viewerDialog.open) return; if (event.key === 'ArrowRight') { event.preventDefault(); move(1); } else if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); } else if (event.key === 'Escape') stop(); };
     document.addEventListener('keydown',keys);
-    walking = {control,end:()=>{ document.removeEventListener('keydown',keys); bar.remove(); control.setAttribute('aria-pressed','false'); show(-1); walking = null; replan(); }};
+    walking = {control,end:()=>{ const refocus = bar.contains(document.activeElement); document.removeEventListener('keydown',keys); bar.remove(); control.hidden = false; control.setAttribute('aria-pressed','false'); if (refocus) control.focus(); show(-1); walking = null; replan(); }};
     render();
   }
   function setupWalks() {
@@ -462,6 +472,24 @@
         spotlight(preview,nodes,edges);
         const box = preview?.getBoundingClientRect();
         if (box && (box.bottom < 0 || box.top > innerHeight)) preview.scrollIntoView({block:'nearest',behavior:'smooth'});
+      }));
+    });
+    // A workflow no step list walks through can be walked node by node, in the order it was written,
+    // each node lit with the edges that lead into it.
+    const walked = new Set(all('ol.steps [data-diagram-link]').map(link=>link.dataset.diagramLink));
+    all('.block-diagram').forEach(block=>{
+      const diagram = diagrams[block.id], nodes = diagram?.semantic?.nodes || [], edges = diagram?.semantic?.edges || [];
+      if (diagram?.diagramType !== 'workflow' || walked.has(block.id) || nodes.length < 3) return;
+      const preview = block.querySelector('.diagram-preview');
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'walk-start'; button.textContent = `▶ ${words.walkFlow}`; button.setAttribute('aria-pressed','false');
+      block.querySelector('.diagram-title')?.after(button);
+      button.addEventListener('click',()=>walk(button,nodes,index=>{
+        if (index < 0) { spotlight(preview); return; }
+        const node = nodes[index], into = edges.filter(edge=>edge.to === node.id && (index === 0 || nodes.slice(0,index).some(seen=>seen.id === edge.from)));
+        spotlight(preview,[node.id,...into.map(edge=>edge.from)],into.map(edge=>edge.id));
+        const target = preview.querySelector(`[data-node-id="${CSS.escape(node.id)}"]`), box = target?.getBoundingClientRect();
+        if (box && (box.top < 0 || box.bottom > innerHeight - 80)) target.scrollIntoView({block:'center',behavior:'smooth'});
+        return node.label || node.id;
       }));
     });
     all('.block-diagram').forEach(block=>{
@@ -550,6 +578,12 @@
   }
   // Source cards: hovering or focusing a citation shows where the claim comes from, with the pinned
   // code excerpt for a repository source, so a reader can check it without leaving the page.
+  const glyph = path => `<svg viewBox="0 0 16 16"><path d="${path}"/></svg>`;
+  const sourceIcons = {
+    code:glyph('M5.5 5 2.5 8l3 3M10.5 5l3 3-3 3M9 3.5 7 12.5'),
+    web:glyph('M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zM2 8h12M8 2c1.7 1.6 2.5 3.6 2.5 6S9.7 12.4 8 14C6.3 12.4 5.5 10.4 5.5 8S6.3 3.6 8 2z'),
+    note:glyph('M4 2.5h5.5l2.5 2.5v8.5H4zM9.5 2.5V5H12M6 8h4M6 10.5h4'),
+  };
   function setupSourceCards() {
     const sources = prepared.preparedSources?.sources || {};
     const card = document.createElement('div'); card.className = 'source-card'; card.hidden = true; card.setAttribute('role','tooltip');
@@ -562,11 +596,16 @@
       if (!source) return;
       clearTimeout(hideTimer);
       const escapeText = value => String(value ?? '').replace(/[&<>"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[character]));
-      const location = source.path ? `${source.path}${source.lines ? `:${source.lines.join('–')}` : ''}${source.revision ? ` @ ${String(source.revision).slice(0,10)}` : ''}` : (()=>{ try { return new URL(source.url).host; } catch { return ''; } })();
-      const lines = typeof source.text === 'string' ? source.text.split('\n') : [];
+      // A repository source shows its pinned excerpt; a web page its host; any other note its text.
+      const host = (()=>{ try { return new URL(source.url).host.replace(/^www\./,''); } catch { return ''; } })();
+      const where = source.path ? `${source.path}${source.lines ? `:${source.lines.join('–')}` : ''}` : host;
+      const kind = source.path ? 'code' : source.url ? 'web' : 'note';
+      const lines = source.path && typeof source.text === 'string' ? source.text.split('\n') : [];
       const first = source.lines?.[0] || 1;
       const excerpt = lines.length ? `<pre><code>${lines.slice(0,14).map((line,index)=>`<span class="line"><i>${first + index}</i>${escapeText(line) || ' '}</span>`).join('')}${lines.length > 14 ? `<span class="line more"><i></i>…</span>` : ''}</code></pre>` : '';
-      card.innerHTML = `<b>${escapeText(source.title || source.path || id)}</b>${location ? `<code class="source-where">${escapeText(location)}</code>` : ''}${excerpt}${source.url ? `<a href="${escapeText(source.url)}" target="_blank" rel="noopener noreferrer">${say('Open source','打开原文')} ↗</a>` : ''}`;
+      const note = !source.path && (source.text || source.method) ? `<p class="source-note">${escapeText(source.text || '')}${source.method ? `<span>${escapeText(source.method)}</span>` : ''}</p>` : '';
+      const number = /^\d+$/.test(link.textContent.trim()) ? link.textContent.trim() : '';
+      card.innerHTML = `<header><span class="source-icon" data-kind="${kind}" aria-hidden="true">${sourceIcons[kind]}</span><span class="source-head"><b>${escapeText(source.title || source.path || id)}</b>${where ? `<span class="source-where">${escapeText(where)}</span>` : ''}</span>${number ? `<span class="source-number">${number}</span>` : ''}</header>${excerpt}${note}${source.revision || source.url ? `<footer>${source.revision ? `<span class="source-pin">${say('Pinned at','固定在')} <code>${escapeText(String(source.revision).slice(0,7))}</code></span>` : '<span></span>'}${source.url ? `<a href="${escapeText(source.url)}" target="_blank" rel="noopener noreferrer">${say('Open source','打开原文')} ↗</a>` : ''}</footer>` : ''}`;
       card.hidden = false;
       const box = link.getBoundingClientRect(), width = Math.min(520,innerWidth - 24);
       card.style.width = `${width}px`;

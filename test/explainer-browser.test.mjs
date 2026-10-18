@@ -108,7 +108,9 @@ test('public system-theme mode starts with fresh storage and stable DOM identiti
 test('text names light their diagram nodes and walk-throughs step through steps and messages',{skip:!chrome},async()=>{
  const {renderExplainer}=await import('../archify/explainer/render.mjs');const {compileExplainerDiagram,prepareExplainerDiagrams}=await import('../archify/explainer/diagrams.mjs');
  const spec=compileExplainerDiagram('sequence',['actor api | API | backend','actor redis | Redis | database','api | redis | Read cache','redis | api | Return cache'],{title:'Cache lookup',id:'native',quality:'showcase'});
+ const flow=compileExplainerDiagram('workflow',['alert | Alert','check | Check signal','fix | Fix','alert > check','check > fix'],{title:'Triage',id:'flow',quality:'showcase'});
  const doc=formalDocument();doc.meta.id='walk-browser';doc.meta.quality_profile='showcase';doc.panels.push({id:'how',title:'Where does the request go?',blocks:[{id:'native',type:'diagram',diagramType:'sequence',spec},{id:'why',type:'prose',text:'The API asks Redis first, and Redis answers from memory.'},{id:'step',type:'steps',items:[{id:'read-step',text:'Read cache',target:{diagram:'native',node:'api',edges:['api-to-redis-1']}},{id:'return-step',text:'Return cache',target:{diagram:'native',node:'redis',edges:['redis-to-api-1']}}]}]});
+ doc.panels.push({id:'triage',title:'How is it handled?',blocks:[{id:'flow',type:'diagram',diagramType:'workflow',spec:flow}]});
  const preparedDiagrams=await prepareExplainerDiagrams(doc,{baseDir:dir,sourcePath:path.join(dir,'walk.json'),quality:'showcase'});
  const file=artifact('walk',renderExplainer(doc,{sourceText:JSON.stringify(doc),preparedDiagrams,preparedSources:{sources:{example:{title:'Example'}}}}));
  const browser=new ChromeVisualBrowser(chrome);try {
@@ -128,6 +130,11 @@ test('text names light their diagram nodes and walk-throughs step through steps 
    return new Promise(resolve=>setTimeout(()=>resolve({terms,lit,stepHover,cleared,current,stepLit,ended,text,copied,open:document.querySelector('.ask-dialog').open}),50));})()`);
   assert.deepEqual(result.terms,['API','Redis'],'each name is linked once per panel');
   assert.deepEqual(result.lit,['redis']);
+  const flowWalk=await pageValue(browser,`(function(){const start=document.querySelector('#flow figcaption .walk-start');start.click();const hidden=start.hidden;document.querySelector('.walk-bar [data-walk=next]').click();const lit=[...document.querySelectorAll('#flow .reader-highlight')].map(e=>e.dataset.nodeId||e.dataset.edgeId);const text=document.querySelector('.walk-text').textContent;document.querySelector('.walk-bar [data-walk=end]').click();return {hidden,lit,text,restored:!start.hidden&&!document.querySelector('.walk-bar')};})()`);
+  assert.equal(flowWalk.hidden,true,'the walk bar replaces the start button');
+  assert.equal(flowWalk.text,'Check signal');
+  assert.ok(flowWalk.lit.includes('check')&&flowWalk.lit.includes('alert')&&flowWalk.lit.length>=3,JSON.stringify(flowWalk.lit));
+  assert.equal(flowWalk.restored,true);
   assert.deepEqual(result.stepHover.sort(),['redis','redis-to-api-1'],'hovering anywhere in a step lights its node and edge');
   assert.equal(result.cleared,true);
   assert.equal(result.current,'return-step');

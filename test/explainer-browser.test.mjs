@@ -135,6 +135,8 @@ test('text names light their diagram nodes and walk-throughs step through steps 
   assert.match(result.copied,/Question: I do not follow this part/);
   assert.match(result.copied,/patch explainer/);
   assert.equal(result.open,false);
+  const style=await pageValue(browser,`(function(){const toggle=document.querySelector('[data-style-toggle]');toggle.click();const open=!document.querySelector('.style-options').hidden&&toggle.getAttribute('aria-expanded')==='true';document.querySelector('[data-style-choice=swiss]').click();return {open,closed:document.querySelector('.style-options').hidden,style:document.documentElement.dataset.style,label:document.querySelector('[data-style-label]').textContent,checked:document.querySelector('[data-style-choice=swiss]').getAttribute('aria-checked'),saved:localStorage.getItem('archify-explainer-style')};})()`);
+  assert.deepEqual(style,{open:true,closed:true,style:'swiss',label:'Swiss',checked:'true',saved:'swiss'});
   const image=await pageValue(browser,`window.ArchifyExplainer.pageImage().then(blob=>({type:blob.type,size:blob.size}))`);
   assert.equal(image.type,'image/png');assert.ok(image.size>20000,'the long image carries the rendered page');
  }finally{await browser.close();}

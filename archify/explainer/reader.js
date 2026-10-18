@@ -211,9 +211,27 @@
   preference.addEventListener?.('change',applyTheme);
   document.querySelector('[data-print]').addEventListener('click',()=>window.print());
   // The author picks a default style; a reader's own choice is kept for every explainer page.
-  const styleChoice = document.querySelector('[data-style-choice]');
-  try { const saved = localStorage.getItem('archify-explainer-style'); if (saved && [...styleChoice.options].some(option=>option.value === saved)) { root.dataset.style = saved; styleChoice.value = saved; } } catch {}
-  styleChoice?.addEventListener('change',()=>{ root.dataset.style = styleChoice.value; try { localStorage.setItem('archify-explainer-style',styleChoice.value); } catch {} requestAnimationFrame(()=>{ layoutBoard(); ensureDiagramReadability(); }); });
+  // A small menu, not a native select, so it matches the toolbar; arrow keys move, Escape closes.
+  const styleToggle = document.querySelector('[data-style-toggle]'), styleMenu = document.querySelector('.style-options');
+  const styleItems = all('[data-style-choice]',styleMenu || document);
+  const setStyle = (style, remember) => {
+    if (!styleItems.some(item=>item.dataset.styleChoice === style)) return;
+    root.dataset.style = style;
+    styleItems.forEach(item=>item.setAttribute('aria-checked',String(item.dataset.styleChoice === style)));
+    styleToggle.querySelector('[data-style-label]').textContent = words.styles[style];
+    styleToggle.querySelector('.style-swatch').dataset.swatch = style;
+    if (remember) { try { localStorage.setItem('archify-explainer-style',style); } catch {} requestAnimationFrame(()=>{ layoutBoard(); ensureDiagramReadability(); }); }
+  };
+  const toggleMenu = open => { styleMenu.hidden = !open; styleToggle.setAttribute('aria-expanded',String(open)); if (open) (styleItems.find(item=>item.getAttribute('aria-checked') === 'true') || styleItems[0]).focus(); };
+  try { const saved = localStorage.getItem('archify-explainer-style'); if (saved) setStyle(saved,false); } catch {}
+  styleToggle?.addEventListener('click',()=>toggleMenu(styleMenu.hidden));
+  styleItems.forEach(item=>item.addEventListener('click',()=>{ setStyle(item.dataset.styleChoice,true); toggleMenu(false); styleToggle.focus(); }));
+  styleMenu?.addEventListener('keydown',event=>{
+    const index = styleItems.indexOf(document.activeElement);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); styleItems[(index + (event.key === 'ArrowDown' ? 1 : -1) + styleItems.length) % styleItems.length].focus(); }
+    else if (event.key === 'Escape' || event.key === 'Tab') { toggleMenu(false); if (event.key === 'Escape') styleToggle.focus(); }
+  });
+  document.addEventListener('click',event=>{ if (styleMenu && !styleMenu.hidden && !event.target.closest('.style-menu')) toggleMenu(false); });
   // Long image: the page as laid out now, drawn through an SVG foreignObject at twice the pixel
   // density. Controls, dialogs and walk-through bars are left out. Browsers that refuse to export a
   // foreignObject canvas (Safari) get a notice pointing to Print / PDF.

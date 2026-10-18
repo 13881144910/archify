@@ -58,13 +58,38 @@ test('real Chrome: Guide native keyboard activation retains focus and exposes se
       await settle();
     };
     const click = async selector => {
-      const point = await evaluate(`(() => {
+      const point = await evaluate(`(async () => {
         const e = document.querySelector(${JSON.stringify(selector)});
         e.scrollIntoView({block:'center', behavior:'instant'});
-        const r = e.getBoundingClientRect(); return { x:r.x + r.width/2, y:r.y + r.height/2 };
+        // A previous card may still have a compositor-driven smooth scroll.
+        // Measure after frames settle, not in the same call as scrollIntoView.
+        let previous, stable = 0;
+        const deadline = performance.now() + 3000;
+        while (performance.now() < deadline) {
+          await new Promise(resolve => requestAnimationFrame(resolve));
+          const r = e.getBoundingClientRect(), current = { x:r.x + r.width/2, y:r.y + r.height/2, scroll:scrollY };
+          const hit = document.elementFromPoint(current.x, current.y);
+          const targetHit = hit === e || e.contains(hit);
+          stable = previous && targetHit && Math.abs(current.x - previous.x) < .25 && Math.abs(current.y - previous.y) < .25 && Math.abs(current.scroll - previous.scroll) < .25 ? stable + 1 : 0;
+          previous = current;
+          if (stable >= 3) {
+            window.guidePointerReceipt = { selector:${JSON.stringify(selector)}, point:current, events:[] };
+            for (const type of ['mousedown', 'mouseup', 'click']) document.addEventListener(type, event => {
+              window.guidePointerReceipt.events.push({ type, intended:event.target === e || e.contains(event.target), target:event.target.id || event.target.tagName, x:event.clientX, y:event.clientY, scroll:scrollY });
+            }, { once:true, capture:true });
+            return { x:current.x, y:current.y };
+          }
+        }
+        throw new Error('Pointer target did not settle: ' + ${JSON.stringify(selector)} + ' ' + JSON.stringify(previous));
       })()`);
       for (const type of ['mousePressed', 'mouseReleased']) await browser.cdp.send('Input.dispatchMouseEvent', { type, ...point, button:'left', clickCount:1 }, session);
       await settle();
+      const receipt = await evaluate('window.guidePointerReceipt');
+      manifest.pointerEvents ??= [];
+      manifest.pointerEvents.push(receipt);
+      fs.writeFileSync(path.join(output, 'manifest.json'), JSON.stringify(manifest, null, 2));
+      assert.deepEqual(receipt.events.map(event => event.type), ['mousedown', 'mouseup', 'click'], 'native pointer dispatch produces the complete activation sequence');
+      assert.ok(receipt.events.every(event => event.intended), 'native pointer events must hit the intended control: ' + JSON.stringify(receipt));
     };
     const focus = selector => evaluate(`document.querySelector(${JSON.stringify(selector)}).focus()`);
     const active = () => evaluate(`(() => { const e = document.activeElement; return e.dataset.filter || e.id || e.className || e.tagName; })()`);

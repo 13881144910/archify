@@ -17,7 +17,7 @@
 | lane move | 交接 |
 | see | 实地看房 | external | verify |
 | id | 核对身份和产权 | backend | verify |
-| ok | 身份产权一致？ | backend | verify |
+| ok | 签约身份已核实？ | backend | verify |
 | walk | 放弃这套房 | external | verify |
 | terms | 条款写进合同 | backend | paper |
 | pay | 付款并留凭证 | backend | paper |
@@ -31,8 +31,8 @@
 
 @steps id=rent-steps
 | see | 实地看房 | 晚上和周末各看一次；测采光、噪音、水压、手机信号；查通勤时间。 | rent-flow | see |
-| id | 核对身份和产权 | 看身份证原件和房产证；产权人姓名要与签约人一致。 | rent-flow | id |
-| terms | 条款写进合同 | 口头承诺一律写进合同或补充条款，双方签字才有效。 | rent-flow | terms |
+| id | 核对身份和产权 | 看身份证原件和房产证；核实签约人是产权人，或持有产权人授权委托书的代理人。 | rent-flow | id |
+| terms | 条款写进合同 | 为减少争议，将关键承诺写进合同或补充条款，并由双方确认。 | rent-flow | terms |
 | pay | 付款并留凭证 | 转账备注用途；要求收据，或在合同里注明已收金额。 | rent-flow | pay |
 | check | 逐项验房拍照 | 水电燃气表读数、家具家电、已有破损全部拍照存档。 | rent-flow | check |
 

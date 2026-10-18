@@ -200,3 +200,15 @@ test('literal snippets render as copyable code and table corners keep their head
   assert.match(text(all(block,node=>attr(node,'class')==='snippet-label')[0]),/Run tests/);
   assert.equal(text(all(find(tree,'comparison'),node=>node.nodeName==='th')[0]),'Criterion');
 });
+
+test('renderer: shared pages omit disposable native checker filenames but retain evidence',()=>{
+  const prepared=resources();
+  const check={ok:true,file:'/private/build-user/scratch/diagram.html',artifact:{sha256:diagram.sha256},composition:{profile:'standard'}};
+  prepared.preparedDiagrams.diagrams['native-diagram']={...diagram,checks:{check}};
+  const tree=parse(renderExplainer(fixture(),{...prepared,sourcePath:'/published/draft.json',pageDirectory:'/published'}));
+  const frozen=payload(tree,'archify-explainer-prepared'),manifest=JSON.parse(text(find(tree,'explainer-manifest')));
+  for(const saved of [frozen.preparedDiagrams.diagrams['native-diagram'].checks.check,manifest.children['native-diagram'].checks.check]){
+    assert.equal('file' in saved,false);assert.equal(saved.ok,true);assert.deepEqual(saved.artifact,check.artifact);assert.deepEqual(saved.composition,check.composition);
+  }
+  assert.equal(prepared.preparedDiagrams.diagrams['native-diagram'].checks.check.file,check.file);
+});

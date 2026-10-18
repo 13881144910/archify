@@ -19,6 +19,7 @@ All notable changes are documented here. Format loosely follows [Keep a Changelo
   - **Sharing:** the page ships in four styles (clean, editorial, product, Swiss) with light and dark themes, and exports a PNG, WebP or JPG long image or prints to PDF.
   - **Examples:** four live pages in `docs/cases/explainer/`.
   - **Credit:** the one-page document direction of #942 by @goatliamia shaped this work.
+  - **Acknowledgment:** thanks to @QingYunA for the early one-page diagram-and-explanation proposal and demo prototype.
 
 ### Fixed
 

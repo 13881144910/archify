@@ -149,6 +149,16 @@
     .stage-window[data-mode="page"] .page-frame { opacity:1; visibility:visible; transform:scale(var(--page-scale,1)); transition:opacity .6s var(--ease-out),transform .8s var(--ease-out); }
     .stage-window[data-mode="page"] #hero-proof-frame { opacity:0; }
     .stage-window[data-mode="page"].is-page-loading .page-frame { opacity:.3; }
+    /* wide screens: in the page chapter the caption moves into a rail beside the page instead of over it */
+    @media(min-width:1100px) {
+      .hero-frame { transition:margin-left .7s var(--ease-out); }
+      .stage-window[data-mode="page"] .hero-frame { margin-left:360px; border-left:1px solid var(--line); }
+      .stage-window[data-mode="page"] .beat-card { left:0; top:52px; bottom:0; width:360px; display:flex; flex-direction:column; justify-content:center; padding:2rem 2rem 2.25rem; border:0; border-radius:0; background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
+      .stage-window[data-mode="page"] .beat-title { font-size:1.75rem; line-height:1.15; letter-spacing:-.03em; }
+      .stage-window[data-mode="page"] .beat-body { margin-top:.85rem; font-size:.9375rem; line-height:1.65; }
+      .stage-window[data-mode="page"] .beat-rail { order:3; margin:1.75rem 0 0; }
+      .stage-window[data-mode="page"] .beat-meta { white-space:normal; }
+    }
 
     /* beat card — glass caption anchored bottom-left inside the window */
     .beat-card { position:absolute; left:1.25rem; bottom:1.25rem; z-index:3; width:min(400px,calc(100% - 2.5rem)); padding:1.1rem 1.25rem 1.25rem; border-radius:14px; border:1px solid var(--line-hi); background:rgba(var(--bg-rgb),.72); backdrop-filter:blur(16px) saturate(1.2); -webkit-backdrop-filter:blur(16px) saturate(1.2); box-shadow:0 20px 50px rgba(var(--shadow-rgb),calc(.45 * var(--shadow-k))); }
@@ -411,6 +421,10 @@
     html[lang^="zh"] .cta-h { letter-spacing:-.015em; line-height:1.12; }
     .cta-sub { max-width:520px; margin-top:1.75rem; font-size:1.0625rem; line-height:1.65; color:var(--text-2); text-wrap:pretty; }
     .cta-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:.75rem; margin-top:2.5rem; }
+    .cta-prompt { display:flex; align-items:center; gap:.6rem; max-width:min(720px,100%); min-height:52px; margin-top:2.25rem; padding:.75rem 1.2rem; border:1px solid var(--line-hi); border-radius:14px; background:rgba(var(--bg-rgb),.7); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); font-family:var(--font-mono); font-size:.8125rem; line-height:1.5; color:var(--text); text-align:left; box-shadow:0 20px 60px -30px rgba(var(--accent-rgb),.5); }
+    .cta-mark { color:var(--accent-text); font-weight:600; }
+    .cta-caret { flex:none; width:7px; height:1.1em; margin-left:-.35rem; background:var(--accent); animation:caret 1s steps(1) infinite; }
+    @keyframes caret { 50% { opacity:0; } }
 
     /* FOOTER */
     footer { border-top:1px solid var(--line); padding:2.5rem 2rem; }
@@ -434,6 +448,20 @@
     .demo-close:hover { color:var(--text); border-color:rgba(var(--fg-rgb),.5); }
     .demo-video-box { aspect-ratio:16 / 9; background:#000; }
     .demo-video-box video { width:100%; height:100%; display:block; }
+
+    /* Scroll-driven arrival: CSS only and transform only, so nothing is ever hidden and browsers
+       without view timelines simply show the page as it is. */
+    @supports (animation-timeline: view()) {
+      @media (prefers-reduced-motion: no-preference) {
+        .section-head, .answer-traits, .page-card, .life-card, .types-list, .type-preview, .gates, .run, .features-grid, .legend-chip, .terminal, .steps, .shortcut-box, .receipt {
+          animation:arrive linear both; animation-timeline:view(); animation-range:entry 0% entry 60%;
+        }
+        .page-card:nth-child(2), .life-card:nth-child(2), .legend-chip:nth-child(2), .receipt:nth-child(2) { animation-range:entry 5% entry 68%; }
+        .page-card:nth-child(3), .life-card:nth-child(3), .legend-chip:nth-child(3), .receipt:nth-child(3) { animation-range:entry 10% entry 76%; }
+        .page-card:nth-child(4), .life-card:nth-child(4), .legend-chip:nth-child(4), .receipt:nth-child(4) { animation-range:entry 15% entry 84%; }
+        @keyframes arrive { from { transform:translateY(56px) scale(.97); } }
+      }
+    }
 
     @media(prefers-reduced-motion:reduce) {
       html { scroll-behavior:auto; }

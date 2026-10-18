@@ -374,7 +374,9 @@
   window.addEventListener('resize', onScroll);
   /* the demo page keeps a desktop layout at least 1180 px wide, scaled into the window */
   const fitPage = () => pageFrame.style.setProperty('--page-scale', Math.min(1, pageFrame.parentElement.clientWidth / 1180).toFixed(4));
-  window.addEventListener('resize', fitPage);
+  /* the frame also narrows when the page chapter opens its caption rail */
+  if ('ResizeObserver' in window) new ResizeObserver(fitPage).observe(pageFrame.parentElement);
+  else window.addEventListener('resize', fitPage);
   fitPage();
   applyScroll();
 
@@ -402,6 +404,29 @@
     };
     requestAnimationFrame(frame);
   });
+
+  /* ══ Closing prompt — types example requests in turn, maps and pages alike; the first is in the
+     HTML, and nothing cycles under reduced motion ══ */
+  const PROMPTS = {
+    en: ['Use Archify to answer as one page: why did P99 jump while the mean stayed flat?', 'Use Archify to map our checkout services and show where the cache sits.', 'Use Archify to read this repository and show how a request reaches the database.', 'Use Archify to plan my annual leave around two comp days that expire in June.', 'Use Archify to answer as one page: what should I check before signing a lease?', "Use Archify to draw a timeline of last night's incident."],
+    zh: ['用 Archify 一页回答：P99 暴涨、平均值几乎没变，为什么？', '用 Archify 画出我们的结账服务，标出缓存在哪一层。', '用 Archify 读一下这个仓库，画出一个请求怎么走到数据库。', '用 Archify 帮我排年假，有两天调休 6 月底过期。', '用 Archify 一页回答：第一次租房，签合同前要确认什么？', '用 Archify 画出昨晚那次事故的时间线。']
+  };
+  const ctaPrompt = $('cta-prompt');
+  if (ctaPrompt && !reducedMotion.matches && 'IntersectionObserver' in window) {
+    let index = 0;
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+    async function cycle() {
+      for (;;) {
+        await sleep(2600);
+        for (let n = ctaPrompt.textContent.length; n >= 0; n -= 2) { ctaPrompt.textContent = ctaPrompt.textContent.slice(0, n); await sleep(14); }
+        index = (index + 1) % PROMPTS[lang].length;
+        const next = PROMPTS[lang][index];
+        for (let n = 1; n <= next.length; n++) { ctaPrompt.textContent = next.slice(0, n); await sleep(lang === 'zh' ? 70 : 32); }
+      }
+    }
+    let started = false;
+    new IntersectionObserver(entries => { if (!started && entries.some(entry => entry.isIntersecting)) { started = true; cycle(); } }).observe(ctaPrompt);
+  }
 
   /* ══ Hero pointer spotlight — fine pointers only, never under reduced motion ══ */
   const hero = document.querySelector('.hero');

@@ -116,6 +116,7 @@ export const indexCopy = {
       'cta-h':'Ask once.<br><em>Share the answer.</em>',
       'cta-sub':'One command installs the checked skill for your agent — your next map or one-page answer is a chat message away.',
       'cta-install':'Install the skill','cta-gh':'Star on GitHub',
+      'cta-prompt':'Use Archify to answer as one page: why did P99 jump while the mean stayed flat?',
       'footer-changelog':'Changelog','footer-license':'License','footer-community':'Community'
     },
     zh: {
@@ -235,6 +236,7 @@ export const indexCopy = {
       'cta-h':'问一次，<br><em>分享这个答案。</em>',
       'cta-sub':'一条命令为你的 Agent 安装经过检查的技能——下一张图、下一页答案，只差一句对话。',
       'cta-install':'安装技能','cta-gh':'在 GitHub 上 Star',
+      'cta-prompt':'用 Archify 一页回答：P99 暴涨、平均值几乎没变，为什么？',
       'footer-changelog':'更新日志','footer-license':'许可证','footer-community':'社区包'
     }
   };

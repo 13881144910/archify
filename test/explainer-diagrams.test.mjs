@@ -210,3 +210,16 @@ test('explainer diagrams: sequence phase rows become native segments over the fo
   assert.ok(spec.segments[1].from < spec.messages[2].y && spec.segments[1].to > spec.messages[2].y);
   assert.throws(() => compileExplainerDiagram('sequence', ['b | s | SYN', 'phase | Empty'], { id: 'empty' }), error => (error.archifyDiagnostics || error.diagnostics || []).some(item => /phase needs/.test(item.message)));
 });
+
+test('explainer diagrams: a linear workflow too wide for one row wraps into rows; questions get the decision mark', () => {
+  const long = (i) => `step${i} | Step ${i} with a deliberately long label for width | backend`;
+  const rows = [1, 2, 3, 4, 5, 6, 7].map(long).concat([1, 2, 3, 4, 5, 6].map(i => `step${i} > step${i + 1}`));
+  const spec = compileExplainerDiagram('workflow', rows, { id: 'wrapped' });
+  assert.ok(spec.lanes.length > 1, 'the chain wraps into several rows');
+  assert.ok(spec.nodes.every(node => node.col <= 5));
+  assert.deepEqual(spec.nodes.map(node => node.id), ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7'], 'reading order is kept');
+  const short = compileExplainerDiagram('workflow', ['ask | Needs scaling? | backend', 'keep | Keep it | backend', 'ask > keep | no'], { id: 'short' });
+  assert.equal(short.lanes.length, 1);
+  assert.equal(short.nodes[0].icon, 'decision');
+  assert.equal(short.nodes[1].icon, undefined);
+});

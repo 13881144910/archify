@@ -191,6 +191,8 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
         // a narrower node drops the label below the icon, out of line with its neighbours.
         const labelWidth = Math.ceil(Math.max(textUnits(node.label) * 6.8 + 12, minimumNodeTextWidth(node.label, 11) + 2 * (SEMANTIC_SIGIL_FOOTPRINT + 2)));
         if (diagramType === 'workflow' && labelWidth > 92) node.width = labelWidth;
+        // A question is a decision point: the native decision mark tells it apart from a step.
+        if (diagramType === 'workflow' && /[?？]$/u.test(node.label)) node.icon = 'decision';
         if (entry.parts[3]) nodeLanes.set(node.id, { lane: safeId(entry.parts[3], entry.context), context: entry.context });
         nodes.push(node);
       }
@@ -235,9 +237,24 @@ export function compileExplainerDiagram(diagramType, rows, { title, id, line = 1
       if (spec.nodes.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'A workflow lane holds at most six nodes.', 'Split the process into another lane.');
       spec.edges = edges;
     } else {
-      if (placed.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'Native workflow columns are limited to 0–5.', 'Declare phase lanes with "lane <id> | label" rows and assign nodes to them.');
-      spec.lanes = Array.from({ length: Math.max(1, ...placed.map(node => node.row + 1)) }, (_, row) => ({ id: `lane-${row}`, label: row ? `分支 ${row}` : spec.meta.title }));
-      spec.nodes = placed.map(({ row, ...node }) => ({ ...node, lane: `lane-${row}` }));
+      // A linear process too wide for one readable row wraps into rows of equal size, stepping down
+      // where six columns allow, the same way declared phases do.
+      const fits = laid => laid.every(node => node.col <= 5) && workflowWidth(laid, edges) <= READABLE_WORKFLOW_WIDTH;
+      let wrapped;
+      if (placed.every(node => node.row === 0) && !fits(placed)) {
+        const ordered = [...placed].sort((a, b) => a.col - b.col);
+        for (let size = 5; size >= 2 && !wrapped; size--) {
+          const groups = Array.from({ length: Math.ceil(ordered.length / size) }, (_, i) => ordered.slice(i * size, i * size + size));
+          for (const stair of [true, false]) {
+            const laid = groups.flatMap((group, row) => group.map((node, i) => ({ ...node, row, col: (stair ? groups.slice(0, row).reduce((sum, g) => sum + g.length - 1, 0) : 0) + i })));
+            if (fits(laid)) { wrapped = laid; break; }
+          }
+        }
+      }
+      const rows = wrapped || placed;
+      if (rows.some(node => node.col > 5)) fail(context, 'diagram-shorthand-limit', 'Native workflow columns are limited to 0–5.', 'Declare phase lanes with "lane <id> | label" rows and assign nodes to them.');
+      spec.lanes = Array.from({ length: Math.max(1, ...rows.map(node => node.row + 1)) }, (_, row) => ({ id: `lane-${row}`, label: wrapped ? `${spec.meta.title} · ${row + 1}` : row ? `分支 ${row}` : spec.meta.title }));
+      spec.nodes = rows.map(({ row, ...node }) => ({ ...node, lane: `lane-${row}` }));
       spec.edges = edges;
     }
   } else if (diagramType === 'tree') {

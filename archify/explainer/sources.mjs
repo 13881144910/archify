@@ -117,24 +117,33 @@ function readImage(document, baseDir, authoredPath, pointer) {
   const expected = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' }[path.extname(relative).toLowerCase()];
   if (!expected) fail(document, `${pointer}/path`, 'image', 'asset-format', 'Only local PNG, JPEG, WebP and GIF images are supported.',
     'Use a PNG, JPEG, WebP or GIF image.');
+  const bytes = readContained(document, baseDir, relative, pointer, 'image', MAX_IMAGE_BYTES, '8 MiB');
+  const mime = imageMime(bytes);
+  if (mime !== expected) fail(document, pointer, 'image', 'asset-format', 'The image bytes do not match a supported image format.',
+    'Use a correctly encoded image whose extension matches its bytes.');
+  return { path: relative, mime, ...digest(bytes), dataUrl: `data:${mime};base64,${bytes.toString('base64')}` };
+}
+
+// Read a regular file inside baseDir without following links, and confirm it did not change meanwhile.
+function readContained(document, baseDir, relative, pointer, component, limit, limitText) {
+  const noun = component === 'image' ? 'image' : 'data file', Noun = noun[0].toUpperCase() + noun.slice(1);
   let fd;
   try {
     const root = fs.realpathSync(baseDir);
     const ancestors = [[root, fs.lstatSync(root)]];
     let candidate = root;
-    const parts = relative.split('/');
-    for (const part of parts) {
+    for (const part of relative.split('/')) {
       candidate = path.join(candidate, part);
       const stat = fs.lstatSync(candidate);
-      if (stat.isSymbolicLink()) fail(document, `${pointer}/path`, 'image', 'asset-symlink', 'Image paths may not traverse symbolic links.',
-        'Copy the image into the input directory as a regular file.');
+      if (stat.isSymbolicLink()) fail(document, `${pointer}/path`, component, 'asset-symlink', `${Noun} paths may not traverse symbolic links.`,
+        `Copy the ${noun} into the input directory as a regular file.`);
       ancestors.push([candidate, stat]);
     }
-    if (!ancestors.at(-1)[1].isFile()) fail(document, pointer, 'image', 'asset-file', 'The image must be a regular file.', 'Use a regular image file.');
+    if (!ancestors.at(-1)[1].isFile()) fail(document, pointer, component, 'asset-file', `The ${noun} must be a regular file.`, `Use a regular ${noun}.`);
     fd = fs.openSync(candidate, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0));
     const before = fs.fstatSync(fd);
-    if (!sameFile(before, ancestors.at(-1)[1]) || before.size > MAX_IMAGE_BYTES) fail(document, pointer, 'image', 'asset-size',
-      'The image changed or exceeds the 8 MiB size limit.', 'Use a stable image smaller than 8 MiB.');
+    if (!sameFile(before, ancestors.at(-1)[1]) || before.size > limit) fail(document, pointer, component, 'asset-size',
+      `The ${noun} changed or exceeds the ${limitText} size limit.`, `Use a stable ${noun} smaller than ${limitText}.`);
     const bytes = Buffer.alloc(before.size);
     let offset = 0;
     while (offset < bytes.length) {
@@ -144,16 +153,13 @@ function readImage(document, baseDir, authoredPath, pointer) {
     }
     const unchanged = offset === bytes.length && sameFile(before, fs.fstatSync(fd))
       && ancestors.every(([file, stat]) => { const current = fs.lstatSync(file); return !current.isSymbolicLink() && sameFile(current, stat); });
-    if (!unchanged) fail(document, pointer, 'image', 'asset-changed', 'The image path or bytes changed while being frozen.',
-      'Finish image updates before rendering again.');
-    const mime = imageMime(bytes);
-    if (mime !== expected) fail(document, pointer, 'image', 'asset-format', 'The image bytes do not match a supported image format.',
-      'Use a correctly encoded image whose extension matches its bytes.');
-    return { path: relative, mime, ...digest(bytes), dataUrl: `data:${mime};base64,${bytes.toString('base64')}` };
+    if (!unchanged) fail(document, pointer, component, 'asset-changed', `The ${noun} path or bytes changed while being frozen.`,
+      `Finish ${noun} updates before rendering again.`);
+    return bytes;
   } catch (error) {
     if (error.archifyDiagnostics) throw error;
-    fail(document, pointer, 'image', 'asset-read', 'The image cannot be read safely inside the input directory.',
-      'Use an accessible regular image file inside the input directory.');
+    fail(document, pointer, component, 'asset-read', `The ${noun} cannot be read safely inside the input directory.`,
+      `Use an accessible regular ${noun} inside the input directory.`);
   } finally {
     if (fd !== undefined) fs.closeSync(fd);
   }

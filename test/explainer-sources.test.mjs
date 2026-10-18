@@ -129,13 +129,17 @@ test('unquoted config credentials are blocked while environment and code referen
   }
 });
 
-test('location references do not return code and code blocks cannot trust web/example sources', async t => {
+test('cited repository locations carry their pinned lines, unverifiable ones stay plain, and code blocks cannot trust web/example sources', async t => {
   const data = fixture(t);
   const doc = document(data.repository);
   doc.panels[0].blocks = [];
   const result = await resolveExplainerSources(doc, { repoRoot: data.root });
-  assert.ok(!Object.hasOwn(result.sources.router, 'text'));
-  assert.equal(result.dependencies.length, 0);
+  assert.equal(typeof result.sources.router.text, 'string', 'a cited location shows its lines on the page');
+  assert.equal(result.dependencies.length, 1, 'and freezes the file it was read from');
+  const absent = document(data.repository, { path: 'src/absent.js', lines: [1, 3] }); absent.panels[0].blocks = [];
+  const missing = await resolveExplainerSources(absent, { repoRoot: data.root });
+  assert.ok(!Object.hasOwn(missing.sources.router, 'text'), 'an unverifiable citation stays a plain reference');
+  assert.ok(!Object.hasOwn((await resolveExplainerSources(doc, {})).sources.router, 'text'), 'without a repository root nothing is read');
   doc.sources = [{ id: 'router', title: 'Example', text: 'code' }];
   doc.panels[0].blocks = [{ id: 'code', type: 'code', source: 'router' }];
   await rejects(doc, {}, 'code-source');

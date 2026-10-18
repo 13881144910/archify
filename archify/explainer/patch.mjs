@@ -91,7 +91,7 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
     const original=(previous.dependencies || []).find(dep=>dep.kind==='diagram-spec' && dep.id===entry.id);
     if(!original) fail('payload','The original diagram has no frozen specification evidence.',artifactPath,panelId,'Rebuild the original artifact before patching.');
     newDiagrams.diagrams[entry.id].specification=previous.preparedDiagrams.diagrams[entry.id].specification;
-    return {...original,retained:true};
+    return {...original,path:near(original.path),retained:true};
   });
   const preparedSources={...previous.preparedSources,sources:{...previous.preparedSources.sources,...newSources.sources},assets:{...previous.preparedSources.assets,...newSources.assets},charts:{...previous.preparedSources.charts,...newSources.charts}};
   const preparedDiagrams={...previous.preparedDiagrams,diagrams:{...previous.preparedDiagrams.diagrams,...newDiagrams.diagrams}};
@@ -107,10 +107,11 @@ export async function preparePanelPatch({artifactPath,panelId,replacementPath,re
   const dependencyKey=entry=>`${entry.kind}:${entry.id}`;
   const newDependencies=[...(newSources.dependencies||[]),...(newDiagrams.dependencies||[])];
   const preparedIds=new Set(newDependencies.map(dependencyKey));
-  const dependencies=[...(previous.dependencies||[]).filter(entry=>!preparedIds.has(dependencyKey(entry)) && (entry.kind!=='image'||imageIds.has(entry.id)) && (entry.kind!=='data'||dataChartIds.has(entry.id)) && (entry.kind!=='diagram-spec'||diagramIds.has(entry.id))),...newDependencies].map(entry=>({ ...entry,
-    ...(entry.kind==='repository'||entry.inline?{}:{path:path.resolve(common.baseDir,entry.path)}) }));
+  const localDependency=(entry,baseDir)=>({...entry,...(entry.kind==='repository'||entry.inline?{}:{path:path.resolve(baseDir,entry.path)})});
+  const dependencies=[...(previous.dependencies||[]).filter(entry=>!preparedIds.has(dependencyKey(entry)) && (entry.kind!=='image'||imageIds.has(entry.id)) && (entry.kind!=='data'||dataChartIds.has(entry.id)) && (entry.kind!=='diagram-spec'||diagramIds.has(entry.id))).map(entry=>localDependency(entry,path.dirname(artifactPath))),
+    ...newDependencies.map(entry=>localDependency(entry,common.baseDir))];
   // Old dependencies are embedded immutable bytes. Only newly prepared resources are reread/verified.
-  const bundle=rebindPreparedBundle({...previous,preparedSources,preparedDiagrams,dependencies,quality:selectedQuality,writingMode:writingMode || previous.writingMode || 'warn'},parsed);
+  const bundle=rebindPreparedBundle({...previous,sourcePath:common.sourcePath,baseDir:common.baseDir,preparedSources,preparedDiagrams,dependencies,quality:selectedQuality,writingMode:writingMode || previous.writingMode || 'warn'},parsed);
   bundle.dependencies = dependencies.map(entry => ({...entry, retained: entry.retained===true || !preparedIds.has(dependencyKey(entry))}));
   return {bundle:rebindPreparedBundle(bundle,parsed),sourceText,sourcePath:draft.sourcePath || artifactPath,previousRevision:computeExplainerRevision(previous),previousSourceSha256:previous.source.sha256,panelId};
 }

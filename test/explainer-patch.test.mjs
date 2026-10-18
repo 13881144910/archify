@@ -92,3 +92,28 @@ test('panel patch quality override validates every native child from frozen inpu
   assert.deepEqual(patched.dependencies.find(dep=>dep.id==='second-diagram'),{...previous.dependencies.find(dep=>dep.id==='second-diagram'),retained:true});
   const check=run(['check',output,'--json','--require-provenance']);assert.equal(check.status,0,check.stdout+check.stderr);
 });
+
+
+test('panel patch across directories retains resource origins for subsequent edits',t=>{
+  const dir=fs.realpathSync(temp(t)),source=path.join(dir,'source'),out=path.join(dir,'out'),moved=path.join(dir,'moved','deep');
+  for(const folder of [source,out,moved])fs.mkdirSync(folder,{recursive:true});
+  const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a8XcAAAAASUVORK5CYII=','base64');
+  fs.writeFileSync(path.join(source,'asset.png'),png);
+  const doc=fixture();doc.panels[1].blocks.push({id:'retained-image',type:'image',path:'asset.png',alt:'Retained image'});
+  const input=path.join(source,'draft.json'),artifact=path.join(out,'page.html'),replacement=path.join(dir,'replacement.json');
+  fs.writeFileSync(input,JSON.stringify(doc));
+  const delivered=run(['deliver','explainer',input,artifact,'--json']);assert.equal(delivered.status,0,delivered.stdout+delivered.stderr);
+  const next={...doc.panels[0],title:'Changed title'};fs.writeFileSync(replacement,JSON.stringify(next));
+  const relocated=path.join(moved,'page.html');
+  const first=run(['patch','explainer',artifact,'first',replacement,relocated,'--json']);assert.equal(first.status,0,first.stdout+first.stderr);
+  next.blocks=[...next.blocks,{id:'new-image',type:'image',path:'asset.png',alt:'New image'}];fs.writeFileSync(replacement,JSON.stringify(next));
+  const output=path.join(out,'final.html');
+  const second=run(['patch','explainer',relocated,'first',replacement,output,'--json']);assert.equal(second.status,0,second.stdout+second.stderr);
+  const result=read(output);
+  assert.equal(path.resolve(out,result.sourcePath),input);assert.equal(path.resolve(out,result.baseDir),source);
+  for(const id of ['retained-image','new-image']){
+    assert.equal(path.resolve(out,result.dependencies.find(entry=>entry.id===id).path),path.join(source,'asset.png'));
+    assert.deepEqual(Buffer.from(result.preparedSources.assets[id].contentBase64,'base64'),png);
+  }
+  const checked=run(['check',output,'--json','--require-provenance']);assert.equal(checked.status,0,checked.stdout+checked.stderr);
+});

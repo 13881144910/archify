@@ -224,9 +224,6 @@ meter{width:100%;height:8px;accent-color:var(--accent)}
 .diagram>figcaption{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-height:28px;margin:0 0 10px;padding:0 2px;font-size:12px;color:var(--muted)}
 .diagram-title{font-size:12.5px;font-weight:500;color:var(--secondary)}
 .js .diagram-actions{display:flex!important;align-items:center;gap:10px;margin-left:auto}
-.explore-hint{font-size:11.5px;color:var(--faint)}
-.block-diagram{container-type:inline-size}
-@container (max-width:640px){.explore-hint{display:none!important}}
 .explore-button{height:28px;padding:0 10px;font-size:12.5px;line-height:1;color:var(--accent-ink);border-color:color-mix(in srgb,var(--accent) 32%,var(--rule))}
 .explore-button .tool-icon{width:14px;height:14px;color:var(--accent)}
 .explore-button:hover{background:var(--accent-soft);color:var(--accent-ink)}

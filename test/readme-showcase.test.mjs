@@ -190,6 +190,29 @@ test('README motion proof is compact, looping, and backed by current gallery art
   }
 });
 
+test('Windows command lookup and ffmpeg launch keep their boundary diagnostics', async () => {
+  const showcase = await import(pathToFileURL(path.join(repoRoot, 'scripts', 'build-readme-showcase.mjs')).href);
+  const selected = String.raw`C:\Tools\ffmpeg.EXE`;
+  const lookup = showcase.commandPath('ffmpeg', () => ({
+    status: 0,
+    stdout: `\r\n${selected}\r\nC:\\Other\\ffmpeg.exe\r\n`,
+  }), 'win32');
+  assert.equal(lookup, selected);
+  assert.equal(showcase.commandPath('ffmpeg', () => ({
+    status: 1,
+    stdout: '',
+    error: new Error('where failed'),
+  }), 'win32'), null);
+  assert.throws(
+    () => showcase.launchFfmpeg(selected, ['-version'], () => ({
+      status: null,
+      stderr: '',
+      error: Object.assign(new Error('spawn ENOENT'), { code: 'ENOENT' }),
+    })),
+    /ffmpeg failed:\s*spawn ENOENT/,
+  );
+});
+
 function fakeChrome({ exitBeforeStop = false, closeOn = null } = {}) {
   const child = new EventEmitter();
   child.exitCode = null;

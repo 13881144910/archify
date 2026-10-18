@@ -73,13 +73,32 @@ function executable(file) {
   }
 }
 
-function commandPath(command) {
-  const result = spawnSync('sh', ['-c', 'command -v "$1"', 'archify-showcase', command], {
+function commandPath(command, spawnCommand = spawnSync, platform = process.platform) {
+  if (platform === 'win32') {
+    const result = spawnCommand('where.exe', [command], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true,
+    });
+    if (result.error || result.status !== 0) return null;
+    return result.stdout.split(/\r?\n/u).map(entry => entry.trim()).find(Boolean) || null;
+  }
+  const result = spawnCommand('sh', ['-c', 'command -v "$1"', 'archify-showcase', command], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
   });
-  return result.status === 0 ? result.stdout.trim() : null;
+  if (result.error || result.status !== 0) return null;
+  return result.stdout.trim() || null;
 }
+
+function launchFfmpeg(ffmpeg, args, spawnCommand = spawnSync) {
+  const result = spawnCommand(ffmpeg, args, { encoding: 'utf8' });
+  if (result.error || result.status !== 0) {
+    const detail = result.error?.message || String(result.stderr || result.stdout || '').trim() || `exited ${result.status ?? 'without a status'}`;
+    throw new Error(`ffmpeg failed:\n${detail}`);
+  }
+  return result;
+}
+
+export { commandPath, requireCommand, launchFfmpeg };
 
 function findChrome() {
   const candidates = [
@@ -371,12 +390,11 @@ function buildGif(ffmpeg, framesRoot) {
     '[s0]palettegen=max_colors=112:stats_mode=diff[p]',
     '[s1][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle',
   ].join(';');
-  const result = spawnSync(ffmpeg, [
+  launchFfmpeg(ffmpeg, [
     '-y', '-loglevel', 'error', '-framerate', String(fps),
     '-i', path.join(framesRoot, 'frame-%04d.png'),
     '-filter_complex', filter, '-loop', '0', outputPath,
-  ], { encoding: 'utf8' });
-  if (result.status !== 0) throw new Error(`ffmpeg failed:\n${result.stderr || result.stdout}`);
+  ]);
 }
 
 // The owner of the temporary root must honor Chrome shutdown failure too.

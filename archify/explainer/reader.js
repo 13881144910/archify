@@ -489,7 +489,8 @@
   // message that names the page, the panel ID and the quote, so the agent can revise just that panel.
   function setupAsk() {
     const dialog = document.createElement('dialog'); dialog.className = 'ask-dialog';
-    dialog.innerHTML = `<form method="dialog"><header><h2></h2><button type="button" data-ask-cancel aria-label="${words.askCancel}">×</button></header><blockquote hidden></blockquote><div class="ask-chips">${words.askChips.map(chip=>`<button type="button" data-chip>${chip}</button>`).join('')}</div><textarea rows="3" placeholder="${words.askPlaceholder}"></textarea><footer><button type="button" data-ask-cancel>${words.askCancel}</button><button type="submit" class="primary">${words.askCopy}</button></footer></form>`;
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    dialog.innerHTML = `<form method="dialog"><header><div><h2 id="ask-title">${words.ask}</h2><p class="ask-where"></p></div><button type="button" class="ask-close" data-ask-cancel aria-label="${words.askCancel}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></header><blockquote hidden></blockquote><div class="ask-chips" role="group" aria-label="${words.askQuestion}">${words.askChips.map(chip=>`<button type="button" data-chip>${chip}</button>`).join('')}</div><textarea rows="4" aria-labelledby="ask-title" placeholder="${words.askPlaceholder}"></textarea><footer><p class="ask-note">${words.askNote}</p><button type="button" data-ask-cancel>${words.askCancel}</button><button type="submit" class="primary">${words.askCopy}<kbd>${mac ? '⌘↵' : 'Ctrl ↵'}</kbd></button></footer></form>`;
     document.body.append(dialog);
     const area = dialog.querySelector('textarea'), quoteBox = dialog.querySelector('blockquote');
     let context = null;
@@ -497,11 +498,18 @@
       const number = panel.id === 'answer' ? words.answer : panel.querySelector('.panel-id')?.textContent.trim();
       const title = panel.id === 'answer' ? words.answer : panel.dataset.title || panel.querySelector('h2')?.textContent.trim();
       context = {panel,quote,number,title};
-      dialog.querySelector('h2').textContent = `${words.ask} · ${panel.id === 'answer' ? title : `${number} ${title}`}`;
+      dialog.querySelector('.ask-where').textContent = panel.id === 'answer' ? title : say(`Panel ${number} · ${title}`,`面板 ${number} · ${title}`);
+      all('[data-chip]',dialog).forEach(chip=>chip.setAttribute('aria-pressed','false'));
       quoteBox.hidden = !quote; quoteBox.textContent = quote;
       area.value = ''; dialog.showModal(); area.focus();
     };
-    dialog.querySelectorAll('[data-chip]').forEach(chip=>chip.addEventListener('click',()=>{ area.value = area.value ? `${area.value}\n${chip.textContent}` : chip.textContent; area.focus(); }));
+    // A suggested question is added once; choosing it again takes it back out.
+    dialog.querySelectorAll('[data-chip]').forEach(chip=>chip.addEventListener('click',()=>{
+      const lines = area.value.split('\n').filter(line=>line.trim()), on = !lines.includes(chip.textContent);
+      area.value = (on ? [...lines,chip.textContent] : lines.filter(line=>line !== chip.textContent)).join('\n');
+      chip.setAttribute('aria-pressed',String(on)); area.focus();
+    }));
+    area.addEventListener('keydown',event=>{ if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); dialog.querySelector('form').requestSubmit(); } });
     dialog.querySelectorAll('[data-ask-cancel]').forEach(button=>button.addEventListener('click',()=>dialog.close()));
     dialog.querySelector('form').addEventListener('submit',event=>{
       event.preventDefault();

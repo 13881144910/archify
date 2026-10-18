@@ -311,20 +311,32 @@ footer{padding:28px 0 32px}
 .ask-button:hover{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--rule))}
 .ask-floating{position:absolute;z-index:20;font-size:12px;padding:3px 10px;border-radius:999px;background:var(--ink);color:var(--paper);border:0;box-shadow:0 4px 14px rgb(0 0 0/.18)}
 .ask-floating:hover{background:var(--accent);color:#fff}
-.ask-dialog{width:min(520px,calc(100vw - 32px));padding:0}
-.ask-dialog form{margin:0;display:flex;flex-direction:column;gap:12px;padding:16px 18px 18px}
-.ask-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.ask-dialog h2{font-size:14.5px;font-weight:600;overflow-wrap:anywhere}
-.ask-dialog header button{border:0;background:none;font-size:18px;line-height:1;padding:2px 6px;color:var(--muted)}
-.ask-dialog blockquote{margin:0;padding:8px 12px;border-radius:8px;background:var(--sunk);box-shadow:inset 3px 0 0 var(--accent);font-size:13px;color:var(--secondary);max-height:120px;overflow:auto}
+/* Follow-up dialog: where the question points, suggested questions, the reader's words, then copy. */
+.ask-dialog{width:min(560px,calc(100vw - 32px));padding:0;border-radius:14px}
+.ask-dialog form{margin:0;display:flex;flex-direction:column;gap:14px;padding:20px 22px 18px}
+.ask-dialog header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.ask-dialog h2{font:600 16px/1.35 var(--sans);color:var(--ink)}
+.ask-where{margin-top:3px;font-size:12.5px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.ask-close{display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;margin:-4px -6px 0 0;border:0;border-radius:8px;background:none;color:var(--muted);transition:background .15s,color .15s}
+.ask-close:hover{background:var(--sunk);color:var(--ink)}
+.ask-close svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.ask-dialog blockquote{margin:0;padding:9px 12px;border-radius:8px;background:var(--sunk);box-shadow:inset 3px 0 0 var(--accent);font-size:13px;line-height:1.6;color:var(--secondary);max-height:120px;overflow:auto}
 .ask-chips{display:flex;flex-wrap:wrap;gap:6px}
-.ask-chips button{font-size:12px;padding:2px 10px;border-radius:999px;color:var(--secondary)}
-.ask-chips button:hover{color:var(--accent);border-color:var(--accent)}
-.ask-dialog textarea{font:inherit;font-size:13.5px;color:var(--ink);background:var(--panel);border:1px solid var(--rule-strong);border-radius:8px;padding:8px 10px;resize:vertical}
-.ask-dialog textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
-.ask-dialog footer{display:flex;justify-content:flex-end;gap:8px}
-.ask-dialog .primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.ask-chips button{height:28px;padding:0 12px;border:1px solid var(--rule-strong);border-radius:999px;background:var(--panel);font-size:12.5px;line-height:1;color:var(--secondary);transition:background .15s,color .15s,border-color .15s}
+.ask-chips button:hover{color:var(--accent-ink);border-color:color-mix(in srgb,var(--accent) 45%,var(--rule))}
+.ask-chips button[aria-pressed=true]{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 55%,var(--rule));color:var(--accent-ink)}
+.ask-dialog textarea{min-height:96px;font:inherit;font-size:14px;line-height:1.6;color:var(--ink);background:var(--paper);border:1px solid var(--rule-strong);border-radius:10px;padding:10px 12px;resize:vertical;transition:border-color .15s,box-shadow .15s}
+.ask-dialog textarea::placeholder{color:var(--faint)}
+.ask-dialog textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent);background:var(--panel)}
+.ask-dialog footer{display:flex;align-items:center;gap:8px;padding:0}
+.ask-note{flex:1;min-width:0;margin-right:8px;font-size:11.5px;line-height:1.45;color:var(--muted)}
+.ask-dialog footer button{background:var(--panel);color:var(--secondary)}
+.ask-dialog footer button:hover{background:var(--sunk);color:var(--ink)}
+.ask-dialog .primary,.ask-dialog .primary:hover{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.ask-dialog .primary:hover{filter:brightness(1.06)}
+.ask-dialog .primary kbd{margin-left:2px;font:500 10.5px/1 var(--sans);opacity:.75}
 :root[data-theme=dark] .ask-dialog .primary{color:#0c0d10}
+@media(max-width:560px){.ask-note{flex-basis:100%;margin:0 0 4px}.ask-dialog footer{flex-wrap:wrap;justify-content:flex-end}}
 @media print{.ask-button,.ask-floating{display:none!important}}
 
 /* Dialogs */

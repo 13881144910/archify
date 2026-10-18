@@ -15,7 +15,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--rule-str
 button:hover{border-color:var(--faint);color:var(--ink)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 code,pre{font-family:var(--mono)}
-code{font-size:.86em;background:var(--code);border:1px solid var(--rule);padding:0 5px;border-radius:5px;overflow-wrap:anywhere;color:var(--ink)}
+code{font-size:.86em;background:var(--code);border:1px solid var(--rule);padding:0 5px;border-radius:5px;overflow-wrap:anywhere;color:var(--ink);-webkit-box-decoration-break:clone;box-decoration-break:clone}
 ::selection{background:var(--marker)}
 .interactive{display:none!important}
 .js .interactive{display:initial!important}
@@ -403,7 +403,7 @@ dialog::backdrop{background:rgb(10 10 12/.55);backdrop-filter:blur(2px)}
 [data-style=editorial] .panel-body{padding:10px 4px 18px}
 [data-style=editorial] .verdict{background:none;box-shadow:inset 3px 0 0 var(--accent);border-radius:0;font-size:20px;line-height:1.7;padding:0 0 0 16px}
 [data-style=editorial] .answer-scope{border-top:1px dotted var(--rule-strong);padding:10px 4px}
-[data-style=editorial] tbody tr:nth-child(even)>*{background:none}
+[data-style=editorial] tbody tr:nth-child(even)>*{background:none;border-radius:0}
 [data-style=editorial] tbody td,[data-style=editorial] tbody th{border-bottom:1px solid var(--rule)}
 /* Product: soft cards, strong weights, one confident accent. */
 [data-style=product] h1{font-size:30px;font-weight:800;letter-spacing:-.025em}
@@ -432,11 +432,15 @@ dialog::backdrop{background:rgb(10 10 12/.55);backdrop-filter:blur(2px)}
 [data-style=swiss] .reasons li::before{background:var(--ink);color:var(--paper);box-shadow:none;border-radius:0}
 [data-style=swiss] .answer-scope{border-top:1px solid var(--ink);padding:10px 0}
 [data-style=swiss] .scope-chip{border-radius:0;border-color:var(--ink);background:none}
-[data-style=swiss] tbody tr:nth-child(even)>*{background:none}
+[data-style=swiss] tbody tr:nth-child(even)>*{background:none;border-radius:0}
 [data-style=swiss] tbody td,[data-style=swiss] tbody th{border-bottom:1px solid var(--rule)}
 [data-style=swiss] thead th{color:var(--ink);font-weight:700;border-bottom:2px solid var(--ink)}
 [data-style=swiss] .callout{border-radius:0;box-shadow:inset 4px 0 0 var(--accent)}
 [data-style=swiss] .steps li::before{border-radius:0;border-color:var(--ink)}
+/* Swiss controls keep the square corners of its numbers, chips and rules. */
+[data-style=swiss] :is(.tool-button,.theme-controls,.theme-controls button,.menu-options,.menu-options button,.walk-bar,.walk-bar button,.walk-start,.ask-button,.ask-chips button,.ask-dialog,.ask-dialog footer button,.ask-dialog textarea,.ask-dialog blockquote,.source-card,.source-icon,.source-note,.colophon-mark,.viewer-dialog,.snippet,.checklist input){border-radius:2px}
+/* Its neutral nodes take a grey outline; the full-strength rule colour is for page rules only. */
+:root[data-style=swiss] .board .diagram-preview.diagram-preview[class]{--frontend-stroke:color-mix(in srgb,var(--ink) 32%,var(--paper));--database-stroke:color-mix(in srgb,var(--ink) 32%,var(--paper));--cloud-stroke:color-mix(in srgb,var(--ink) 32%,var(--paper));--external-stroke:color-mix(in srgb,var(--ink) 32%,var(--paper));--messagebus-stroke:color-mix(in srgb,var(--ink) 32%,var(--paper));--security-stroke:color-mix(in srgb,var(--ink) 32%,var(--paper))}
 /* Style overrides that must beat the clean dark rules, and chart series that stay apart in warm palettes. */
 :root[data-style=editorial] .answer-id,:root[data-style=swiss] .answer-id{background:none;color:var(--accent)}
 :root[data-style=product] .answer-id{color:var(--badge-ink)}

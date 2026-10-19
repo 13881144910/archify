@@ -38,6 +38,11 @@ test('all built pages expose one shared top navigation and the correct current p
       assert.equal(attr(community, 'data-en'), 'Community', page);
       assert.equal(attr(community, 'data-zh'), '社区包', page);
     }
+    if (page === 'index') {
+      const install = nodes(nav).find(node => hasClass(node, 'nav-cta'));
+      const destination = new URL(resolvedHref(install));
+      assert.equal(destination.href, hrefFor('start') + '#install', 'homepage installation opens the agent-aware setup');
+    }
     const row = nodes(nav).find(node => hasClass(node, 'nav-links'));
     assert.equal(nodes(row).filter(node => node.tagName === 'a').length, 5, page);
   }

@@ -7,7 +7,7 @@ import head from '../../data/agent-diagrams-head.html?raw';
 import css from '../../styles/agent-diagrams.css?raw';
 const { lang = 'en' } = Astro.props;
 const Content = lang === 'zh' ? Chinese : English;
-const sectionIds = ['case-version-boundary', 'case-decoding', 'case-file-writes', 'case-persistence', 'case-reading-the-arrow', 'case-limits'];
+const sectionIds = ['case-reproduce', 'case-use-your-repo', 'case-version-boundary', 'case-decoding', 'case-file-writes', 'case-persistence', 'case-reading-the-arrow', 'case-limits'];
 const headings = (lang === 'zh' ? chineseHeadings() : englishHeadings()).filter(heading => heading.depth === 2).map((heading, index) => ({ ...heading, slug: sectionIds[index] }));
 ---
 <SiteLayout page="cases/mco-runtime" lang={lang} head={head} css={css}>

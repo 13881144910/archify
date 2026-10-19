@@ -4,6 +4,37 @@ The MCO runtime architecture example in Archify separates provider execution, an
 
 This case explains the existing MCO runtime diagram, not a newly executed agent run. Open the published diagram: [MCO runtime diagram](cases/mco-runtime.architecture.html)
 
+<span class="section-anchor" id="case-reproduce"></span>
+
+## Replay the existing architecture example
+
+Start with the [interactive HTML](cases/mco-runtime.architecture.html) and its [typed JSON source](cases/mco-runtime.architecture.json). No installation is needed to inspect these files. Follow the Answer Transport → Invocation Artifacts relationship, then compare it with the pinned code links below: the edge describes data ownership, not a direct function call.
+
+To render the same authored input locally, use Node.js 18 or newer, Git, and a fresh directory. These commands pin the stable Archify checkout used for this replay; they do not run MCO or invoke a model:
+
+```sh
+git clone https://github.com/tt-a1i/archify.git archify-mco-case
+cd archify-mco-case
+git checkout --detach ba701d20a55ed6f139484d9ead7ff45671fe40eb
+git clone https://github.com/mco-org/mco.git mco-source
+git -C mco-source checkout --detach 9f1a1cf1afdc04d7b5406782b40dfec76d9bc798
+node archify/bin/archify.mjs render architecture docs/cases/mco-runtime.architecture.json mco-replay.html --repo-root mco-source
+```
+
+Open `mco-replay.html` in a browser. This replays an existing model; it does not rediscover the repository or establish a new validation or visual-review result. Check that the provider adapters, answer transport, invocation runtime and artifact writer are still distinct, and use the source links to verify who calls the decoder and who writes files. Rendering with another Archify revision may produce different output.
+
+<span class="section-anchor" id="case-use-your-repo"></span>
+
+## Make a source-backed diagram of your own repository
+
+[Choose your agent and install Archify →](start.html?type=architecture&input=repository#install)
+
+Use this prompt in your configured coding agent, from the repository you want it to inspect:
+
+> Use Archify to explain how this repository turns external provider output into retained result files. Pin the repository commit. Trace one invocation through its entry point, provider adapter, decoding, streamed writes, final report writer and cleanup. Include only components and relationships supported by files you read, with source links. Distinguish dataflow edges from direct calls and temporary files from retained artifacts. Mark unknowns instead of filling them in. Deliver the architecture HTML, typed JSON and check results, then explain what I should verify in the source.
+
+This scope suits a review of component responsibilities and file ownership. For exact message order, use a sequence diagram; for a live incident or latency claim, bring logs, traces or measurements. An architecture picture alone cannot answer those questions. Your repository may have different components; the MCO names are evidence for this case only.
+
 <span class="section-anchor" id="case-version-boundary"></span>
 
 ## Version boundary

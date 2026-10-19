@@ -1,7 +1,7 @@
 # Architecture case to first use
 
 Base: `ba701d20a55ed6f139484d9ead7ff45671fe40eb` (main, 2026-10-19).
-Candidate: the commit containing this receipt. Checks ran on its complete working diff before commit; no product or output changes followed.
+Initial candidate: `d2e4aa880dd72dfcf6e283cdc2e3d69900845aac`. Initial checks below ran on its complete working diff before commit. Follow-up evidence is recorded at the end.
 
 ## Observed before
 
@@ -14,7 +14,7 @@ The homepage navigation's Install Skill anchor resolved to `#quickstart`, althou
 - The case provides the original HTML and JSON, a replay pinned to both repositories, an adaptation prompt, boundaries and repository-mode Start.
 - Original artifact/source bytes and all generation behavior remain unchanged.
 
-## Checks executed by Codex
+## Initial checks executed by Codex
 
 - `npm --prefix website run check`: 0 errors, 0 warnings, one existing clipboard deprecation hint.
 - Default build: 14 pages. `npm --prefix website test`: 79 passed, 7 browser tests skipped by their opt-in conditions, 0 failed.
@@ -35,3 +35,24 @@ Browser-suite screenshots, inspected by Codex (not human acceptance):
 Screenshots are bounded page tiles; their top may continue a preceding tile. Text remains readable and within the viewport. Full local browser manifests and tiles are in ignored `website/.browser-evidence/{github,cloudflare}/`.
 
 No new tracking was added. Existing Start session events were unchanged. This PR establishes usable links and content, not SEO ranking, traffic growth or installation conversion improvements. Live production acceptance awaits an authorized merge and deployment.
+
+
+## Review follow-up
+
+Comparison base: `d2e4aa880dd72dfcf6e283cdc2e3d69900845aac`. Candidate: the follow-up commit containing this update.
+
+The bilingual repository prompt now requests an actual entry-to-output path, uses the provider-to-retained-files path only when present, and otherwise selects a path supported by the repository's code. Source links, pinned commit, explicit unknowns and artifact/check deliverables remain required. This avoids assuming MCO's components exist in another repository.
+
+The existing navigation suite now checks the architecture-panel case link in both homepage locales, resolves it using the deployed HTML base, and verifies that its localized target was actually built. It runs against both deployment outputs. This protects a missing, wrong-locale or broken case destination without freezing the link's copy or markup structure.
+
+Updated checks on the complete follow-up source/test diff:
+
+- Type check: 0 errors/warnings, one existing clipboard deprecation hint.
+- Default and Cloudflare builds: 14 pages each.
+- Default website tests: 80 passed, 7 opt-in browser checks skipped, 0 failed.
+- Cloudflare navigation/case/SEO/deployment tests: 21 passed, 0 skipped/failed.
+- Real Chrome homepage and MCO suites on each build: 2 passed per build, 0 skipped/failed; same language/theme/viewport coverage as above.
+- A temporary broken-link probe in ignored build output failed the new homepage test as expected; restoring the original output passed. No source file was altered by this probe.
+- The linked screenshots were refreshed from the follow-up browser runs and inspected by Codex. This remains Agent visual inspection, not human acceptance.
+
+No original artifact or product behavior changed. The original replay execution evidence remains applicable; no generation code, input JSON or command changed in this follow-up. Review discussion was not replied to or resolved as part of preparing this revision.

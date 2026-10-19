@@ -38,6 +38,11 @@ test('all built pages expose one shared top navigation and the correct current p
       assert.equal(attr(community, 'data-en'), 'Community', page);
       assert.equal(attr(community, 'data-zh'), '社区包', page);
     }
+    if (page === 'index') {
+      const install = nodes(nav).find(node => hasClass(node, 'nav-cta'));
+      const destination = new URL(resolvedHref(install));
+      assert.equal(destination.href, hrefFor('start') + '#install', 'homepage installation opens the agent-aware setup');
+    }
     const row = nodes(nav).find(node => hasClass(node, 'nav-links'));
     assert.equal(nodes(row).filter(node => node.tagName === 'a').length, 5, page);
   }
@@ -51,4 +56,19 @@ test('the homepage retains its footer catalog link alongside the top entry', () 
   assert.equal(attr(base[0], 'href'), './');
   const baseUri = new URL(attr(base[0], 'href'), new URL(cloudflare ? '' : 'index.html', origin));
   assert.ok(nodes(footer).some(node => node.tagName === 'a' && new URL(attr(node, 'href'), baseUri).href === `${origin}community${extension}`));
+});
+
+
+test('both localized homepages link to the existing architecture source case', () => {
+  for (const lang of ['en', 'zh']) {
+    const file = lang === 'zh' ? 'zh.html' : 'index.html';
+    const dom = parse(fs.readFileSync(new URL(file, output), 'utf8'));
+    const baseUri = new URL(attr(nodes(dom).find(node => node.tagName === 'base'), 'href'), new URL(file, origin));
+    const expected = `${origin}${lang === 'zh' ? 'zh/' : ''}cases/mco-runtime${extension}`;
+    const link = nodes(dom).find(node => node.tagName === 'a' && hasClass(node, 'type-more') &&
+      new URL(attr(node, 'href'), baseUri).href === expected);
+    assert.ok(link, `${lang}: architecture panel offers the localized source case`);
+    assert.ok(nodes(link).some(node => node.nodeName === '#text' && node.value.trim()), 'case entry has readable link text');
+    assert.ok(fs.existsSync(new URL(`${lang === 'zh' ? 'zh/' : ''}cases/mco-runtime.html`, output)), 'case destination is built');
+  }
 });

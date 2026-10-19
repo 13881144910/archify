@@ -44,6 +44,14 @@ test('MCO case exposes pinned source, honest limits, stable sections and nested 
       assert.equal(next.tagName, 'h2');
       assert.equal(text(next), text(link));
     }
+    const start = nodes(article).find(node => node.tagName === 'a' && attr(node, 'href')?.includes('input=repository'));
+    assert.ok(start, 'the case offers a repository-mode installation next step');
+    const startUrl = new URL(attr(start, 'href'), base);
+    assert.equal(startUrl.pathname, new URL(`${prefix}start${cloudflare ? '' : '.html'}`, origin).pathname);
+    assert.equal(startUrl.searchParams.get('type'), 'architecture');
+    assert.equal(startUrl.hash, '#install');
+    const replay = nodes(article).find(node => node.tagName === 'pre');
+    assert.ok(text(replay).includes('--repo-root mco-source'), 'replay can verify declared repository evidence');
     const artifact = nodes(article).find(node => attr(node, 'href') === 'cases/mco-runtime.architecture.html');
     assert.ok(artifact);
     assert.equal(new URL(attr(artifact, 'href'), base).href, origin + 'cases/mco-runtime.architecture.html');
